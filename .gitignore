@@ -22,3 +22,6 @@ go.work
 
 # ide
 .idea
+
+# binaries
+/bin
