@@ -52,6 +52,7 @@ func initDev() {
 		{"astria-sequencer", "https://github.com/astriaorg/astria/releases/download/sequencer-v0.9.0/astria-sequencer-aarch64-apple-darwin.tar.gz"},
 		{"astria-composer", "https://github.com/astriaorg/astria/releases/download/composer-v0.4.0/astria-composer-aarch64-apple-darwin.tar.gz"},
 		{"astria-conductor", "https://github.com/astriaorg/astria/releases/download/conductor-v0.12.0/astria-conductor-aarch64-apple-darwin.tar.gz"},
+		// {"cometbft", "https://github.com/cometbft/cometbft/releases/download/v0.37.4/cometbft_0.37.4_darwin_arm64.tar.gz"},
 	}
 
 	// fileURL := "https://example.com/file.tar.gz"
@@ -156,6 +157,8 @@ func createDevDir(dirName string) {
 }
 
 func DownloadAndExtractFile(path string, url string) error {
+	println("path: ", path)
+	println("url: ", url)
 	// Download section (same as before)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -193,6 +196,74 @@ func DownloadAndExtractFile(path string, url string) error {
 
 	tr := tar.NewReader(gzr)
 
+	fileCount := 0
+
+	path = filepath.Dir(path)
+	// path = filepath.Join(path, "")
+	// Ensure the parent directory exists
+	if err := os.MkdirAll(path, 0755); err != nil {
+		log.Fatal(err)
+	}
+	println("path: ", path)
+
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break // End of tar archive
+		}
+		if err != nil {
+			return err // Handle other errors
+		}
+		println("\tfile: ", header.Name)
+
+		fileCount++
+
+		// outfile := filepath.Dir(filepath.Join(path, header.Name))
+		outfile := filepath.Join(path, header.Name)
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			println("\t\tdir")
+			// Create directory if it doesn't exist
+			if err := os.MkdirAll(outfile, os.FileMode(header.Mode)); err != nil {
+				log.Fatal(err)
+			}
+
+		case tar.TypeReg:
+			// outfile := filepath.Join(path, header.Name)
+			println("\t\tfile: ", outfile)
+			tmpfile, err := os.Create(outfile)
+			if err != nil {
+				return err
+			}
+			defer tmpfile.Close()
+			println("\t\tcreated")
+
+			if _, err := io.Copy(tmpfile, tr); err != nil {
+				fmt.Println("\t\tcopy error:", err)
+				// tmpfile.Close()
+				return err
+			}
+			// tmpfile.Close()
+			println("\t\tcopied")
+			// if err := tmpfile.Close(); err != nil {
+			// 	return fmt.Errorf("error closing file %w", err)
+			// }
+			println("\t\tclosed")
+
+			// Make the file executable by everyone
+			if err := os.Chmod(outfile, 0755); err != nil {
+				log.Fatal(err)
+			}
+			println("\t\tupdated permissions")
+
+		}
+
+	}
+	println("fileCount: ", fileCount)
+
+	return nil
+
 	// Extract tar contents
 	for {
 		header, err := tr.Next()
@@ -208,7 +279,9 @@ func DownloadAndExtractFile(path string, url string) error {
 		}
 
 		// Check the type of the file
-		target := filepath.Join(path, "extracted", header.Name)
+		// target := filepath.Join(path, "extracted", header.Name)
+		target := filepath.Join(path, header.Name)
+		println("target: ", target)
 		switch header.Typeflag {
 		case tar.TypeDir:
 			println("dir")
@@ -217,6 +290,11 @@ func DownloadAndExtractFile(path string, url string) error {
 				return err
 			}
 		case tar.TypeReg:
+			println("file")
+			// Ensure the parent directory exists
+			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+				log.Fatalf("ExtractTarGz: MkdirAll() failed for parent directory: %s", err.Error())
+			}
 			println("file")
 
 			// Create file
@@ -227,7 +305,7 @@ func DownloadAndExtractFile(path string, url string) error {
 			println("file")
 
 			if _, err := io.Copy(outFile, tr); err != nil {
-				outFile.Close()
+				// outFile.Close()
 				return err
 			}
 			println("file")
