@@ -59,7 +59,6 @@ func initDev() {
 	}
 
 	for _, bin := range binaries {
-		fmt.Printf("Downloading: (%s, %s)\n", bin.Name, bin.Url)
 
 		downloadAndUnpack(bin.Url, fullPath, bin.Name)
 	}
@@ -276,7 +275,15 @@ func extractTarGz(placePath string, gzipStream io.Reader) error {
 	}
 }
 
+// TODO: add error handling
 func downloadAndUnpack(url string, placePath string, packageName string) {
+	// Check if the file already exists
+	if _, err := os.Stat(filepath.Join(placePath, packageName)); err == nil {
+		fmt.Printf("%s already exists. Skipping download.\n", packageName)
+		return
+	}
+	fmt.Printf("Downloading: (%s, %s)\n", packageName, url)
+
 	// Download the file
 	dest := filepath.Join(placePath, packageName+".tar.gz")
 	if err := downloadFile(url, dest); err != nil {

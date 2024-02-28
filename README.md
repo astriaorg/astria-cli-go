@@ -39,11 +39,11 @@ mprocs
 ### Useful Commands While Testing
 
 ```
-# In the main repo dir
-# remove locally built cli binary and the /local-dev-astria dir
+# In astria-cli-go/
+# remove locally built cli binary and the local-dev-astria/ dir
 just clean
 
-# In local-dev-astria
+# In astria-cli-go/local-dev-astria/
 # remove local data for cometbft and sequencer
 just clean
 ```
