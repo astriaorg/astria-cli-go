@@ -47,7 +47,10 @@ func initDev() {
 	createDevDir(fullPath)
 	recreateEnvFile(fullPath)
 	recreateCometbftAndSequencerGenesisData(fullPath)
+	recreateMprocsFile(fullPath)
+	recreateJustfile(fullPath)
 
+	// TODO: make the binaries list configurable based on target os and arch
 	binaries := []Binary{
 		{"cometbft", "https://github.com/cometbft/cometbft/releases/download/v0.37.4/cometbft_0.37.4_darwin_arm64.tar.gz"},
 		{"astria-sequencer", "https://github.com/astriaorg/astria/releases/download/sequencer-v0.9.0/astria-sequencer-aarch64-apple-darwin.tar.gz"},
@@ -105,6 +108,62 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
 	_, err = newValidatorFile.Write(validatorData)
+	if err != nil {
+		log.Fatalf("failed to write data to new file: %v", err)
+	}
+}
+
+//go:embed justfile
+var embeddedJustfile embed.FS
+
+// TODO: add error handling
+func recreateJustfile(path string) {
+	// Read the content from the embedded file
+	data, err := fs.ReadFile(embeddedJustfile, "justfile")
+	if err != nil {
+		log.Fatalf("failed to read embedded file: %v", err)
+	}
+
+	// Specify the path for the new file
+	newPath := filepath.Join(path, "justfile")
+
+	// Create a new file
+	newFile, err := os.Create(newPath)
+	if err != nil {
+		log.Fatalf("failed to create new file: %v", err)
+	}
+	defer newFile.Close()
+
+	// Write the data to the new file
+	_, err = newFile.Write(data)
+	if err != nil {
+		log.Fatalf("failed to write data to new file: %v", err)
+	}
+}
+
+//go:embed mprocs.yaml
+var embeddedMprocsFile embed.FS
+
+// TODO: add error handling
+func recreateMprocsFile(path string) {
+	// Read the content from the embedded file
+	data, err := fs.ReadFile(embeddedMprocsFile, "mprocs.yaml")
+	if err != nil {
+		log.Fatalf("failed to read embedded file: %v", err)
+	}
+
+	// Specify the path for the new file
+	newPath := filepath.Join(path, "mprocs.yaml")
+
+	// Create a new file
+	newFile, err := os.Create(newPath)
+	if err != nil {
+		log.Fatalf("failed to create new file: %v", err)
+	}
+	defer newFile.Close()
+
+	// Write the data to the new file
+	_, err = newFile.Write(data)
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}

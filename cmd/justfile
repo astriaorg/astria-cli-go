@@ -1,0 +1,25 @@
+default:
+  @just --list
+
+set dotenv-load
+set fallback
+
+run-cometbft:
+    ./cometbft init
+    cp genesis.json ~/.cometbft/config/genesis.json
+    cp priv_validator_key.json ~/.cometbft/config/priv_validator_key.json
+    sed -i '.bak' 's/timeout_commit = "1s"/timeout_commit = "2s"/g' ~/.cometbft/config/config.toml
+    ./cometbft node
+
+run-sequencer:
+    ./astria-sequencer
+
+run-conductor:
+    ./astria-conductor
+
+run-composer:
+    ./astria-composer
+
+clean:
+    rm -rf ~/.cometbft/
+    rm -rf /tmp/astria_db

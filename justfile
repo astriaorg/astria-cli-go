@@ -5,5 +5,5 @@ clean:
     rm -rf bin
     rm -rf local-dev-astria
 
-run:
+init:
     ./bin/astria-local init
