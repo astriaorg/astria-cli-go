@@ -4,6 +4,7 @@ build:
 clean:
     rm -rf bin
     rm -rf local-dev-astria
+    rm -rf data
 
 init:
     ./bin/astria-local init

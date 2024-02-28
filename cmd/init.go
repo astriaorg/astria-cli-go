@@ -35,16 +35,21 @@ var initCmd = &cobra.Command{
 
 func initDev() {
 	// TODO: make the dir name configuratble
-	downloadDir := "local-dev-astria"
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Println("error getting cwd:", err)
 		return
 	}
+
+	dataDir := "data"
+	dataPath := filepath.Join(cwd, dataDir)
+	createDir(dataPath)
+
+	downloadDir := "local-dev-astria"
 	fullPath := filepath.Join(cwd, downloadDir)
 
 	fmt.Println("Local dev files placed in: ", fullPath)
-	createDevDir(fullPath)
+	createDir(fullPath)
 	recreateEnvFile(fullPath)
 	recreateCometbftAndSequencerGenesisData(fullPath)
 	recreateMprocsFile(fullPath)
@@ -197,7 +202,7 @@ func recreateEnvFile(path string) {
 }
 
 // TODO: add error handling
-func createDevDir(dirName string) {
+func createDir(dirName string) {
 	err := os.MkdirAll(dirName, 0755)
 	if err != nil {
 		fmt.Println("Error creating directory:", err)
@@ -321,4 +326,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// TODO: add a "path" flag to the init command
+	// initCmd.Flags().StringP("path", "p", "", "Choose where the local-dev-astria directory will be created. Defaults to the current working directory.")
 }

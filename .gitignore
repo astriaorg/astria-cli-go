@@ -26,3 +26,4 @@ go.work
 # binaries
 /bin
 /local-dev-astria
+/data
