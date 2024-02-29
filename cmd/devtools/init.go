@@ -29,11 +29,11 @@ var initCmd = &cobra.Command{
 	Short: "Initializes the local development environment.",
 	Long:  `The init command will download the nessesary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		initDev()
+		runInitialization()
 	},
 }
 
-func initDev() {
+func runInitialization() {
 	// TODO: make the dir name configuratble
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -315,7 +315,7 @@ func downloadAndUnpack(url string, placePath string, packageName string) {
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	devCmd.AddCommand(initCmd)
 
 	// Here you will define your flags and configuration settings.
 

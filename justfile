@@ -7,7 +7,7 @@ clean:
     rm -rf data
 
 init:
-    ./bin/astria-dev init
+    ./bin/astria-dev dev init
 
 run: 
-    ./bin/astria-dev run
+    ./bin/astria-dev dev run

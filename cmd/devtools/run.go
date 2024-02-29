@@ -151,7 +151,7 @@ func run() {
 }
 
 func init() {
-	rootCmd.AddCommand(runCmd)
+	devCmd.AddCommand(runCmd)
 
 	// Here you will define your flags and configuration settings.
 
