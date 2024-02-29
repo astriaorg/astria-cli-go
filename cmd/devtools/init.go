@@ -113,6 +113,8 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
+	fmt.Println("Cometbft genesis data created successfully.")
+	fmt.Println("Cometbft validator data created successfully.")
 }
 
 //go:embed config/justfile
@@ -141,6 +143,7 @@ func recreateJustfile(path string) {
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
+	fmt.Println("Justfile created successfully.")
 }
 
 //go:embed config/mprocs.yaml
@@ -169,6 +172,7 @@ func recreateMprocsFile(path string) {
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
+	fmt.Println("Mprocs file created successfully.")
 }
 
 //go:embed config/local.env.example
@@ -197,6 +201,7 @@ func recreateEnvFile(path string) {
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
+	fmt.Println("Local .env file created successfully.")
 }
 
 // TODO: add error handling
