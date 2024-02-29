@@ -16,7 +16,7 @@ just run
 ```
 
 `just init` is an alias for `./bin/astria-dev init`
-`just init` is an alias for `./bin/astria-dev run`
+`just run` is an alias for `./bin/astria-dev run`
 
 This will download, configure, and run the following binaries of these applications:
 
