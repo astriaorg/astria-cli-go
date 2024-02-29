@@ -60,48 +60,53 @@ func exists(path string) bool {
 }
 
 func checkIfInitialized() bool {
+	status := true
 	if !exists("./local-dev-astria/.env") {
 		fmt.Println("no .env file")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/astria-sequencer") {
 		fmt.Println("no astria-sequencer")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/astria-conductor") {
 		fmt.Println("no astria-conductor")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/astria-composer") {
 		fmt.Println("no astria-composer")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/cometbft") {
 		fmt.Println("no cometbft")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/genesis.json") {
 		fmt.Println("no genesis.json")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/priv_validator_key.json") {
 		fmt.Println("no priv_validator_key.json")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/justfile") {
 		fmt.Println("no justfile")
-		return false
+		status = false
 	}
 	if !exists("./local-dev-astria/mprocs.yaml") {
 		fmt.Println("no mprocs.yaml")
-		return false
+		status = false
 	}
 	if !exists("./data") {
 		fmt.Println("no data directory")
-		return false
+		status = false
 	}
 
-	return true
+	if status {
+		return true
+	} else {
+		return false
+	}
 }
 
 func run() {
@@ -130,7 +135,7 @@ func run() {
 
 	// TODO: check if the data and local-dev-astria directories exist
 	if !checkIfInitialized() {
-		fmt.Println("Error: one or more required files not present. Did you run 'astria init'?")
+		fmt.Println("Error: one or more required files not present. Did you run 'astria-dev init'?")
 		return
 	}
 

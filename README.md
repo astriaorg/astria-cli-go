@@ -9,13 +9,16 @@ Dependencies: (for now)
 ```
 git clone git@github.com:astriaorg/astria-cli-go.git
 cd astria-cli-go
+git checkout feat/local-binaries
 just build
 just init
+just run
 ```
 
 `just init` is an alias for `./bin/astria-dev init`
+`just init` is an alias for `./bin/astria-dev run`
 
-This will download the following binaries of these applications:
+This will download, configure, and run the following binaries of these applications:
 
 | App       | Version |
 | --------- | ------- |
@@ -27,23 +30,10 @@ This will download the following binaries of these applications:
 And place them in a `local-dev-astria` directory, along with several other
 configuration files for everything.
 
-# Run the Applications
-
-NOTE: this will eventually be integrated into the cli as `astria-dev run --local`
-
-```
-cd local-dev-astria
-mprocs
-```
-
 ### Useful Commands While Testing
 
 ```
 # In astria-cli-go/
-# remove locally built cli binary and the local-dev-astria/ dir
-just clean
-
-# In astria-cli-go/local-dev-astria/
-# remove local data for cometbft and sequencer
+# remove locally built cli binary, the local-dev-astria/ dir, and the data/ dir
 just clean
 ```
