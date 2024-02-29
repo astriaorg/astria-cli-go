@@ -1,5 +1,5 @@
 build:
-    go build -o bin/astria-local 
+    go build -o bin/astria-dev 
 
 clean:
     rm -rf bin
@@ -7,4 +7,7 @@ clean:
     rm -rf data
 
 init:
-    ./bin/astria-local init
+    ./bin/astria-dev init
+
+run: 
+    ./bin/astria-dev run

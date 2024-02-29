@@ -13,7 +13,7 @@ just build
 just init
 ```
 
-`just init` is an alias for `./bin/astria-local init`
+`just init` is an alias for `./bin/astria-dev init`
 
 This will download the following binaries of these applications:
 
@@ -29,7 +29,7 @@ configuration files for everything.
 
 # Run the Applications
 
-NOTE: this will eventually be integrated into the cli as `astria-local run --local`
+NOTE: this will eventually be integrated into the cli as `astria-dev run --local`
 
 ```
 cd local-dev-astria

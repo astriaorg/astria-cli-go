@@ -8,7 +8,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "astria-cli-go",
+	Use:   "astria-dev",
 	Short: "TODO: short description",
 	Long:  `TODO: longer description`,
 	// Uncomment the following line if your bare application

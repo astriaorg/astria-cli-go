@@ -1,6 +1,6 @@
 package main
 
-import "github.com/astria/astria-cli-go/cmd"
+import "github.com/astria/astria-dev/cmd"
 
 func main() {
 	cmd.Execute()
