@@ -1,10 +1,17 @@
+# The Astria Development CLI
+
+The `astria-dev` cli is a tool designed to make local rollup development as
+simple and dependency free as possible.
+
+Currently the cli only works on arm Macos.
+
 # Locally Build the CLI
 
-Dependencies: (for now)
+Dependencies:
 
-- GO
-- just
-- mprocs
+- [GO](https://go.dev/doc/install)
+- [just](https://github.com/casey/just)
+- [mprocs](https://formulae.brew.sh/formula/mprocs)
 
 ```
 git clone git@github.com:astriaorg/astria-cli-go.git
@@ -20,20 +27,24 @@ just run
 
 This will download, configure, and run the following binaries of these applications:
 
-| App       | Version |
-| --------- | ------- |
-| Cometbft  | v0.37.4 |
-| Sequencer | v0.9.0  |
-| Conductor | v0.12.0 |
-| Composer  | v0.4.0  |
+| App              | Version |
+| ---------------- | ------- |
+| Cometbft         | v0.37.4 |
+| Astria-Sequencer | v0.9.0  |
+| Astria-Conductor | v0.12.0 |
+| Astria-Composer  | v0.4.0  |
 
 And place them in a `local-dev-astria` directory, along with several other
 configuration files for everything.
+
+The cli runs the minimum viable components for testing a rollup against the
+Astria stack, allowing developers to confirm that their rollup interacts with
+Astria's apis correctly.
 
 ### Useful Commands While Testing
 
 ```
 # In astria-cli-go/
-# remove locally built cli binary, the local-dev-astria/ dir, and the data/ dir
+# removes the locally built `astria-dev` cli binary, the local-dev-astria/ dir, and the data/ dir
 just clean
 ```
