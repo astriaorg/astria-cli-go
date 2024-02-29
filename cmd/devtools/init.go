@@ -70,29 +70,27 @@ func runInitialization() {
 
 }
 
-//go:embed genesis.json
+//go:embed config/genesis.json
 var embeddedCometbftGenesisFile embed.FS
 
-//go:embed priv_validator_key.json
+//go:embed config/priv_validator_key.json
 var embeddedCometbftValidatorFile embed.FS
 
 func recreateCometbftAndSequencerGenesisData(path string) {
-	genesisPath := "genesis.json"
-	validatorPath := "priv_validator_key.json"
 	// Read the content from the embedded file
-	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, genesisPath)
+	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "config/genesis.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
 	// Read the content from the embedded file
-	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, validatorPath)
+	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, "config/priv_validator_key.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
 
 	// Specify the path for the new file
-	newGenesisPath := filepath.Join(path, genesisPath)
-	newValidatorPath := filepath.Join(path, validatorPath)
+	newGenesisPath := filepath.Join(path, "genesis.json")
+	newValidatorPath := filepath.Join(path, "priv_validator_key.json")
 
 	// Create a new file
 	newGenesisFile, err := os.Create(newGenesisPath)
@@ -117,13 +115,13 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	}
 }
 
-//go:embed justfile
+//go:embed config/justfile
 var embeddedJustfile embed.FS
 
 // TODO: add error handling
 func recreateJustfile(path string) {
 	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedJustfile, "justfile")
+	data, err := fs.ReadFile(embeddedJustfile, "config/justfile")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
@@ -145,13 +143,13 @@ func recreateJustfile(path string) {
 	}
 }
 
-//go:embed mprocs.yaml
+//go:embed config/mprocs.yaml
 var embeddedMprocsFile embed.FS
 
 // TODO: add error handling
 func recreateMprocsFile(path string) {
 	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedMprocsFile, "mprocs.yaml")
+	data, err := fs.ReadFile(embeddedMprocsFile, "config/mprocs.yaml")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
@@ -173,13 +171,13 @@ func recreateMprocsFile(path string) {
 	}
 }
 
-//go:embed local.env.example
+//go:embed config/local.env.example
 var embeddedEnvironmentFile embed.FS
 
 // TODO: add error handling
 func recreateEnvFile(path string) {
 	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedEnvironmentFile, "local.env.example")
+	data, err := fs.ReadFile(embeddedEnvironmentFile, "config/local.env.example")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
