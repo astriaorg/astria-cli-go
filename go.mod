@@ -1,4 +1,4 @@
-module github.com/astria/astria-dev
+module github.com/astria/astria-cli-go
 
 go 1.21.3
 
