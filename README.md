@@ -22,8 +22,8 @@ just init
 just run
 ```
 
-`just init` is an alias for `./bin/astria-dev init`
-`just run` is an alias for `./bin/astria-dev run`
+`just init` is an alias for `./bin/astria-dev dev init`
+`just run` is an alias for `./bin/astria-dev dev run`
 
 This will download, configure, and run the following binaries of these applications:
 
@@ -40,6 +40,20 @@ configuration files for everything.
 The cli runs the minimum viable components for testing a rollup against the
 Astria stack, allowing developers to confirm that their rollup interacts with
 Astria's apis correctly.
+
+## Development
+
+Requires go version 1.17 or newer.
+
+You will also need to update your `gopls` settings for build tags to allow for
+correct parsing of the build tags in the code. This will depend on your IDE, but
+for VS Code you can open your settings and add:
+
+```
+"gopls": {
+    "buildFlags": ["-tags=darwin arm64 amd64 linux"]
+}
+```
 
 ### Useful Commands While Testing
 
