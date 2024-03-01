@@ -51,6 +51,7 @@ func loadAndGetEnvVariables(filePath string) []string {
 }
 
 func checkPortInUse(port int) bool {
+	// TODO: make this check more sophisticated then just "is the port in use"
 	address := fmt.Sprintf(":%d", port)
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
@@ -151,13 +152,13 @@ func run() {
 	// TODO: make the port configurable
 	rollupExecutionPort := 50051
 	if !checkPortInUse(rollupExecutionPort) {
-		fmt.Printf("Error: no rollup running on port %d\n", rollupExecutionPort)
+		fmt.Printf("Error: no rollup execution rpc detected on port %d\n", rollupExecutionPort)
 		return
 	}
 	// TODO: make the port configurable
 	rollupRpcPort := 8546
 	if !checkPortInUse(rollupRpcPort) {
-		fmt.Printf("Error: no rollup running on port %d\n", rollupRpcPort)
+		fmt.Printf("Error: no rollup rpc detected on port %d\n", rollupRpcPort)
 		return
 	}
 	if !checkIfInitialized() {

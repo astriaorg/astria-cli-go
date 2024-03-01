@@ -7,11 +7,10 @@ Currently the cli only works on arm Macos.
 
 # Locally Build the CLI
 
-Dependencies:
+Dependencies: (only required for development)
 
 - [GO](https://go.dev/doc/install)
 - [just](https://github.com/casey/just)
-- [mprocs](https://formulae.brew.sh/formula/mprocs)
 
 ```
 git clone git@github.com:astriaorg/astria-cli-go.git
@@ -45,7 +44,7 @@ Astria's apis correctly.
 
 Requires go version 1.17 or newer.
 
-You will also need to update your `gopls` settings for build tags to allow for
+You may also need to update your `gopls` settings in your editor for build tags to allow for
 correct parsing of the build tags in the code. This will depend on your IDE, but
 for VS Code you can open your settings and add:
 
