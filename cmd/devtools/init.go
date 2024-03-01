@@ -47,8 +47,6 @@ func runInitialization() {
 	createDir(fullPath)
 	recreateEnvFile(fullPath)
 	recreateCometbftAndSequencerGenesisData(fullPath)
-	recreateMprocsFile(fullPath)
-	recreateJustfile(fullPath)
 
 	for _, bin := range Binaries {
 
@@ -102,64 +100,6 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	}
 	fmt.Println("Cometbft genesis data created successfully.")
 	fmt.Println("Cometbft validator data created successfully.")
-}
-
-//go:embed config/justfile
-var embeddedJustfile embed.FS
-
-// TODO: add error handling
-func recreateJustfile(path string) {
-	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedJustfile, "config/justfile")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-	}
-
-	// Specify the path for the new file
-	newPath := filepath.Join(path, "justfile")
-
-	// Create a new file
-	newFile, err := os.Create(newPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-	}
-	defer newFile.Close()
-
-	// Write the data to the new file
-	_, err = newFile.Write(data)
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-	}
-	fmt.Println("Justfile created successfully.")
-}
-
-//go:embed config/mprocs.yaml
-var embeddedMprocsFile embed.FS
-
-// TODO: add error handling
-func recreateMprocsFile(path string) {
-	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedMprocsFile, "config/mprocs.yaml")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-	}
-
-	// Specify the path for the new file
-	newPath := filepath.Join(path, "mprocs.yaml")
-
-	// Create a new file
-	newFile, err := os.Create(newPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-	}
-	defer newFile.Close()
-
-	// Write the data to the new file
-	_, err = newFile.Write(data)
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-	}
-	fmt.Println("Mprocs file created successfully.")
 }
 
 //go:embed config/local.env.example

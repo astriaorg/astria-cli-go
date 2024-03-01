@@ -5,37 +5,49 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "TODO: short description",
+	Long:  `TODO: long description`,
 	Run: func(cmd *cobra.Command, args []string) {
 		run()
 	},
 }
 
-func checkInstalled(cmds ...string) error {
-	cmd := exec.Command(cmds[0], cmds[1:]...)
-
-	_, err := cmd.Output()
+func loadEnvVariables(filePath string) {
+	err := godotenv.Load(filePath)
 	if err != nil {
-		return fmt.Errorf("error running command: %s", err)
+		log.Fatalf("Error loading .env file: %v", err)
 	}
+}
 
-	return nil
+func getEnvList() []string {
+	var envList []string
+	for _, env := range os.Environ() {
+		// Each string is in the form key=value
+		pair := strings.SplitN(env, "=", 2)
+		key := pair[0]
+		envList = append(envList, key+"="+os.Getenv(key))
+	}
+	return envList
+}
+
+func loadAndGetEnvVariables(filePath string) []string {
+	loadEnvVariables(filePath)
+	return getEnvList()
 }
 
 func checkPortInUse(port int) bool {
@@ -59,6 +71,7 @@ func exists(path string) bool {
 	return true // The file or directory exists
 }
 
+// checkIfInitialized checks if the files required for local development are present
 func checkIfInitialized() bool {
 	status := true
 	if !exists("./local-dev-astria/.env") {
@@ -89,14 +102,6 @@ func checkIfInitialized() bool {
 		fmt.Println("no priv_validator_key.json")
 		status = false
 	}
-	if !exists("./local-dev-astria/justfile") {
-		fmt.Println("no justfile")
-		status = false
-	}
-	if !exists("./local-dev-astria/mprocs.yaml") {
-		fmt.Println("no mprocs.yaml")
-		status = false
-	}
 	if !exists("./data") {
 		fmt.Println("no data directory")
 		status = false
@@ -109,20 +114,38 @@ func checkIfInitialized() bool {
 	}
 }
 
-func run() {
-	// Check if just is installed
-	err := checkInstalled("just")
-	if err != nil {
-		fmt.Println("Error: do you have 'just' installed?", err)
-		return
+func executeCommand(cmdIn string, env []string) {
+	var cmd *exec.Cmd
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("osascript", "-e", `tell application "Terminal" to do script "`+cmdIn+`"`)
+	// TODO: add support for windows
+	// case "windows":
+	// 	cmd = exec.Command("cmd", "/C", "start", "cmd", "/C", cmdIn)
+	case "linux":
+		// TODO: using gnome-terminal for now, but need to add support for other terminals?
+		cmd = exec.Command("gnome-terminal", "--", "bash", "-c", cmdIn)
+	default:
+		panic("Unsupported OS")
 	}
 
-	// Check if mprocs is installed
-	err = checkInstalled("mprocs", "-h")
+	err := cmd.Run()
 	if err != nil {
-		fmt.Println("Error: do you have 'mprocs' installed?", err)
+		panic(err)
+	}
+}
+
+func run() {
+	// TODO: make the dir name configuratble
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("error getting cwd:", err)
 		return
 	}
+	// Load the .env file and get the environment variables
+	envPath := filepath.Join(cwd, "local-dev-astria/.env")
+	environment := loadAndGetEnvVariables(envPath)
 
 	// Check if a rollup is running on the default port
 	// TODO: make the port configurable
@@ -130,24 +153,27 @@ func run() {
 	if !checkPortInUse(rollupPort) {
 		fmt.Printf("Error: no rollup running on port %d\n", rollupPort)
 		return
-
 	}
-
-	// TODO: check if the data and local-dev-astria directories exist
 	if !checkIfInitialized() {
 		fmt.Println("Error: one or more required files not present. Did you run 'astria-dev init'?")
 		return
 	}
 
-	// Create the mprocs command
-	cmd := exec.Command("mprocs")
-	cmd.Dir = "local-dev-astria"
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		os.Stderr.WriteString("Error running command: " + err.Error() + "\n")
-	}
+	path := "cd " + filepath.Join(cwd, "local-dev-astria")
+
+	// launch sequencer in new terminal
+	cmdIn := path + " && ./astria-sequencer"
+	executeCommand(cmdIn, environment)
+	// launch cometbft in new terminal
+	cmdIn = path + " && ./cometbft init --home ../data/.cometbft && cp genesis.json ../data/.cometbft/config/genesis.json && cp priv_validator_key.json ../data/.cometbft/config/priv_validator_key.json && sed -i '.bak' 's/timeout_commit = \\\"1s\\\"/timeout_commit = \\\"2s\\\"/g' ../data/.cometbft/config/config.toml && ./cometbft node --home ../data/.cometbft"
+	executeCommand(cmdIn, environment)
+	// launch composer in new terminal
+	cmdIn = path + " && ./astria-composer"
+	executeCommand(cmdIn, environment)
+	// launch conductor in new terminal
+	cmdIn = path + " && ./astria-conductor"
+	executeCommand(cmdIn, environment)
+
 }
 
 func init() {
