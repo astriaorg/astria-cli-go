@@ -149,9 +149,15 @@ func run() {
 
 	// Check if a rollup is running on the default port
 	// TODO: make the port configurable
-	rollupPort := 50051
-	if !checkPortInUse(rollupPort) {
-		fmt.Printf("Error: no rollup running on port %d\n", rollupPort)
+	rollupExecutionPort := 50051
+	if !checkPortInUse(rollupExecutionPort) {
+		fmt.Printf("Error: no rollup running on port %d\n", rollupExecutionPort)
+		return
+	}
+	// TODO: make the port configurable
+	rollupRpcPort := 8546
+	if !checkPortInUse(rollupRpcPort) {
+		fmt.Printf("Error: no rollup running on port %d\n", rollupRpcPort)
 		return
 	}
 	if !checkIfInitialized() {
