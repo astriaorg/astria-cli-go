@@ -74,45 +74,58 @@ func exists(path string) bool {
 
 // checkIfInitialized checks if the files required for local development are present
 func checkIfInitialized() bool {
+	// all paths that should exist
+	paths := []string{
+		"./local-dev-astria/.env",
+		"./local-dev-astria/astria-sequencer",
+		"./local-dev-astria/astria-conductor",
+		"./local-dev-astria/astria-composer",
+		"./local-dev-astria/cometbft",
+		"./local-dev-astria/genesis.json",
+		"./local-dev-astria/priv_validator_key.json",
+		"./data",
+	}
 	status := true
-	if !exists("./local-dev-astria/.env") {
-		fmt.Println("no .env file")
-		status = false
-	}
-	if !exists("./local-dev-astria/astria-sequencer") {
-		fmt.Println("no astria-sequencer")
-		status = false
-	}
-	if !exists("./local-dev-astria/astria-conductor") {
-		fmt.Println("no astria-conductor")
-		status = false
-	}
-	if !exists("./local-dev-astria/astria-composer") {
-		fmt.Println("no astria-composer")
-		status = false
-	}
-	if !exists("./local-dev-astria/cometbft") {
-		fmt.Println("no cometbft")
-		status = false
-	}
-	if !exists("./local-dev-astria/genesis.json") {
-		fmt.Println("no genesis.json")
-		status = false
-	}
-	if !exists("./local-dev-astria/priv_validator_key.json") {
-		fmt.Println("no priv_validator_key.json")
-		status = false
-	}
-	if !exists("./data") {
-		fmt.Println("no data directory")
-		status = false
-	}
 
-	if status {
-		return true
-	} else {
-		return false
+	for _, path := range paths {
+		if !exists(path) {
+			fmt.Println("no", path)
+			status = false
+		}
 	}
+	return status
+}
+
+// TODO: are there any other terminals that should be supported?
+var terminalEmulators = []struct {
+	command string
+	args    []string
+}{
+	{"x-terminal-emulator", []string{"-e"}}, // Debian alternatives system
+	{"gnome-terminal", []string{"--"}},      // GNOME
+	{"konsole", []string{"-e"}},             // KDE
+	{"xfce4-terminal", []string{"-e"}},      // XFCE
+	{"lxterminal", []string{"-e"}},          // LXDE
+	{"mate-terminal", []string{"-e"}},       // MATE
+	{"terminator", []string{"-e"}},          // Terminator
+	{"tilix", []string{"-e"}},               // Tilix
+	{"xterm", []string{"-e"}},               // XTerm
+}
+
+// openTerminal attempts to open a new terminal window running the specified command.
+func runLinuxCommand(command string) bool {
+	for _, emulator := range terminalEmulators {
+		if path, err := exec.LookPath(emulator.command); err == nil {
+			// Command found, attempt to execute it
+			args := append(emulator.args, command)
+			cmd := exec.Command(path, args...)
+			if err := cmd.Start(); err == nil {
+				// Successfully started the terminal emulator
+				return true
+			}
+		}
+	}
+	return false // No known terminal emulator found or succeeded in opening
 }
 
 func executeCommand(cmdIn string, env []string) {
@@ -120,18 +133,32 @@ func executeCommand(cmdIn string, env []string) {
 
 	switch runtime.GOOS {
 	case "darwin":
+		// TODO: finish fixing the extra terminal window issue
+		// fullCmd := `tell application "Terminal"
+		// 	if (count of windows) = 1 then
+		// 		tell application "Terminal" to do script "` + cmdIn + `" in window 1
+		// 	else
+		// 		tell application "Terminal" to do script "` + cmdIn + `"
+		// 	end if
+		// end tell
+		// `
+		// cmd = exec.Command("osascript", "-e", fullCmd)
 		cmd = exec.Command("osascript", "-e", `tell application "Terminal" to do script "`+cmdIn+`"`)
-	// TODO: add support for windows
-	// case "windows":
-	// 	cmd = exec.Command("cmd", "/C", "start", "cmd", "/C", cmdIn)
+
 	case "linux":
+		didRun := runLinuxCommand(cmdIn)
+		if !didRun {
+			panic("No terminal emulator found")
+		}
 		// TODO: using gnome-terminal for now, but need to add support for other terminals?
-		cmd = exec.Command("gnome-terminal", "--", "bash", "-c", cmdIn)
+		// cmd = exec.Command("gnome-terminal", "--", "bash", "-c", cmdIn)
+
 	default:
 		panic("Unsupported OS")
 	}
+	cmd.Env = env
 
-	err := cmd.Run()
+	err := cmd.Start()
 	if err != nil {
 		panic(err)
 	}
