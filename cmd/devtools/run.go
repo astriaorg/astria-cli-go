@@ -73,23 +73,24 @@ func exists(path string) bool {
 }
 
 // checkIfInitialized checks if the files required for local development are present
-func checkIfInitialized() bool {
+func checkIfInitialized(path string) bool {
 	// all paths that should exist
-	paths := []string{
-		"./local-dev-astria/.env",
-		"./local-dev-astria/astria-sequencer",
-		"./local-dev-astria/astria-conductor",
-		"./local-dev-astria/astria-composer",
-		"./local-dev-astria/cometbft",
-		"./local-dev-astria/genesis.json",
-		"./local-dev-astria/priv_validator_key.json",
-		"./data",
+	filePaths := []string{
+		"local-dev-astria/.env",
+		"local-dev-astria/astria-sequencer",
+		"local-dev-astria/astria-conductor",
+		"local-dev-astria/astria-composer",
+		"local-dev-astria/cometbft",
+		"local-dev-astria/genesis.json",
+		"local-dev-astria/priv_validator_key.json",
+		"data",
 	}
 	status := true
 
-	for _, path := range paths {
-		if !exists(path) {
-			fmt.Println("no", path)
+	for _, fp := range filePaths {
+		expandedPath := filepath.Join(path, fp)
+		if !exists(expandedPath) {
+			fmt.Println("no", fp, "found")
 			status = false
 		}
 	}
@@ -133,7 +134,8 @@ func executeCommand(cmdIn string, env []string) {
 
 	switch runtime.GOOS {
 	case "darwin":
-		// TODO: finish fixing the extra terminal window issue
+		// TODO: finish fixing the extra terminal window issue OR just move on
+		// to the TUI
 		// fullCmd := `tell application "Terminal"
 		// 	if (count of windows) = 1 then
 		// 		tell application "Terminal" to do script "` + cmdIn + `" in window 1
@@ -150,8 +152,6 @@ func executeCommand(cmdIn string, env []string) {
 		if !didRun {
 			panic("No terminal emulator found")
 		}
-		// TODO: using gnome-terminal for now, but need to add support for other terminals?
-		// cmd = exec.Command("gnome-terminal", "--", "bash", "-c", cmdIn)
 
 	default:
 		panic("Unsupported OS")
@@ -165,14 +165,15 @@ func executeCommand(cmdIn string, env []string) {
 }
 
 func run() {
-	// TODO: make the dir name configuratble
-	cwd, err := os.Getwd()
+	// TODO: make the home dir name configuratble
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("error getting cwd:", err)
+		fmt.Println("error getting home dir:", err)
 		return
 	}
+	defaultDir := filepath.Join(homeDir, ".astria")
 	// Load the .env file and get the environment variables
-	envPath := filepath.Join(cwd, "local-dev-astria/.env")
+	envPath := filepath.Join(defaultDir, "local-dev-astria/.env")
 	environment := loadAndGetEnvVariables(envPath)
 
 	// Check if a rollup is running on the default port
@@ -188,12 +189,12 @@ func run() {
 		fmt.Printf("Error: no rollup rpc detected on port %d\n", rollupRpcPort)
 		return
 	}
-	if !checkIfInitialized() {
+	if !checkIfInitialized(defaultDir) {
 		fmt.Println("Error: one or more required files not present. Did you run 'astria-dev init'?")
 		return
 	}
 
-	path := "cd " + filepath.Join(cwd, "local-dev-astria")
+	path := "cd " + filepath.Join(defaultDir, "local-dev-astria")
 
 	// launch sequencer in new terminal
 	cmdIn := path + " && ./astria-sequencer"

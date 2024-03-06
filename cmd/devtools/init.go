@@ -29,19 +29,20 @@ var initCmd = &cobra.Command{
 }
 
 func runInitialization() {
-	// TODO: make the dir name configuratble
-	cwd, err := os.Getwd()
+	// TODO: make the home dir configuratble
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("error getting cwd:", err)
+		fmt.Println("error getting home dir:", err)
 		return
 	}
+	defaultDir := filepath.Join(homeDir, ".astria")
 
 	dataDir := "data"
-	dataPath := filepath.Join(cwd, dataDir)
+	dataPath := filepath.Join(defaultDir, dataDir)
 	createDir(dataPath)
 
 	downloadDir := "local-dev-astria"
-	fullPath := filepath.Join(cwd, downloadDir)
+	fullPath := filepath.Join(defaultDir, downloadDir)
 
 	fmt.Println("Local dev files placed in: ", fullPath)
 	createDir(fullPath)
