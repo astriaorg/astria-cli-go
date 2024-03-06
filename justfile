@@ -1,6 +1,9 @@
 build:
     go build -o bin/astria-dev 
 
+fmt:
+    go fmt ./...
+
 clean:
     rm -rf bin
     rm -rf local-dev-astria
