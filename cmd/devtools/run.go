@@ -200,6 +200,7 @@ func run() {
 	cmdIn := path + " && ./astria-sequencer"
 	executeCommand(cmdIn, environment)
 	// launch cometbft in new terminal
+	// TODO: think about the relative vs absolute path for this command
 	cmdIn = path + " && ./cometbft init --home ../data/.cometbft && cp genesis.json ../data/.cometbft/config/genesis.json && cp priv_validator_key.json ../data/.cometbft/config/priv_validator_key.json && sed -i '.bak' 's/timeout_commit = \\\"1s\\\"/timeout_commit = \\\"2s\\\"/g' ../data/.cometbft/config/config.toml && ./cometbft node --home ../data/.cometbft"
 	executeCommand(cmdIn, environment)
 	// launch composer in new terminal
