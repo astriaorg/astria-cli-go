@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -108,11 +109,21 @@ var embeddedEnvironmentFile embed.FS
 
 // TODO: add error handling
 func recreateEnvFile(path string) {
+	// Determine the user's home directory
+	// TODO: replace homeDir with chose dir when custom home dir is implemented
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("failed to get user home directory: %v", err)
+	}
+
 	// Read the content from the embedded file
 	data, err := fs.ReadFile(embeddedEnvironmentFile, "config/local.env.example")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
+
+	// Convert data to a string and replace "~" with the user's home directory
+	content := strings.ReplaceAll(string(data), "~", homeDir)
 
 	// Specify the path for the new file
 	newPath := filepath.Join(path, ".env")
@@ -125,7 +136,7 @@ func recreateEnvFile(path string) {
 	defer newFile.Close()
 
 	// Write the data to the new file
-	_, err = newFile.Write(data)
+	_, err = newFile.WriteString(content)
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}

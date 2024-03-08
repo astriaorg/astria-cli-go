@@ -27,3 +27,5 @@ go.work
 /bin
 /local-dev-astria
 /data
+
+**/.DS_Store

@@ -54,6 +54,17 @@ for VS Code you can open your settings and add:
 }
 ```
 
+The cli is built using [Cobra](https://github.com/spf13/cobra). Once you've
+pulled the repo you can install the `cobra-cli` as follows to add new commands
+for development:
+
+```
+# install cobra-cli
+go install github.com/spf13/cobra-cli@latest
+# add new command, e.g. `run`
+cobra-cli add <new-command>
+```
+
 ### Useful Commands While Testing
 
 ```
