@@ -1,3 +1,6 @@
+default:
+  @just --list
+
 build:
     go build -o bin/astria-dev 
 
