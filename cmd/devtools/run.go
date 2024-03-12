@@ -378,6 +378,116 @@ func run() {
 		}
 	}()
 
+	// go func() for running the composer
+	go func() {
+		binPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-composer")
+
+		composerCmd := exec.Command(binPath)
+		composerCmd.Env = environment
+
+		app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Key() == tcell.KeyCtrlC {
+				if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+					fmt.Println("Failed to send SIGINT to the process:", err)
+				}
+				app.Stop()
+				return nil
+			}
+			return event
+		})
+
+		// Get a pipe to the command's output.
+		// TODO: read both stdout and stderr
+		// stderr, err := cmd.StderrPipe()
+		// if err != nil {
+		// 	panic(err)
+		// }
+		stdout, err := composerCmd.StdoutPipe()
+		if err != nil {
+			panic(err)
+		}
+
+		if err := composerCmd.Start(); err != nil {
+			panic(err)
+		}
+
+		// Create a scanner to read the output line by line.
+		// TODO: read both stdout and stderr
+		// stderrScanner := bufio.NewScanner(stderr)
+		stdoutScanner := bufio.NewScanner(stdout)
+		// output := io.MultiReader(stdout, stderr)
+
+		for stdoutScanner.Scan() {
+			line := stdoutScanner.Text()
+			app.QueueUpdateDraw(func() {
+				composerTextView.Write([]byte(line + "\n"))
+				composerTextView.ScrollToEnd()
+			})
+		}
+		if err := stdoutScanner.Err(); err != nil {
+			panic(err)
+		}
+
+		if err := composerCmd.Wait(); err != nil {
+			panic(err)
+		}
+	}()
+
+	// go func() for running the conductor
+	go func() {
+		binPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor")
+
+		conductorCmd := exec.Command(binPath)
+		conductorCmd.Env = environment
+
+		app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Key() == tcell.KeyCtrlC {
+				if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+					fmt.Println("Failed to send SIGINT to the process:", err)
+				}
+				app.Stop()
+				return nil
+			}
+			return event
+		})
+
+		// Get a pipe to the command's output.
+		// TODO: read both stdout and stderr
+		// stderr, err := cmd.StderrPipe()
+		// if err != nil {
+		// 	panic(err)
+		// }
+		stdout, err := conductorCmd.StdoutPipe()
+		if err != nil {
+			panic(err)
+		}
+
+		if err := conductorCmd.Start(); err != nil {
+			panic(err)
+		}
+
+		// Create a scanner to read the output line by line.
+		// TODO: read both stdout and stderr
+		// stderrScanner := bufio.NewScanner(stderr)
+		stdoutScanner := bufio.NewScanner(stdout)
+		// output := io.MultiReader(stdout, stderr)
+
+		for stdoutScanner.Scan() {
+			line := stdoutScanner.Text()
+			app.QueueUpdateDraw(func() {
+				conductorTextView.Write([]byte(line + "\n"))
+				conductorTextView.ScrollToEnd()
+			})
+		}
+		if err := stdoutScanner.Err(); err != nil {
+			panic(err)
+		}
+
+		if err := conductorCmd.Wait(); err != nil {
+			panic(err)
+		}
+	}()
+
 	// Create a new Flex layout.
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(sequencerTextView, 0, 1, false).
