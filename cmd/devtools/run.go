@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/joho/godotenv"
@@ -102,6 +101,11 @@ func checkIfInitialized(path string) bool {
 }
 
 func run() {
+	sequencerStartComplete := make(chan bool)
+	cometbftStartComplete := make(chan bool)
+	composerStartComplete := make(chan bool)
+	// conductorStartComplete := make(chan bool)
+
 	// TODO: make the home dir name configuratble
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -231,6 +235,8 @@ func run() {
 			panic(err)
 		}
 
+		sequencerStartComplete <- true
+
 		// Create a scanner to read the output line by line.
 		// TODO: read both stdout and stderr
 		// stderrScanner := bufio.NewScanner(stderr)
@@ -253,10 +259,9 @@ func run() {
 		}
 	}()
 
-	time.Sleep(1 * time.Second)
-
 	// go func() for running the cometbft
 	go func() {
+		<-sequencerStartComplete
 		initCmdArgs := []string{"init", "--home", cometbftDataPath}
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
@@ -364,6 +369,8 @@ func run() {
 			panic(err)
 		}
 
+		cometbftStartComplete <- true
+
 		stdoutScanner := bufio.NewScanner(stdout)
 
 		for stdoutScanner.Scan() {
@@ -383,11 +390,9 @@ func run() {
 		}
 	}()
 
-	time.Sleep(1 * time.Second)
-
 	// go func() for running the composer
 	go func() {
-
+		<-cometbftStartComplete
 		// Get a pipe to the command's output.
 		// TODO: read both stdout and stderr
 		// stderr, err := cmd.StderrPipe()
@@ -402,6 +407,8 @@ func run() {
 		if err := composerCmd.Start(); err != nil {
 			panic(err)
 		}
+
+		composerStartComplete <- true
 
 		// Create a scanner to read the output line by line.
 		// TODO: read both stdout and stderr
@@ -427,7 +434,7 @@ func run() {
 
 	// go func() for running the conductor
 	go func() {
-
+		<-composerStartComplete
 		// Get a pipe to the command's output.
 		// TODO: read both stdout and stderr
 		// stderr, err := cmd.StderrPipe()
