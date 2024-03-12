@@ -8,9 +8,10 @@ fmt:
     go fmt ./...
 
 clean:
-    rm -rf bin
-    rm -rf local-dev-astria
-    rm -rf data
+    ./bin/astria-dev dev clean
+
+cleanall:
+    ./bin/astria-dev dev clean all
 
 init:
     ./bin/astria-dev dev init
