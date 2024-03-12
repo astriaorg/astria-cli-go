@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/joho/godotenv"
@@ -134,21 +135,6 @@ func run() {
 		return
 	}
 
-	// path := "cd " + filepath.Join(defaultDir, "local-dev-astria")
-
-	// // launch sequencer in new terminal
-	// cmdIn := path + " && ./astria-sequencer"
-	// executeCommand(cmdIn, environment)
-	// // launch cometbft in new terminal
-	// // TODO: think about the relative vs absolute path for this command
-	// cmdIn = path + " && ./cometbft init --home ../data/.cometbft && cp genesis.json ../data/.cometbft/config/genesis.json && cp priv_validator_key.json ../data/.cometbft/config/priv_validator_key.json && sed -i '.bak' 's/timeout_commit = \\\"1s\\\"/timeout_commit = \\\"2s\\\"/g' ../data/.cometbft/config/config.toml && ./cometbft node --home ../data/.cometbft"
-	// executeCommand(cmdIn, environment)
-	// // launch composer in new terminal
-	// cmdIn = path + " && ./astria-composer"
-	// executeCommand(cmdIn, environment)
-	// // launch conductor in new terminal
-	// cmdIn = path + " && ./astria-conductor"
-	// executeCommand(cmdIn, environment)
 	app := tview.NewApplication()
 
 	// create text view object for the sequencer
@@ -159,7 +145,6 @@ func run() {
 			app.Draw()
 		})
 	sequencerTextView.SetTitle(" Sequencer ").SetBorder(true)
-	// sequencerTextView.SetScrollToEnd(true)
 
 	// create text view object for the cometbft
 	cometbftTextView := tview.NewTextView().
@@ -186,25 +171,51 @@ func run() {
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
+	// create the sequencer command
+	sequencerBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer")
+	seqCmd := exec.Command(sequencerBinPath)
+	seqCmd.Env = environment
+
+	// create the cometbft command
+	cometbftDataPath := filepath.Join(homePath, ".astria/data/.cometbft")
+	cometbftCmdPath := filepath.Join(homePath, ".astria/local-dev-astria/cometbft")
+	nodeCmdArgs := []string{"node", "--home", cometbftDataPath}
+	cometbftCmd := exec.Command(cometbftCmdPath, nodeCmdArgs...)
+	cometbftCmd.Env = environment
+
+	// create the composer command
+	composerBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-composer")
+	composerCmd := exec.Command(composerBinPath)
+	composerCmd.Env = environment
+
+	// create the conductor command
+	conductorBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor")
+	conductorCmd := exec.Command(conductorBinPath)
+	conductorCmd.Env = environment
+
+	// set the input capture for the app
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyCtrlC {
+			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := cometbftCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			app.Stop()
+			return nil
+		}
+		return event
+	})
 	// Run a command and stream its output to the TextView.
 	// go func() for running the sequencer
 	go func() {
-		binPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer")
-
-		seqCmd := exec.Command(binPath)
-		seqCmd.Env = environment
-
-		app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-			if event.Key() == tcell.KeyCtrlC {
-				if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
-					fmt.Println("Failed to send SIGINT to the process:", err)
-				}
-				app.Stop()
-				return nil
-			}
-			return event
-		})
-
 		// Get a pipe to the command's output.
 		// TODO: read both stdout and stderr
 		// stderr, err := cmd.StderrPipe()
@@ -242,10 +253,10 @@ func run() {
 		}
 	}()
 
+	time.Sleep(1 * time.Second)
+
 	// go func() for running the cometbft
 	go func() {
-		cometbftDataPath := filepath.Join(homePath, ".astria/data/.cometbft")
-		cometbftCmdPath := filepath.Join(homePath, ".astria/local-dev-astria/cometbft")
 		initCmdArgs := []string{"init", "--home", cometbftDataPath}
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
@@ -343,12 +354,6 @@ func run() {
 			})
 		}
 
-		// binPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer")
-		// // actual run command - ./cometbft node --home ../data/.cometbft
-		nodeCmdArgs := []string{"node", "--home", cometbftDataPath}
-		cometbftCmd := exec.Command(cometbftCmdPath, nodeCmdArgs...)
-		cometbftCmd.Env = environment
-
 		stdout, err := cometbftCmd.StdoutPipe()
 		// stdout, err := cometbftCmd.StderrPipe()
 		if err != nil {
@@ -378,23 +383,10 @@ func run() {
 		}
 	}()
 
+	time.Sleep(1 * time.Second)
+
 	// go func() for running the composer
 	go func() {
-		binPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-composer")
-
-		composerCmd := exec.Command(binPath)
-		composerCmd.Env = environment
-
-		app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-			if event.Key() == tcell.KeyCtrlC {
-				if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
-					fmt.Println("Failed to send SIGINT to the process:", err)
-				}
-				app.Stop()
-				return nil
-			}
-			return event
-		})
 
 		// Get a pipe to the command's output.
 		// TODO: read both stdout and stderr
@@ -435,21 +427,6 @@ func run() {
 
 	// go func() for running the conductor
 	go func() {
-		binPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor")
-
-		conductorCmd := exec.Command(binPath)
-		conductorCmd.Env = environment
-
-		app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-			if event.Key() == tcell.KeyCtrlC {
-				if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
-					fmt.Println("Failed to send SIGINT to the process:", err)
-				}
-				app.Stop()
-				return nil
-			}
-			return event
-		})
 
 		// Get a pipe to the command's output.
 		// TODO: read both stdout and stderr
