@@ -268,7 +268,7 @@ func run() {
 				}
 				sequencerTextView.Write([]byte(line + "\n"))
 				// sequencerTextView.Write([]byte("\x1b[31mThis should be red.\x1b[0m\n"))
-				sequencerTextView.Write([]byte("[red]This should be red.[-]\n"))
+				// sequencerTextView.Write([]byte("[red]This should be red.[-]\n"))
 
 				sequencerTextView.ScrollToEnd()
 			})
