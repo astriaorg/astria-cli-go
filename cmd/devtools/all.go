@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -12,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// cleanallCmd represents the cleanall command
+// allCmd represents the `dev clean all` command
 var allCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Clean all local data including binaries and config files.",
@@ -28,6 +25,8 @@ func runCleanAll() {
 		fmt.Println("error getting home dir:", err)
 		return
 	}
+
+	// TODO: allow for configuration of this directory
 	defaultDataDir := filepath.Join(homePath, ".astria")
 
 	cleanCmd := exec.Command("rm", "-rf", defaultDataDir)
@@ -43,9 +42,9 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// cleanallCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// allCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// cleanallCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// allCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

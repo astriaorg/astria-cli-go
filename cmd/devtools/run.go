@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -30,13 +27,15 @@ var runCmd = &cobra.Command{
 	},
 }
 
-func loadEnvVariables(filePath string) {
-	err := godotenv.Load(filePath)
+// loadEnvVariables loads the environment variables from the src file
+func loadEnvVariables(src string) {
+	err := godotenv.Load(src)
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 }
 
+// getEnvList returns a list of environment variables in the form key=value
 func getEnvList() []string {
 	var envList []string
 	for _, env := range os.Environ() {
@@ -48,6 +47,7 @@ func getEnvList() []string {
 	return envList
 }
 
+// loadAndGetEnvVariables loads the environment variables from the src file and returns a list of environment variables in the form key=value
 func loadAndGetEnvVariables(filePath string) []string {
 	loadEnvVariables(filePath)
 	return getEnvList()
@@ -66,6 +66,7 @@ func checkPortInUse(port int) bool {
 	return false
 }
 
+// exists checks if a file or directory exists
 func exists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
@@ -77,7 +78,7 @@ func exists(path string) bool {
 
 // checkIfInitialized checks if the files required for local development are present
 func checkIfInitialized(path string) bool {
-	// all paths that should exist
+	// all dirs/files that should exist
 	filePaths := []string{
 		"local-dev-astria/.env",
 		"local-dev-astria/astria-sequencer",
@@ -101,10 +102,10 @@ func checkIfInitialized(path string) bool {
 }
 
 func run() {
+	// Create channels to properly control the start order of all processes
 	sequencerStartComplete := make(chan bool)
 	cometbftStartComplete := make(chan bool)
 	composerStartComplete := make(chan bool)
-	// conductorStartComplete := make(chan bool)
 
 	// TODO: make the home dir name configuratble
 	homePath, err := os.UserHomeDir()
@@ -113,27 +114,25 @@ func run() {
 		return
 	}
 	defaultDir := filepath.Join(homePath, ".astria")
+
 	// Load the .env file and get the environment variables
 	envPath := filepath.Join(defaultDir, "local-dev-astria/.env")
 	environment := loadAndGetEnvVariables(envPath)
 
-	// FIXME: this is a temporary ignored for easier dev
-	// TODO: remove if when actually done
-	if false {
-		// Check if a rollup is running on the default port
-		// TODO: make the port configurable
-		rollupExecutionPort := 50051
-		if !checkPortInUse(rollupExecutionPort) {
-			fmt.Printf("Error: no rollup execution rpc detected on port %d\n", rollupExecutionPort)
-			return
-		}
-		// TODO: make the port configurable
-		rollupRpcPort := 8546
-		if !checkPortInUse(rollupRpcPort) {
-			fmt.Printf("Error: no rollup rpc detected on port %d\n", rollupRpcPort)
-			return
-		}
+	// Check if a rollup is running on the default port
+	// TODO: make the port configurable
+	rollupExecutionPort := 50051
+	if !checkPortInUse(rollupExecutionPort) {
+		fmt.Printf("Error: no rollup execution rpc detected on port %d\n", rollupExecutionPort)
+		return
 	}
+	// TODO: make the port configurable
+	rollupRpcPort := 8546
+	if !checkPortInUse(rollupRpcPort) {
+		fmt.Printf("Error: no rollup rpc detected on port %d\n", rollupRpcPort)
+		return
+	}
+	// check if the `dev init` command has been run
 	if !checkIfInitialized(defaultDir) {
 		fmt.Println("Error: one or more required files not present. Did you run 'astria-dev init'?")
 		return
@@ -159,6 +158,7 @@ func run() {
 		})
 	cometbftTextView.SetTitle(" Cometbft ").SetBorder(true)
 
+	// create text view object for the composer
 	composerTextView := tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true).
@@ -167,6 +167,7 @@ func run() {
 		})
 	composerTextView.SetTitle(" Composer ").SetBorder(true)
 
+	// create text view object for the conductor
 	conductorTextView := tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true).
@@ -175,34 +176,34 @@ func run() {
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
-	// create the sequencer command
+	// create the sequencer run command
 	sequencerBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer")
 	seqCmd := exec.Command(sequencerBinPath)
 	seqCmd.Env = environment
 
-	// create the cometbft command
+	// create the cometbft run command
 	cometbftDataPath := filepath.Join(homePath, ".astria/data/.cometbft")
 	cometbftCmdPath := filepath.Join(homePath, ".astria/local-dev-astria/cometbft")
 	nodeCmdArgs := []string{"node", "--home", cometbftDataPath}
 	cometbftCmd := exec.Command(cometbftCmdPath, nodeCmdArgs...)
 	cometbftCmd.Env = environment
 
-	// create the composer command
+	// create the composer run command
 	composerBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-composer")
 	composerCmd := exec.Command(composerBinPath)
 	composerCmd.Env = environment
 
-	// create the conductor command
+	// create the conductor run command
 	conductorBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor")
 	conductorCmd := exec.Command(conductorBinPath)
 	conductorCmd.Env = environment
 
 	// Track the current word wrap status.
 	wordWrapEnabled := true
-	includeAnsiEscapeCharacters := false
 
 	// set the input capture for the app
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		// properly handle ctrl-c and pass SIGINT to the running processes
 		if event.Key() == tcell.KeyCtrlC {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
 				fmt.Println("Failed to send SIGINT to the process:", err)
@@ -219,29 +220,21 @@ func run() {
 			app.Stop()
 			return nil
 		}
+		// set 'w' to toggle word wrap
 		if event.Key() == tcell.KeyRune && event.Rune() == 'w' {
-			// Toggle word wrap
 			sequencerTextView.SetWrap(!wordWrapEnabled)
 			cometbftTextView.SetWrap(!wordWrapEnabled)
 			composerTextView.SetWrap(!wordWrapEnabled)
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
 		}
-		if event.Key() == tcell.KeyRune && event.Rune() == 'e' {
-			includeAnsiEscapeCharacters = !includeAnsiEscapeCharacters
-		}
 
 		return event
 	})
-	// Run a command and stream its output to the TextView.
-	// go func() for running the sequencer
+
+	// go routine for running the sequencer
 	go func() {
 		// Get a pipe to the command's output.
-		// TODO: read both stdout and stderr
-		// stderr, err := cmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
 		stdout, err := seqCmd.StdoutPipe()
 		if err != nil {
 			panic(err)
@@ -251,48 +244,42 @@ func run() {
 			panic(err)
 		}
 
+		// let the cometbft go routine know that it can start
 		sequencerStartComplete <- true
 
 		// Create a scanner to read the output line by line.
-		// TODO: read both stdout and stderr
-		// stderrScanner := bufio.NewScanner(stderr)
 		stdoutScanner := bufio.NewScanner(stdout)
-		// output := io.MultiReader(stdout, stderr)
 
+		// Create a writer to properly write to the text view
 		aWriter := tview.ANSIWriter(sequencerTextView)
 
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				// sequencerTextView.Write([]byte(line + "\n"))
 				aWriter.Write([]byte(line + "\n"))
-				// sequencerTextView.Write([]byte("\x1b[31mThis should be red.\x1b[0m\n"))
-				// sequencerTextView.Write([]byte("[red]This should be red.[-]\n"))
-
 				sequencerTextView.ScrollToEnd()
 			})
 		}
 		if err := stdoutScanner.Err(); err != nil {
 			panic(err)
 		}
-
 		if err := seqCmd.Wait(); err != nil {
 			panic(err)
 		}
 	}()
 
-	// go func() for running the cometbft
+	// go routine for running cometbft
 	go func() {
 		<-sequencerStartComplete
 		initCmdArgs := []string{"init", "--home", cometbftDataPath}
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
 
+		// Create a writer to properly write to the text view
 		aWriter := tview.ANSIWriter(cometbftTextView)
 
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
-			// cometbftTextView.Write([]byte(p))
 			aWriter.Write([]byte(p))
 			cometbftTextView.ScrollToEnd()
 		})
@@ -301,7 +288,6 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
-				// cometbftTextView.Write([]byte(p))
 				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
@@ -309,13 +295,13 @@ func run() {
 			return
 		}
 		app.QueueUpdateDraw(func() {
-			// cometbftTextView.Write([]byte(out))
 			aWriter.Write([]byte(out))
 			cometbftTextView.ScrollToEnd()
 
 		})
 
-		// $ cp genesis.json ../data/.cometbft/config/genesis.json
+		// create the comand to replace the defualt genesis.json with the
+		// configured one
 		initGenesisJsonPath := filepath.Join(homePath, ".astria/local-dev-astria/genesis.json")
 		endGenesisJsonPath := filepath.Join(homePath, ".astria/data/.cometbft/config/genesis.json")
 		copyArgs := []string{initGenesisJsonPath, endGenesisJsonPath}
@@ -326,7 +312,6 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				// cometbftTextView.Write([]byte(p))
 				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
@@ -335,13 +320,13 @@ func run() {
 		}
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
-			// cometbftTextView.Write([]byte(p))
 			aWriter.Write([]byte(p))
 			cometbftTextView.ScrollToEnd()
 
 		})
 
-		// // $ cp priv_validator_key.json
+		// create the comand to replace the defualt priv_validator_key.json with the
+		// configured one
 		initPrivValidatorJsonPath := filepath.Join(homePath, ".astria/local-dev-astria/priv_validator_key.json")
 		endPrivValidatorJsonPath := filepath.Join(homePath, ".astria/data/.cometbft/config/priv_validator_key.json")
 		copyArgs = []string{initPrivValidatorJsonPath, endPrivValidatorJsonPath}
@@ -352,7 +337,6 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				// cometbftTextView.Write([]byte(p))
 				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
@@ -361,14 +345,12 @@ func run() {
 		}
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
-			// cometbftTextView.Write([]byte(p))
 			aWriter.Write([]byte(p))
 			cometbftTextView.ScrollToEnd()
 
 		})
 
-		// go code for the following sed command
-		// $ sed -i '.bak' 's/timeout_commit = \\\"1s\\\"/timeout_commit = \\\"2s\\\"/g' ../data/.cometbft/config/config.toml
+		// update the cometbft config.toml file to have the proper block time
 		cometbftConfigPath := filepath.Join(homePath, ".astria/data/.cometbft/config/config.toml")
 		oldValue := `timeout_commit = "1s"`
 		newValue := `timeout_commit = "2s"`
@@ -376,7 +358,6 @@ func run() {
 		if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
-				// cometbftTextView.Write([]byte(p))
 				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
@@ -385,7 +366,6 @@ func run() {
 		} else {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
-				// cometbftTextView.Write([]byte(p))
 				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
@@ -393,15 +373,14 @@ func run() {
 		}
 
 		stdout, err := cometbftCmd.StdoutPipe()
-		// stdout, err := cometbftCmd.StderrPipe()
 		if err != nil {
 			panic(err)
 		}
-
 		if err := cometbftCmd.Start(); err != nil {
 			panic(err)
 		}
 
+		// let the composer go routine know that it can start
 		cometbftStartComplete <- true
 
 		stdoutScanner := bufio.NewScanner(stdout)
@@ -409,7 +388,6 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				// cometbftTextView.Write([]byte(line + "\n"))
 				aWriter.Write([]byte(line + "\n"))
 				cometbftTextView.ScrollToEnd()
 
@@ -418,7 +396,6 @@ func run() {
 		if err := stdoutScanner.Err(); err != nil {
 			panic(err)
 		}
-
 		if err := cometbftCmd.Wait(); err != nil {
 			panic(err)
 		}
@@ -427,12 +404,7 @@ func run() {
 	// go func() for running the composer
 	go func() {
 		<-cometbftStartComplete
-		// Get a pipe to the command's output.
-		// TODO: read both stdout and stderr
-		// stderr, err := cmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
+
 		stdout, err := composerCmd.StdoutPipe()
 		if err != nil {
 			panic(err)
@@ -442,20 +414,18 @@ func run() {
 			panic(err)
 		}
 
+		// let the conductor go routine know that it can start
 		composerStartComplete <- true
 
 		// Create a scanner to read the output line by line.
-		// TODO: read both stdout and stderr
-		// stderrScanner := bufio.NewScanner(stderr)
 		stdoutScanner := bufio.NewScanner(stdout)
-		// output := io.MultiReader(stdout, stderr)
 
+		// Create a writer to properly write to the text view
 		aWriter := tview.ANSIWriter(composerTextView)
 
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				// composerTextView.Write([]byte(line + "\n"))
 				aWriter.Write([]byte(line + "\n"))
 				composerTextView.ScrollToEnd()
 			})
@@ -463,7 +433,6 @@ func run() {
 		if err := stdoutScanner.Err(); err != nil {
 			panic(err)
 		}
-
 		if err := composerCmd.Wait(); err != nil {
 			panic(err)
 		}
@@ -472,12 +441,8 @@ func run() {
 	// go func() for running the conductor
 	go func() {
 		<-composerStartComplete
+
 		// Get a pipe to the command's output.
-		// TODO: read both stdout and stderr
-		// stderr, err := cmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
 		stdout, err := conductorCmd.StdoutPipe()
 		if err != nil {
 			panic(err)
@@ -488,17 +453,14 @@ func run() {
 		}
 
 		// Create a scanner to read the output line by line.
-		// TODO: read both stdout and stderr
-		// stderrScanner := bufio.NewScanner(stderr)
 		stdoutScanner := bufio.NewScanner(stdout)
-		// output := io.MultiReader(stdout, stderr)
 
+		// Create a writer to properly write to the text view
 		aWriter := tview.ANSIWriter(conductorTextView)
 
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				// conductorTextView.Write([]byte(line + "\n"))
 				aWriter.Write([]byte(line + "\n"))
 				conductorTextView.ScrollToEnd()
 			})
@@ -506,7 +468,6 @@ func run() {
 		if err := stdoutScanner.Err(); err != nil {
 			panic(err)
 		}
-
 		if err := conductorCmd.Wait(); err != nil {
 			panic(err)
 		}
@@ -522,7 +483,6 @@ func run() {
 	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)
 	}
-
 }
 
 func init() {
@@ -539,6 +499,8 @@ func init() {
 	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
+// replaceInFile replaces oldValue with newValue in the file at filename.
+// it is used here to update the block time in the cometbft config.toml file.
 func replaceInFile(filename, oldValue, newValue string) error {
 	// Read the original file.
 	content, err := os.ReadFile(filename)

@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -30,12 +27,12 @@ var initCmd = &cobra.Command{
 }
 
 func runInitialization() {
-	// TODO: make the home dir configuratble
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("error getting home dir:", err)
 		return
 	}
+	// TODO: make the default home dir configuratble
 	defaultDir := filepath.Join(homeDir, ".astria")
 
 	dataDir := "data"
@@ -174,8 +171,8 @@ func downloadFile(url, filepath string) error {
 	return err
 }
 
-// extractTarGz extracts a .tar.gz file to the current directory.
-func extractTarGz(placePath string, gzipStream io.Reader) error {
+// extractTarGz extracts a .tar.gz file to dest.
+func extractTarGz(dest string, gzipStream io.Reader) error {
 	uncompressedStream, err := gzip.NewReader(gzipStream)
 	if err != nil {
 		return err
@@ -196,7 +193,7 @@ func extractTarGz(placePath string, gzipStream io.Reader) error {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(placePath, header.Name)
+		target := filepath.Join(dest, header.Name)
 
 		// the following switch could also be done using if/else statements
 		switch header.Typeflag {
@@ -249,6 +246,7 @@ func downloadAndUnpack(url string, placePath string, packageName string) {
 	}
 
 	// Delete the .tar.gz file
+	// TODO: should this be configuratble?
 	err = os.Remove(dest)
 	if err != nil {
 		log.Fatalf("Failed to delete downloaded %s.tar.gz file: %v", packageName, err)
