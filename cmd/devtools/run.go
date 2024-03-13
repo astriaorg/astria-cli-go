@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"syscall"
 
@@ -260,13 +259,13 @@ func run() {
 		stdoutScanner := bufio.NewScanner(stdout)
 		// output := io.MultiReader(stdout, stderr)
 
+		aWriter := tview.ANSIWriter(sequencerTextView)
+
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				if includeAnsiEscapeCharacters {
-					line = removeAnsiEscapeCodes(line)
-				}
-				sequencerTextView.Write([]byte(line + "\n"))
+				// sequencerTextView.Write([]byte(line + "\n"))
+				aWriter.Write([]byte(line + "\n"))
 				// sequencerTextView.Write([]byte("\x1b[31mThis should be red.\x1b[0m\n"))
 				// sequencerTextView.Write([]byte("[red]This should be red.[-]\n"))
 
@@ -289,9 +288,12 @@ func run() {
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
 
+		aWriter := tview.ANSIWriter(cometbftTextView)
+
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
-			cometbftTextView.Write([]byte(p))
+			// cometbftTextView.Write([]byte(p))
+			aWriter.Write([]byte(p))
 			cometbftTextView.ScrollToEnd()
 		})
 
@@ -299,14 +301,16 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
-				cometbftTextView.Write([]byte(p))
+				// cometbftTextView.Write([]byte(p))
+				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
 			})
 			return
 		}
 		app.QueueUpdateDraw(func() {
-			cometbftTextView.Write([]byte(out))
+			// cometbftTextView.Write([]byte(out))
+			aWriter.Write([]byte(out))
 			cometbftTextView.ScrollToEnd()
 
 		})
@@ -322,7 +326,8 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				cometbftTextView.Write([]byte(p))
+				// cometbftTextView.Write([]byte(p))
+				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
 			})
@@ -330,7 +335,8 @@ func run() {
 		}
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
-			cometbftTextView.Write([]byte(p))
+			// cometbftTextView.Write([]byte(p))
+			aWriter.Write([]byte(p))
 			cometbftTextView.ScrollToEnd()
 
 		})
@@ -346,7 +352,8 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				cometbftTextView.Write([]byte(p))
+				// cometbftTextView.Write([]byte(p))
+				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
 			})
@@ -354,7 +361,8 @@ func run() {
 		}
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
-			cometbftTextView.Write([]byte(p))
+			// cometbftTextView.Write([]byte(p))
+			aWriter.Write([]byte(p))
 			cometbftTextView.ScrollToEnd()
 
 		})
@@ -368,7 +376,8 @@ func run() {
 		if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
-				cometbftTextView.Write([]byte(p))
+				// cometbftTextView.Write([]byte(p))
+				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
 			})
@@ -376,7 +385,8 @@ func run() {
 		} else {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
-				cometbftTextView.Write([]byte(p))
+				// cometbftTextView.Write([]byte(p))
+				aWriter.Write([]byte(p))
 				cometbftTextView.ScrollToEnd()
 
 			})
@@ -399,10 +409,8 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				if includeAnsiEscapeCharacters {
-					line = removeAnsiEscapeCodes(line)
-				}
-				cometbftTextView.Write([]byte(line + "\n"))
+				// cometbftTextView.Write([]byte(line + "\n"))
+				aWriter.Write([]byte(line + "\n"))
 				cometbftTextView.ScrollToEnd()
 
 			})
@@ -442,13 +450,13 @@ func run() {
 		stdoutScanner := bufio.NewScanner(stdout)
 		// output := io.MultiReader(stdout, stderr)
 
+		aWriter := tview.ANSIWriter(composerTextView)
+
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				if includeAnsiEscapeCharacters {
-					line = removeAnsiEscapeCodes(line)
-				}
-				composerTextView.Write([]byte(line + "\n"))
+				// composerTextView.Write([]byte(line + "\n"))
+				aWriter.Write([]byte(line + "\n"))
 				composerTextView.ScrollToEnd()
 			})
 		}
@@ -485,13 +493,13 @@ func run() {
 		stdoutScanner := bufio.NewScanner(stdout)
 		// output := io.MultiReader(stdout, stderr)
 
+		aWriter := tview.ANSIWriter(conductorTextView)
+
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				if includeAnsiEscapeCharacters {
-					line = removeAnsiEscapeCodes(line)
-				}
-				conductorTextView.Write([]byte(line + "\n"))
+				// conductorTextView.Write([]byte(line + "\n"))
+				aWriter.Write([]byte(line + "\n"))
 				conductorTextView.ScrollToEnd()
 			})
 		}
@@ -561,10 +569,4 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	}
 
 	return nil
-}
-
-func removeAnsiEscapeCodes(s string) string {
-	ansiEscapeRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
-	cleanedText := ansiEscapeRegex.ReplaceAllString(s, "")
-	return cleanedText
 }
