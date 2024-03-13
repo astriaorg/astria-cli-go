@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -197,6 +198,10 @@ func run() {
 	conductorCmd := exec.Command(conductorBinPath)
 	conductorCmd.Env = environment
 
+	// Track the current word wrap status.
+	wordWrapEnabled := true
+	includeAnsiEscapeCharacters := false
+
 	// set the input capture for the app
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyCtrlC {
@@ -215,6 +220,18 @@ func run() {
 			app.Stop()
 			return nil
 		}
+		if event.Key() == tcell.KeyRune && event.Rune() == 'w' {
+			// Toggle word wrap
+			sequencerTextView.SetWrap(!wordWrapEnabled)
+			cometbftTextView.SetWrap(!wordWrapEnabled)
+			composerTextView.SetWrap(!wordWrapEnabled)
+			conductorTextView.SetWrap(!wordWrapEnabled)
+			wordWrapEnabled = !wordWrapEnabled
+		}
+		if event.Key() == tcell.KeyRune && event.Rune() == 'e' {
+			includeAnsiEscapeCharacters = !includeAnsiEscapeCharacters
+		}
+
 		return event
 	})
 	// Run a command and stream its output to the TextView.
@@ -246,7 +263,13 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
+				if includeAnsiEscapeCharacters {
+					line = removeAnsiEscapeCodes(line)
+				}
 				sequencerTextView.Write([]byte(line + "\n"))
+				// sequencerTextView.Write([]byte("\x1b[31mThis should be red.\x1b[0m\n"))
+				sequencerTextView.Write([]byte("[red]This should be red.[-]\n"))
+
 				sequencerTextView.ScrollToEnd()
 			})
 		}
@@ -376,6 +399,9 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
+				if includeAnsiEscapeCharacters {
+					line = removeAnsiEscapeCodes(line)
+				}
 				cometbftTextView.Write([]byte(line + "\n"))
 				cometbftTextView.ScrollToEnd()
 
@@ -419,6 +445,9 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
+				if includeAnsiEscapeCharacters {
+					line = removeAnsiEscapeCodes(line)
+				}
 				composerTextView.Write([]byte(line + "\n"))
 				composerTextView.ScrollToEnd()
 			})
@@ -459,6 +488,9 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
+				if includeAnsiEscapeCharacters {
+					line = removeAnsiEscapeCodes(line)
+				}
 				conductorTextView.Write([]byte(line + "\n"))
 				conductorTextView.ScrollToEnd()
 			})
@@ -529,4 +561,10 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	}
 
 	return nil
+}
+
+func removeAnsiEscapeCodes(s string) string {
+	ansiEscapeRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	cleanedText := ansiEscapeRegex.ReplaceAllString(s, "")
+	return cleanedText
 }
