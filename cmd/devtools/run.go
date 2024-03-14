@@ -280,7 +280,7 @@ func run() {
 			wordWrapEnabled = !wordWrapEnabled
 		}
 		// set 'tab' to cycle through the apps
-		if event.Key() == tcell.KeyTab {
+		if event.Key() == tcell.KeyTab && !fullscreen {
 			newIndex := (currentIndex + 1) % len(items)
 			setFocus(newIndex)
 			return nil
@@ -300,7 +300,7 @@ func run() {
 			app.SetRoot(flex, true)
 		}
 		// set 'up' arrow to cycle through the apps
-		if event.Key() == tcell.KeyUp {
+		if event.Key() == tcell.KeyUp && !fullscreen {
 			if currentIndex > 0 {
 				newIndex := (currentIndex - 1) % len(items)
 				setFocus(newIndex)
@@ -310,7 +310,7 @@ func run() {
 			return nil
 		}
 		// set 'down' arrow to cycle through the apps
-		if event.Key() == tcell.KeyDown {
+		if event.Key() == tcell.KeyDown && !fullscreen {
 			if currentIndex == len(items)-1 {
 				setFocus(currentIndex)
 			} else {
