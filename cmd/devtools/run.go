@@ -480,7 +480,16 @@ func run() {
 		AddItem(composerTextView, 0, 1, false).
 		AddItem(conductorTextView, 0, 1, false)
 
-	if err := app.SetRoot(flex, true).Run(); err != nil {
+	helpInfo := tview.NewTextView().
+		SetText(" Press Ctrl-C to exit")
+	// helpInfo.SetTitle(" Help ").SetBorder(true)
+
+	mainWindow := tview.NewGrid().
+		SetRows(0, 1).
+		AddItem(flex, 0, 0, 1, 1, 0, 0, true).
+		AddItem(helpInfo, 1, 0, 1, 1, 0, 0, false)
+
+	if err := app.SetRoot(mainWindow, true).Run(); err != nil {
 		panic(err)
 	}
 }
