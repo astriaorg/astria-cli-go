@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -176,6 +177,55 @@ func run() {
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
+	helpInfo := tview.NewTextView().
+		SetText(" Press Ctrl-C to exit | 'w' to toggle word wrap | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app | 'esc' to exit fullscreen")
+
+	flex := tview.NewFlex().
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(sequencerTextView, 0, 1, true).
+			AddItem(cometbftTextView, 0, 1, false).
+			AddItem(composerTextView, 0, 1, false).
+			AddItem(conductorTextView, 0, 1, false), 0, 4, false).SetDirection(tview.FlexRow).
+		AddItem(helpInfo, 1, 0, false)
+	flex.SetTitle(" Astria Dev ").SetBorder(true)
+
+	fullscreen := false
+	var focusedItem tview.Primitive = sequencerTextView
+
+	// Create a list of items to cycle through
+	items := []tview.Primitive{sequencerTextView, cometbftTextView, composerTextView, conductorTextView}
+	currentIndex := 0
+
+	setFocus := func(index int) {
+		currentIndex = index
+		for i, item := range items {
+			// Use a type assertion to convert the tview.Primitive back to *tview.TextView
+			frame, ok := item.(*tview.TextView)
+			if !ok {
+				// The item is not a *tview.TextView, so skip it.
+				continue
+			}
+			if i == index {
+				title := frame.GetTitle()
+				title = "[black:darkorange]" + title + "[::-]"
+				frame.SetBorderColor(tcell.ColorDarkOrange).SetTitle(title)
+			} else {
+				title := frame.GetTitle()
+				regexPattern := `\[.*?\]`
+				re, err := regexp.Compile(regexPattern)
+				if err != nil {
+					fmt.Println("Error compiling regex:", err)
+					return
+				}
+				title = re.ReplaceAllString(title, "")
+				frame.SetBorderColor(tcell.ColorGray).SetTitle(title)
+
+			}
+		}
+		app.SetFocus(items[index])
+	}
+	setFocus(currentIndex)
+
 	// create the sequencer run command
 	sequencerBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer")
 	seqCmd := exec.Command(sequencerBinPath)
@@ -204,6 +254,7 @@ func run() {
 	// set the input capture for the app
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// properly handle ctrl-c and pass SIGINT to the running processes
+		// TODO: change this to use 'q' to quit instead?
 		if event.Key() == tcell.KeyCtrlC {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
 				fmt.Println("Failed to send SIGINT to the process:", err)
@@ -228,7 +279,47 @@ func run() {
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
 		}
+		// set 'tab' to cycle through the apps
+		if event.Key() == tcell.KeyTab {
+			newIndex := (currentIndex + 1) % len(items)
+			setFocus(newIndex)
+			return nil
+		}
+		// set 'enter' to go fullscreen on the selected app
+		if event.Key() == tcell.KeyEnter && !fullscreen {
+			fullscreen = true
+			frame, ok := items[currentIndex].(*tview.TextView)
+			if !ok {
+				return event
+			}
+			app.SetRoot(frame, true)
+		}
+		// set 'esc' to exit fullscreen
+		if event.Key() == tcell.KeyEscape && fullscreen {
+			fullscreen = false
+			app.SetRoot(flex, true)
+		}
+		// set 'up' arrow to cycle through the apps
+		if event.Key() == tcell.KeyUp {
+			if currentIndex > 0 {
+				newIndex := (currentIndex - 1) % len(items)
+				setFocus(newIndex)
+			} else {
+				setFocus(0)
+			}
+			return nil
+		}
+		// set 'down' arrow to cycle through the apps
+		if event.Key() == tcell.KeyDown {
+			if currentIndex == len(items)-1 {
+				setFocus(currentIndex)
+			} else {
+				newIndex := (currentIndex + 1) % len(items)
+				setFocus(newIndex)
+			}
+			return nil
 
+		}
 		return event
 	})
 
@@ -473,23 +564,8 @@ func run() {
 		}
 	}()
 
-	// Create a new Flex layout.
-	flex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(sequencerTextView, 0, 1, false).
-		AddItem(cometbftTextView, 0, 1, false).
-		AddItem(composerTextView, 0, 1, false).
-		AddItem(conductorTextView, 0, 1, false)
-
-	helpInfo := tview.NewTextView().
-		SetText(" Press Ctrl-C to exit")
-	// helpInfo.SetTitle(" Help ").SetBorder(true)
-
-	mainWindow := tview.NewGrid().
-		SetRows(0, 1).
-		AddItem(flex, 0, 0, 1, 1, 0, 0, true).
-		AddItem(helpInfo, 1, 0, 1, 1, 0, 0, false)
-
-	if err := app.SetRoot(mainWindow, true).Run(); err != nil {
+	app.SetFocus(focusedItem)
+	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)
 	}
 }
