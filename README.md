@@ -17,12 +17,9 @@ git clone git@github.com:astriaorg/astria-cli-go.git
 cd astria-cli-go
 git checkout feat/local-binaries
 just build
-just init
-just run
+just run "dev init"
+just run "dev run"
 ```
-
-`just init` is an alias for `./bin/astria-dev dev init`
-`just run` is an alias for `./bin/astria-dev dev run`
 
 This will download, configure, and run the following binaries of these applications:
 
@@ -42,7 +39,7 @@ Astria's apis correctly.
 
 ## Development
 
-Requires go version 1.17 or newer.
+Requires go version 1.20 or newer.
 
 You may also need to update your `gopls` settings in your editor for build tags to allow for
 correct parsing of the build tags in the code. This will depend on your IDE, but
@@ -65,10 +62,13 @@ go install github.com/spf13/cobra-cli@latest
 cobra-cli add <new-command>
 ```
 
-### Useful Commands While Testing
+### Available Commands
 
-```
-# In astria-cli-go/
-# removes the locally built `astria-dev` cli binary, the local-dev-astria/ dir, and the data/ dir
-just clean
-```
+| Command     | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| `version`   | Prints the cli version.                                   |
+| `help`      | Show help.                                                |
+| `dev`       | Root command development.                                 |
+| `dev init`  | Downloads binaries and initializes the local environment. |
+| `dev run`   | Runs a minimal, local Astria stack.                       |
+| `dev clean` | Deletes the local data for the Astria stack.              |

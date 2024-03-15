@@ -26,6 +26,8 @@ func Execute() {
 }
 
 func init() {
+	// disabling the completion command for now
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.AddCommand()
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

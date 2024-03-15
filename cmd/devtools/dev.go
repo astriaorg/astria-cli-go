@@ -12,6 +12,7 @@ var devCmd = &cobra.Command{
 	Short: "TODO: short description",
 	Long:  `TODO: longer description`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: print out the help for all dev commands
 		fmt.Println("dev called")
 	},
 }
