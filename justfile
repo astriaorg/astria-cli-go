@@ -7,14 +7,6 @@ build:
 fmt:
     go fmt ./...
 
-clean:
-    ./bin/astria-dev dev clean
-
-cleanall:
-    ./bin/astria-dev dev clean all
-
-init:
-    ./bin/astria-dev dev init
-
-run: 
-    ./bin/astria-dev dev run
+defaultargs := ''
+run args=defaultargs:
+    go run main.go {{args}}
