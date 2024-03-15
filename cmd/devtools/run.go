@@ -177,8 +177,11 @@ func run() {
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
-	helpInfo := tview.NewTextView().
-		SetText(" Press Ctrl-C to exit | 'w' to toggle word wrap | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app | 'esc' to exit fullscreen")
+	mainWindowHelpInfo := tview.NewTextView().
+		SetText(" Press 'Ctrl-C' or 'q' to exit | 'w' to toggle word wrap | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app")
+
+	fullscreenHelpInfo := tview.NewTextView().
+		SetText(" Press 'Ctrl-C' or 'q' to exit | 'w' to toggle word wrap | 'esc' to exit fullscreen")
 
 	flex := tview.NewFlex().
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
@@ -186,7 +189,7 @@ func run() {
 			AddItem(cometbftTextView, 0, 1, false).
 			AddItem(composerTextView, 0, 1, false).
 			AddItem(conductorTextView, 0, 1, false), 0, 4, false).SetDirection(tview.FlexRow).
-		AddItem(helpInfo, 1, 0, false)
+		AddItem(mainWindowHelpInfo, 1, 0, false)
 	flex.SetTitle(" Astria Dev ").SetBorder(true)
 
 	fullscreen := false
@@ -207,8 +210,8 @@ func run() {
 			}
 			if i == index {
 				title := frame.GetTitle()
-				title = "[black:darkorange]" + title + "[::-]"
-				frame.SetBorderColor(tcell.ColorDarkOrange).SetTitle(title)
+				title = "[black:green]" + title + "[::-]"
+				frame.SetBorderColor(tcell.ColorGreen).SetTitle(title)
 			} else {
 				title := frame.GetTitle()
 				regexPattern := `\[.*?\]`
@@ -222,6 +225,7 @@ func run() {
 
 			}
 		}
+
 		app.SetFocus(items[index])
 	}
 	setFocus(currentIndex)
@@ -254,8 +258,24 @@ func run() {
 	// set the input capture for the app
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// properly handle ctrl-c and pass SIGINT to the running processes
-		// TODO: change this to use 'q' to quit instead?
 		if event.Key() == tcell.KeyCtrlC {
+			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := cometbftCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			app.Stop()
+			return nil
+		}
+		// set 'q' to exit the app and pass SIGINT to the running processes
+		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
 				fmt.Println("Failed to send SIGINT to the process:", err)
 			}
@@ -292,7 +312,10 @@ func run() {
 			if !ok {
 				return event
 			}
-			app.SetRoot(frame, true)
+			fullscreenFlex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+				AddItem(frame, 0, 1, true).
+				AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
+			app.SetRoot(fullscreenFlex, true)
 		}
 		// set 'esc' to exit fullscreen
 		if event.Key() == tcell.KeyEscape && fullscreen {
