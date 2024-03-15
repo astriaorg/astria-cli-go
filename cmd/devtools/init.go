@@ -20,7 +20,7 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initializes the local development environment.",
-	Long:  `The init command will download the nessesary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
+	Long:  `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runInitialization()
 	},
@@ -32,7 +32,7 @@ func runInitialization() {
 		fmt.Println("error getting home dir:", err)
 		return
 	}
-	// TODO: make the default home dir configuratble
+	// TODO: make the default home dir configurable
 	defaultDir := filepath.Join(homeDir, ".astria")
 
 	dataDir := "data"
