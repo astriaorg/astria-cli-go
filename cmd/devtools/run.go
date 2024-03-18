@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -192,8 +193,24 @@ func run() {
 		AddItem(mainWindowHelpInfo, 1, 0, false)
 	flex.SetTitle(" Astria Dev ").SetBorder(true)
 
-	fullscreen := false
+	// Create ANSI writers for the text views
+	aWriterSequencerTextView := tview.ANSIWriter(sequencerTextView)
+	aWriterCometbftTextView := tview.ANSIWriter(cometbftTextView)
+	aWriterComposerTextView := tview.ANSIWriter(composerTextView)
+	aWriterConductorTextView := tview.ANSIWriter(conductorTextView)
+
+	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
+	isAutoScrolling := true // controlled by the 's' key
 	var focusedItem tview.Primitive = sequencerTextView
+
+	// start the app with auto scrolling enabled
+	sequencerTextView.ScrollToEnd()
+	cometbftTextView.ScrollToEnd()
+	composerTextView.ScrollToEnd()
+	conductorTextView.ScrollToEnd()
+	appendText := func(text string, writer io.Writer, textView *tview.TextView) {
+		writer.Write([]byte(text + "\n"))
+	}
 
 	// Create a list of items to cycle through
 	items := []tview.Primitive{sequencerTextView, cometbftTextView, composerTextView, conductorTextView}
@@ -222,7 +239,6 @@ func run() {
 				}
 				title = re.ReplaceAllString(title, "")
 				frame.SetBorderColor(tcell.ColorGray).SetTitle(title)
-
 			}
 		}
 
@@ -255,8 +271,10 @@ func run() {
 	// Track the current word wrap status.
 	wordWrapEnabled := true
 
-	// set the input capture for the app
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	var fullscreenInputCapture, focusModeInputCapture func(event *tcell.EventKey) *tcell.EventKey
+
+	// create the input capture for the app in fullscreen
+	fullscreenInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
 		// properly handle ctrl-c and pass SIGINT to the running processes
 		if event.Key() == tcell.KeyCtrlC {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
@@ -298,16 +316,36 @@ func run() {
 			composerTextView.SetWrap(!wordWrapEnabled)
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
+			return nil
+		}
+		// set 's' to toggle auto scrolling
+		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
+			if !isAutoScrolling {
+				sequencerTextView.ScrollToEnd()
+				cometbftTextView.ScrollToEnd()
+				composerTextView.ScrollToEnd()
+				conductorTextView.ScrollToEnd()
+			} else {
+				currentOffset, _ := sequencerTextView.GetScrollOffset()
+				sequencerTextView.ScrollTo(currentOffset, 0)
+				currentOffset, _ = cometbftTextView.GetScrollOffset()
+				cometbftTextView.ScrollTo(currentOffset, 0)
+				currentOffset, _ = composerTextView.GetScrollOffset()
+				composerTextView.ScrollTo(currentOffset, 0)
+				currentOffset, _ = conductorTextView.GetScrollOffset()
+				conductorTextView.ScrollTo(currentOffset, 0)
+			}
+			isAutoScrolling = !isAutoScrolling
 		}
 		// set 'tab' to cycle through the apps
-		if event.Key() == tcell.KeyTab && !fullscreen {
+		if event.Key() == tcell.KeyTab && !isFullscreen {
 			newIndex := (currentIndex + 1) % len(items)
 			setFocus(newIndex)
 			return nil
 		}
 		// set 'enter' to go fullscreen on the selected app
-		if event.Key() == tcell.KeyEnter && !fullscreen {
-			fullscreen = true
+		if event.Key() == tcell.KeyEnter && !isFullscreen {
+			isFullscreen = true
 			frame, ok := items[currentIndex].(*tview.TextView)
 			if !ok {
 				return event
@@ -316,14 +354,12 @@ func run() {
 				AddItem(frame, 0, 1, true).
 				AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
 			app.SetRoot(fullscreenFlex, true)
+			app.SetInputCapture(focusModeInputCapture)
+			return nil
 		}
-		// set 'esc' to exit fullscreen
-		if event.Key() == tcell.KeyEscape && fullscreen {
-			fullscreen = false
-			app.SetRoot(flex, true)
-		}
+
 		// set 'up' arrow to cycle through the apps
-		if event.Key() == tcell.KeyUp && !fullscreen {
+		if event.Key() == tcell.KeyUp && !isFullscreen {
 			if currentIndex > 0 {
 				newIndex := (currentIndex - 1) % len(items)
 				setFocus(newIndex)
@@ -333,7 +369,7 @@ func run() {
 			return nil
 		}
 		// set 'down' arrow to cycle through the apps
-		if event.Key() == tcell.KeyDown && !fullscreen {
+		if event.Key() == tcell.KeyDown && !isFullscreen {
 			if currentIndex == len(items)-1 {
 				setFocus(currentIndex)
 			} else {
@@ -344,7 +380,117 @@ func run() {
 
 		}
 		return event
-	})
+	}
+
+	// set the input capture for the app in app focus mode
+	focusModeInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
+		// get the focused item
+		frame, ok := items[currentIndex].(*tview.TextView)
+		if !ok {
+			return event
+		}
+		// properly handle ctrl-c and pass SIGINT to the running processes
+		if event.Key() == tcell.KeyCtrlC {
+			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := cometbftCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			app.Stop()
+			return nil
+		}
+		// set 'q' to exit the app and pass SIGINT to the running processes
+		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
+			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := cometbftCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			app.Stop()
+			return nil
+		}
+		// set 'w' to toggle word wrap
+		if event.Key() == tcell.KeyRune && event.Rune() == 'w' {
+			sequencerTextView.SetWrap(!wordWrapEnabled)
+			cometbftTextView.SetWrap(!wordWrapEnabled)
+			composerTextView.SetWrap(!wordWrapEnabled)
+			conductorTextView.SetWrap(!wordWrapEnabled)
+			wordWrapEnabled = !wordWrapEnabled
+			return nil
+		}
+		// set 's' to toggle auto scrolling
+		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
+			if !isAutoScrolling {
+				sequencerTextView.ScrollToEnd()
+				cometbftTextView.ScrollToEnd()
+				composerTextView.ScrollToEnd()
+				conductorTextView.ScrollToEnd()
+			} else {
+				currentOffset, _ := sequencerTextView.GetScrollOffset()
+				sequencerTextView.ScrollTo(currentOffset, 0)
+				currentOffset, _ = cometbftTextView.GetScrollOffset()
+				cometbftTextView.ScrollTo(currentOffset, 0)
+				currentOffset, _ = composerTextView.GetScrollOffset()
+				composerTextView.ScrollTo(currentOffset, 0)
+				currentOffset, _ = conductorTextView.GetScrollOffset()
+				conductorTextView.ScrollTo(currentOffset, 0)
+			}
+			isAutoScrolling = !isAutoScrolling
+		}
+		// set 'esc' to exit fullscreen
+		if event.Key() == tcell.KeyEscape && isFullscreen {
+			isFullscreen = false
+			frame, ok := items[currentIndex].(*tview.TextView)
+			if !ok {
+				return event
+			}
+			frame.SetInputCapture(nil)
+			frame.SetMouseCapture(nil)
+			app.SetRoot(flex, true)
+			app.SetInputCapture(fullscreenInputCapture)
+			return nil
+		}
+
+		switch event.Key() {
+		case tcell.KeyUp:
+			row, _ := frame.GetScrollOffset()
+			frame.ScrollTo(row-1, 0)
+		case tcell.KeyDown:
+			row, _ := frame.GetScrollOffset()
+			frame.ScrollTo(row+1, 0)
+		}
+
+		frame.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+			switch action {
+			case tview.MouseScrollUp:
+				row, _ := frame.GetScrollOffset()
+				frame.ScrollTo(row-1, 0)
+			case tview.MouseScrollDown:
+				row, _ := frame.GetScrollOffset()
+				frame.ScrollTo(row+1, 0)
+			}
+			return action, event
+		})
+
+		return event
+	}
+
+	// set the input capture for the app
+	app.SetInputCapture(fullscreenInputCapture)
 
 	// go routine for running the sequencer
 	go func() {
@@ -364,14 +510,10 @@ func run() {
 		// Create a scanner to read the output line by line.
 		stdoutScanner := bufio.NewScanner(stdout)
 
-		// Create a writer to properly write to the text view
-		aWriter := tview.ANSIWriter(sequencerTextView)
-
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(line + "\n"))
-				sequencerTextView.ScrollToEnd()
+				appendText(line, aWriterSequencerTextView, sequencerTextView)
 			})
 		}
 		if err := stdoutScanner.Err(); err != nil {
@@ -389,28 +531,22 @@ func run() {
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
 
-		// Create a writer to properly write to the text view
-		aWriter := tview.ANSIWriter(cometbftTextView)
-
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
-			aWriter.Write([]byte(p))
-			cometbftTextView.ScrollToEnd()
+			appendText(p, aWriterCometbftTextView, cometbftTextView)
 		})
 
 		out, err := initCmd.CombinedOutput()
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(p))
-				cometbftTextView.ScrollToEnd()
+				appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 			})
 			return
 		}
 		app.QueueUpdateDraw(func() {
-			aWriter.Write([]byte(out))
-			cometbftTextView.ScrollToEnd()
+			appendText(string(out), aWriterCometbftTextView, cometbftTextView)
 
 		})
 
@@ -426,16 +562,14 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(p))
-				cometbftTextView.ScrollToEnd()
+				appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 			})
 			return
 		}
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
-			aWriter.Write([]byte(p))
-			cometbftTextView.ScrollToEnd()
+			appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 		})
 
@@ -451,16 +585,14 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(p))
-				cometbftTextView.ScrollToEnd()
+				appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 			})
 			return
 		}
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
-			aWriter.Write([]byte(p))
-			cometbftTextView.ScrollToEnd()
+			appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 		})
 
@@ -472,16 +604,14 @@ func run() {
 		if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(p))
-				cometbftTextView.ScrollToEnd()
+				appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 			})
 			return
 		} else {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(p))
-				cometbftTextView.ScrollToEnd()
+				appendText(p, aWriterCometbftTextView, cometbftTextView)
 
 			})
 		}
@@ -502,8 +632,7 @@ func run() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(line + "\n"))
-				cometbftTextView.ScrollToEnd()
+				appendText(line, aWriterCometbftTextView, cometbftTextView)
 
 			})
 		}
@@ -534,14 +663,10 @@ func run() {
 		// Create a scanner to read the output line by line.
 		stdoutScanner := bufio.NewScanner(stdout)
 
-		// Create a writer to properly write to the text view
-		aWriter := tview.ANSIWriter(composerTextView)
-
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(line + "\n"))
-				composerTextView.ScrollToEnd()
+				appendText(line, aWriterComposerTextView, composerTextView)
 			})
 		}
 		if err := stdoutScanner.Err(); err != nil {
@@ -569,14 +694,11 @@ func run() {
 		// Create a scanner to read the output line by line.
 		stdoutScanner := bufio.NewScanner(stdout)
 
-		// Create a writer to properly write to the text view
-		aWriter := tview.ANSIWriter(conductorTextView)
-
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			app.QueueUpdateDraw(func() {
-				aWriter.Write([]byte(line + "\n"))
-				conductorTextView.ScrollToEnd()
+				appendText(line, aWriterConductorTextView, conductorTextView)
+
 			})
 		}
 		if err := stdoutScanner.Err(); err != nil {
