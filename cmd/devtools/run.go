@@ -242,9 +242,6 @@ func run() {
 		output += "\t[:darkslategray]ctrl-c[:-]: Quit the app.\n\n"
 		output += "Help:\n"
 		output += "\t[:darkslategray]h[:-]: Show this help screen.\n\n"
-		output += "\n"
-		// TODO: make all the keys non case sensitive?
-		output += "Note: If none of these keys are working, check your caps lock.\n"
 
 		return output
 	}
@@ -377,7 +374,7 @@ func run() {
 			return nil
 		}
 		// set 'q' to exit the app and pass SIGINT to the running processes
-		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'q' || event.Rune() == 'Q') {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
 				fmt.Println("Failed to send SIGINT to the process:", err)
 			}
@@ -394,7 +391,7 @@ func run() {
 			return nil
 		}
 		// set 'w' to toggle word wrap
-		if event.Key() == tcell.KeyRune && event.Rune() == 'w' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'w' || event.Rune() == 'W') {
 			sequencerTextView.SetWrap(!wordWrapEnabled)
 			cometbftTextView.SetWrap(!wordWrapEnabled)
 			composerTextView.SetWrap(!wordWrapEnabled)
@@ -407,7 +404,7 @@ func run() {
 			return nil
 		}
 		// set 'a' to toggle auto scrolling
-		if event.Key() == tcell.KeyRune && event.Rune() == 'a' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'a' || event.Rune() == 'A') {
 			isAutoScrolling = !isAutoScrolling
 			if isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
@@ -477,7 +474,7 @@ func run() {
 
 		}
 
-		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'h' || event.Rune() == 'H') {
 			isHelpScreen = !isHelpScreen
 			if isHelpScreen {
 				app.SetRoot(helpMainWindowInfo, true)
@@ -513,7 +510,7 @@ func run() {
 			return nil
 		}
 		// set 'q' to exit the app and pass SIGINT to the running processes
-		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'q' || event.Rune() == 'Q') {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
 				fmt.Println("Failed to send SIGINT to the process:", err)
 			}
@@ -530,7 +527,7 @@ func run() {
 			return nil
 		}
 		// set 'w' to toggle word wrap
-		if event.Key() == tcell.KeyRune && event.Rune() == 'w' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'w' || event.Rune() == 'W') {
 			sequencerTextView.SetWrap(!wordWrapEnabled)
 			cometbftTextView.SetWrap(!wordWrapEnabled)
 			composerTextView.SetWrap(!wordWrapEnabled)
@@ -543,7 +540,7 @@ func run() {
 			return nil
 		}
 		// set 'a' to toggle auto scrolling
-		if event.Key() == tcell.KeyRune && event.Rune() == 'a' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'a' || event.Rune() == 'A') {
 			isAutoScrolling = !isAutoScrolling
 			if !isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
@@ -617,7 +614,7 @@ func run() {
 			}
 			return action, event
 		})
-		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'h' || event.Rune() == 'H') {
 			isHelpScreen = !isHelpScreen
 			if isHelpScreen {
 				app.SetRoot(helpMainWindowInfo, true)
