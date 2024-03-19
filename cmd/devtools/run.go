@@ -178,13 +178,82 @@ func run() {
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
+	// app settings
+	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
+	isHelpScreen := false   // controlled by the 'h' key
+	isAutoScrolling := true // controlled by the 's' key
+	wordWrapEnabled := true // controlled by the 'w' key
+	var focusedItem tview.Primitive = sequencerTextView
+
+	helpTextHelp := "(h)elp"
+	helpTextQuit := "(q)uit"
+	helpTextFocus := "(up/down) arrows to select app focus"
+	helpTextEnterFullscreen := "(enter) to go fullscreen on focused app"
+	helpTextExitFullscreen := "(esc) to exit fullscreen"
+	helpTextWordWrap := "(w)ord wrap"
+	helpTextAutoScroll := "(a)utoscroll"
+	helpTextLogScroll := "if not auto scrolling: (up/down) arrows or mousewheel to scroll"
+
+	appendStatus := func(text string, status bool) string {
+		output := ""
+		output += text
+		if status {
+			output += " - [black:green]  on [-:-]"
+		} else {
+			output += " - [white:darkred] off [-:-]"
+		}
+		return output
+	}
+
+	buildMainWindowHelpInfo := func() string {
+		output := " "
+		output += helpTextHelp + " | "
+		output += helpTextQuit + " | "
+		output += helpTextFocus + " | "
+		output += helpTextEnterFullscreen + " | "
+		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
+		output += appendStatus(helpTextAutoScroll, isAutoScrolling)
+		return output
+	}
+
+	buildFullscreenHelpInfo := func() string {
+		output := " "
+		output += helpTextHelp + " | "
+		output += helpTextQuit + " | "
+		output += helpTextExitFullscreen + " | "
+		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
+		output += appendStatus(helpTextAutoScroll, isAutoScrolling) + " | "
+		output += helpTextLogScroll
+		return output
+	}
+
+	buildHelpScreenText := func() string {
+
+		output := "just some text for now\n"
+		return output
+	}
+
+	helpWindow := tview.NewTextView().
+		SetDynamicColors(true).
+		SetText(buildHelpScreenText()).
+		SetChangedFunc(func() {
+			app.Draw()
+		})
+	helpWindow.SetTitle(" Help ").SetBorder(true)
+
 	mainWindowHelpInfo := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText(" Press 'Ctrl-C' or 'q' to exit | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app | 'w' to toggle word wrap | 's' to toggle auto scrolling")
+		SetText(buildMainWindowHelpInfo()).
+		SetChangedFunc(func() {
+			app.Draw()
+		})
 
 	fullscreenHelpInfo := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText(" Press 'Ctrl-C' or 'q' to exit | 'esc' to exit fullscreen | 'w' to toggle word wrap | 's' to toggle auto scrolling | if not auto scrolling, use 'up/down' arrows or mousewheel to scroll")
+		SetText(buildFullscreenHelpInfo()).
+		SetChangedFunc(func() {
+			app.Draw()
+		})
 
 	flex := tview.NewFlex().
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
@@ -195,15 +264,14 @@ func run() {
 		AddItem(mainWindowHelpInfo, 1, 0, false)
 	flex.SetTitle(" Astria Dev ").SetBorder(true)
 
+	// prevWindow is used for toggling in and out of the help window
+	var prevWindow tview.Primitive = flex
+
 	// Create ANSI writers for the text views
 	aWriterSequencerTextView := tview.ANSIWriter(sequencerTextView)
 	aWriterCometbftTextView := tview.ANSIWriter(cometbftTextView)
 	aWriterComposerTextView := tview.ANSIWriter(composerTextView)
 	aWriterConductorTextView := tview.ANSIWriter(conductorTextView)
-
-	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
-	isAutoScrolling := true // controlled by the 's' key
-	var focusedItem tview.Primitive = sequencerTextView
 
 	// start the app with auto scrolling enabled
 	sequencerTextView.ScrollToEnd()
@@ -270,13 +338,10 @@ func run() {
 	conductorCmd := exec.Command(conductorBinPath)
 	conductorCmd.Env = environment
 
-	// Track the current word wrap status.
-	wordWrapEnabled := true
-
-	var fullscreenInputCapture, focusModeInputCapture func(event *tcell.EventKey) *tcell.EventKey
+	var mainWindowInputCapture, focusWindowInputCapture func(event *tcell.EventKey) *tcell.EventKey
 
 	// create the input capture for the app in fullscreen
-	fullscreenInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
+	mainWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
 		// properly handle ctrl-c and pass SIGINT to the running processes
 		if event.Key() == tcell.KeyCtrlC {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
@@ -319,10 +384,13 @@ func run() {
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
 
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
 			return nil
 		}
-		// set 's' to toggle auto scrolling
-		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
+		// set 'a' to toggle auto scrolling
+		if event.Key() == tcell.KeyRune && event.Rune() == 'a' {
 			isAutoScrolling = !isAutoScrolling
 			if isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
@@ -339,6 +407,9 @@ func run() {
 				currentOffset, _ = conductorTextView.GetScrollOffset()
 				conductorTextView.ScrollTo(currentOffset, 0)
 			}
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
 
 			return nil
 		}
@@ -361,8 +432,9 @@ func run() {
 			fullscreenFlex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 				AddItem(frame, 0, 1, true).
 				AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
+			prevWindow = fullscreenFlex
 			app.SetRoot(fullscreenFlex, true)
-			app.SetInputCapture(focusModeInputCapture)
+			app.SetInputCapture(focusWindowInputCapture)
 			return nil
 		}
 
@@ -387,11 +459,20 @@ func run() {
 			return nil
 
 		}
+
+		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
+			isHelpScreen = !isHelpScreen
+			if isHelpScreen {
+				app.SetRoot(helpWindow, true)
+			} else {
+				app.SetRoot(prevWindow, true)
+			}
+		}
 		return event
 	}
 
 	// set the input capture for the app in app focus mode
-	focusModeInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
+	focusWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
 		// get the focused item
 		frame, ok := items[currentIndex].(*tview.TextView)
 		if !ok {
@@ -438,10 +519,14 @@ func run() {
 			composerTextView.SetWrap(!wordWrapEnabled)
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
 			return nil
 		}
-		// set 's' to toggle auto scrolling
-		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
+		// set 'a' to toggle auto scrolling
+		if event.Key() == tcell.KeyRune && event.Rune() == 'a' {
 			isAutoScrolling = !isAutoScrolling
 			if !isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
@@ -458,6 +543,10 @@ func run() {
 				currentOffset, _ = conductorTextView.GetScrollOffset()
 				conductorTextView.ScrollTo(currentOffset, 0)
 			}
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
 			return nil
 		}
 
@@ -472,8 +561,9 @@ func run() {
 			}
 			frame.SetInputCapture(nil)
 			frame.SetMouseCapture(nil)
+			prevWindow = flex
 			app.SetRoot(flex, true)
-			app.SetInputCapture(fullscreenInputCapture)
+			app.SetInputCapture(mainWindowInputCapture)
 			return nil
 		}
 
@@ -510,12 +600,19 @@ func run() {
 			}
 			return action, event
 		})
-
+		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
+			isHelpScreen = !isHelpScreen
+			if isHelpScreen {
+				app.SetRoot(helpWindow, true)
+			} else {
+				app.SetRoot(prevWindow, true)
+			}
+		}
 		return event
 	}
 
 	// set the input capture for the app
-	app.SetInputCapture(fullscreenInputCapture)
+	app.SetInputCapture(mainWindowInputCapture)
 
 	// go routine for running the sequencer
 	go func() {
@@ -752,6 +849,7 @@ func run() {
 		}
 	}()
 
+	prevWindow = flex
 	app.SetFocus(focusedItem)
 	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)

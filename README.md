@@ -64,12 +64,12 @@ cobra-cli add <new-command>
 
 ### Available Commands
 
-| Command         | Description                                                          |
-| --------------- | -------------------------------------------------------------------- |
-| `version`       | Prints the cli version.                                              |
-| `help`          | Show help.                                                           |
-| `dev`           | Root command development.                                            |
-| `dev init`      | Downloads binaries and initializes the local environment.            |
-| `dev run`       | Runs a minimal, local Astria stack.                                  |
-| `dev clean`     | Deletes the local data for the Astria stack.                         |
-| `dev clean all` | Deletes the local data and downloaded binaries for the Astria stack. |
+| Command         | Description                                                                         |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `version`       | Prints the cli version.                                                             |
+| `help`          | Show help.                                                                          |
+| `dev`           | Root command for cli development functionality.                                     |
+| `dev init`      | Downloads binaries and initializes the local environment.                           |
+| `dev run`       | Runs a minimal, local Astria stack.                                                 |
+| `dev clean`     | Deletes the local data for the Astria stack.                                        |
+| `dev clean all` | Deletes the local data, downloaded binaries, and config files for the Astria stack. |
