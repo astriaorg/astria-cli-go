@@ -227,19 +227,36 @@ func run() {
 		return output
 	}
 
-	buildHelpScreenText := func() string {
+	buildMainHelpScreenText := func() string {
+		output := "Navigation:\t\n"
+		output += "\t[:darkslategray]tab[:-]:            Cycle the focus to the next app.\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: Change focus to the previous or next app.\n\n"
+		output += "Focus Control:\n"
+		output += "\t[:darkslategray]enter[:-]: Fullscreen the focused app's logs.\n\n"
+		output += "Word wrap:\n"
+		output += "\t[:darkslategray]w[:-]: Toggle if word wrap is on or off.\n\n"
+		output += "Autoscroll:\n"
+		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n\n"
+		output += "Quitting:\n"
+		output += "\t[:darkslategray]q[:-]:      Quit the app.\n"
+		output += "\t[:darkslategray]ctrl-c[:-]: Quit the app.\n\n"
+		output += "Help:\n"
+		output += "\t[:darkslategray]h[:-]: Show this help screen.\n\n"
+		output += "\n"
+		// TODO: make all the keys non case sensitive?
+		output += "Note: If none of these keys are working, check your caps lock.\n"
 
-		output := "just some text for now\n"
 		return output
 	}
 
-	helpWindow := tview.NewTextView().
+	helpMainWindowInfo := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText(buildHelpScreenText()).
+		SetText(buildMainHelpScreenText()).
+		SetWrap(true).
 		SetChangedFunc(func() {
 			app.Draw()
 		})
-	helpWindow.SetTitle(" Help ").SetBorder(true)
+	helpMainWindowInfo.SetTitle(" Astria CLI Help ").SetBorder(true).SetBorderColor(tcell.ColorBlue).SetBorderPadding(0, 0, 1, 0)
 
 	mainWindowHelpInfo := tview.NewTextView().
 		SetDynamicColors(true).
@@ -463,7 +480,7 @@ func run() {
 		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
 			isHelpScreen = !isHelpScreen
 			if isHelpScreen {
-				app.SetRoot(helpWindow, true)
+				app.SetRoot(helpMainWindowInfo, true)
 			} else {
 				app.SetRoot(prevWindow, true)
 			}
@@ -603,7 +620,7 @@ func run() {
 		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
 			isHelpScreen = !isHelpScreen
 			if isHelpScreen {
-				app.SetRoot(helpWindow, true)
+				app.SetRoot(helpMainWindowInfo, true)
 			} else {
 				app.SetRoot(prevWindow, true)
 			}
