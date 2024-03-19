@@ -210,7 +210,7 @@ func run() {
 	cometbftTextView.ScrollToEnd()
 	composerTextView.ScrollToEnd()
 	conductorTextView.ScrollToEnd()
-	appendText := func(text string, writer io.Writer, textView *tview.TextView) {
+	appendText := func(text string, writer io.Writer) {
 		writer.Write([]byte(text + "\n"))
 	}
 
@@ -524,10 +524,10 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
-		stderr, err := seqCmd.StderrPipe()
-		if err != nil {
-			panic(err)
-		}
+		// stderr, err := seqCmd.StderrPipe()
+		// if err != nil {
+		// 	panic(err)
+		// }
 
 		if err := seqCmd.Start(); err != nil {
 			panic(err)
@@ -537,13 +537,14 @@ func run() {
 		sequencerStartComplete <- true
 
 		// Create a scanner to read the output line by line.
-		output := io.MultiReader(stdout, stderr)
-		outputScanner := bufio.NewScanner(output)
+		// output := io.MultiReader(stdout, stderr)
+		// outputScanner := bufio.NewScanner(output)
+		outputScanner := bufio.NewScanner(stdout)
 
 		for outputScanner.Scan() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterSequencerTextView, sequencerTextView)
+				appendText(line, aWriterSequencerTextView)
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
@@ -563,20 +564,20 @@ func run() {
 
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView, cometbftTextView)
+			appendText(p, aWriterCometbftTextView)
 		})
 
 		out, err := initCmd.CombinedOutput()
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		}
 		app.QueueUpdateDraw(func() {
-			appendText(string(out), aWriterCometbftTextView, cometbftTextView)
+			appendText(string(out), aWriterCometbftTextView)
 
 		})
 
@@ -592,14 +593,14 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		}
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView, cometbftTextView)
+			appendText(p, aWriterCometbftTextView)
 
 		})
 
@@ -615,14 +616,14 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		}
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView, cometbftTextView)
+			appendText(p, aWriterCometbftTextView)
 
 		})
 
@@ -634,14 +635,14 @@ func run() {
 		if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		} else {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 		}
@@ -650,6 +651,11 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		// stderr, err := cometbftCmd.StderrPipe()
+		// if err != nil {
+		// 	panic(err)
+		// }
+
 		if err := cometbftCmd.Start(); err != nil {
 			panic(err)
 		}
@@ -657,16 +663,18 @@ func run() {
 		// let the composer go routine know that it can start
 		cometbftStartComplete <- true
 
-		stdoutScanner := bufio.NewScanner(stdout)
+		// output := io.MultiReader(stdout, stderr)
+		// outputScanner := bufio.NewScanner(output)
+		outputScanner := bufio.NewScanner(stdout)
 
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterCometbftTextView, cometbftTextView)
+				appendText(line, aWriterCometbftTextView)
 
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := cometbftCmd.Wait(); err != nil {
@@ -682,6 +690,10 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		// stderr, err := composerCmd.StderrPipe()
+		// if err != nil {
+		// 	panic(err)
+		// }
 
 		if err := composerCmd.Start(); err != nil {
 			panic(err)
@@ -691,15 +703,17 @@ func run() {
 		composerStartComplete <- true
 
 		// Create a scanner to read the output line by line.
-		stdoutScanner := bufio.NewScanner(stdout)
+		// output := io.MultiReader(stdout, stderr)
+		// outputScanner := bufio.NewScanner(output)
+		outputScanner := bufio.NewScanner(stdout)
 
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterComposerTextView, composerTextView)
+				appendText(line, aWriterComposerTextView)
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := composerCmd.Wait(); err != nil {
@@ -716,22 +730,28 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		// stderr, err := conductorCmd.StderrPipe()
+		// if err != nil {
+		// 	panic(err)
+		// }
 
 		if err := conductorCmd.Start(); err != nil {
 			panic(err)
 		}
 
 		// Create a scanner to read the output line by line.
-		stdoutScanner := bufio.NewScanner(stdout)
+		// output := io.MultiReader(stdout, stderr)
+		// outputScanner := bufio.NewScanner(output)
+		outputScanner := bufio.NewScanner(stdout)
 
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterConductorTextView, conductorTextView)
+				appendText(line, aWriterConductorTextView)
 
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := conductorCmd.Wait(); err != nil {
