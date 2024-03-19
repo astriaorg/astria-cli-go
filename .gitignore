@@ -29,3 +29,4 @@ go.work
 /data
 
 **/.DS_Store
+tview_log.txt

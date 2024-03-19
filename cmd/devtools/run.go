@@ -178,11 +178,82 @@ func run() {
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
+	// app settings
+	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
+	isHelpScreen := false   // controlled by the 'h' key
+	isAutoScrolling := true // controlled by the 's' key
+	wordWrapEnabled := true // controlled by the 'w' key
+	var focusedItem tview.Primitive = sequencerTextView
+
+	helpTextHelp := "(h)elp"
+	helpTextQuit := "(q)uit"
+	helpTextFocus := "(up/down) arrows to select app focus"
+	helpTextEnterFullscreen := "(enter) to go fullscreen on focused app"
+	helpTextExitFullscreen := "(esc) to exit fullscreen"
+	helpTextWordWrap := "(w)ord wrap"
+	helpTextAutoScroll := "(a)utoscroll"
+	helpTextLogScroll := "if not auto scrolling: (up/down) arrows or mousewheel to scroll"
+
+	appendStatus := func(text string, status bool) string {
+		output := ""
+		output += text
+		if status {
+			output += " - [black:green]  on [-:-]"
+		} else {
+			output += " - [white:darkred] off [-:-]"
+		}
+		return output
+	}
+
+	buildMainWindowHelpInfo := func() string {
+		output := " "
+		output += helpTextHelp + " | "
+		output += helpTextQuit + " | "
+		output += helpTextFocus + " | "
+		output += helpTextEnterFullscreen + " | "
+		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
+		output += appendStatus(helpTextAutoScroll, isAutoScrolling)
+		return output
+	}
+
+	buildFullscreenHelpInfo := func() string {
+		output := " "
+		output += helpTextHelp + " | "
+		output += helpTextQuit + " | "
+		output += helpTextExitFullscreen + " | "
+		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
+		output += appendStatus(helpTextAutoScroll, isAutoScrolling) + " | "
+		output += helpTextLogScroll
+		return output
+	}
+
+	buildHelpScreenText := func() string {
+
+		output := "just some text for now\n"
+		return output
+	}
+
+	helpWindow := tview.NewTextView().
+		SetDynamicColors(true).
+		SetText(buildHelpScreenText()).
+		SetChangedFunc(func() {
+			app.Draw()
+		})
+	helpWindow.SetTitle(" Help ").SetBorder(true)
+
 	mainWindowHelpInfo := tview.NewTextView().
-		SetText(" Press 'Ctrl-C' or 'q' to exit | 'w' to toggle word wrap | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app")
+		SetDynamicColors(true).
+		SetText(buildMainWindowHelpInfo()).
+		SetChangedFunc(func() {
+			app.Draw()
+		})
 
 	fullscreenHelpInfo := tview.NewTextView().
-		SetText(" Press 'Ctrl-C' or 'q' to exit | 'w' to toggle word wrap | 'esc' to exit fullscreen")
+		SetDynamicColors(true).
+		SetText(buildFullscreenHelpInfo()).
+		SetChangedFunc(func() {
+			app.Draw()
+		})
 
 	flex := tview.NewFlex().
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
@@ -193,22 +264,21 @@ func run() {
 		AddItem(mainWindowHelpInfo, 1, 0, false)
 	flex.SetTitle(" Astria Dev ").SetBorder(true)
 
+	// prevWindow is used for toggling in and out of the help window
+	var prevWindow tview.Primitive = flex
+
 	// Create ANSI writers for the text views
 	aWriterSequencerTextView := tview.ANSIWriter(sequencerTextView)
 	aWriterCometbftTextView := tview.ANSIWriter(cometbftTextView)
 	aWriterComposerTextView := tview.ANSIWriter(composerTextView)
 	aWriterConductorTextView := tview.ANSIWriter(conductorTextView)
 
-	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
-	isAutoScrolling := true // controlled by the 's' key
-	var focusedItem tview.Primitive = sequencerTextView
-
 	// start the app with auto scrolling enabled
 	sequencerTextView.ScrollToEnd()
 	cometbftTextView.ScrollToEnd()
 	composerTextView.ScrollToEnd()
 	conductorTextView.ScrollToEnd()
-	appendText := func(text string, writer io.Writer, textView *tview.TextView) {
+	appendText := func(text string, writer io.Writer) {
 		writer.Write([]byte(text + "\n"))
 	}
 
@@ -268,13 +338,10 @@ func run() {
 	conductorCmd := exec.Command(conductorBinPath)
 	conductorCmd.Env = environment
 
-	// Track the current word wrap status.
-	wordWrapEnabled := true
-
-	var fullscreenInputCapture, focusModeInputCapture func(event *tcell.EventKey) *tcell.EventKey
+	var mainWindowInputCapture, focusWindowInputCapture func(event *tcell.EventKey) *tcell.EventKey
 
 	// create the input capture for the app in fullscreen
-	fullscreenInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
+	mainWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
 		// properly handle ctrl-c and pass SIGINT to the running processes
 		if event.Key() == tcell.KeyCtrlC {
 			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
@@ -316,11 +383,16 @@ func run() {
 			composerTextView.SetWrap(!wordWrapEnabled)
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
 			return nil
 		}
-		// set 's' to toggle auto scrolling
-		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
-			if !isAutoScrolling {
+		// set 'a' to toggle auto scrolling
+		if event.Key() == tcell.KeyRune && event.Rune() == 'a' {
+			isAutoScrolling = !isAutoScrolling
+			if isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
 				cometbftTextView.ScrollToEnd()
 				composerTextView.ScrollToEnd()
@@ -335,8 +407,15 @@ func run() {
 				currentOffset, _ = conductorTextView.GetScrollOffset()
 				conductorTextView.ScrollTo(currentOffset, 0)
 			}
-			isAutoScrolling = !isAutoScrolling
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
+			return nil
 		}
+
+		// TODO: add a key to just to head of logs (automatically turn off auto scrolling)
+
 		// set 'tab' to cycle through the apps
 		if event.Key() == tcell.KeyTab && !isFullscreen {
 			newIndex := (currentIndex + 1) % len(items)
@@ -353,8 +432,9 @@ func run() {
 			fullscreenFlex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 				AddItem(frame, 0, 1, true).
 				AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
+			prevWindow = fullscreenFlex
 			app.SetRoot(fullscreenFlex, true)
-			app.SetInputCapture(focusModeInputCapture)
+			app.SetInputCapture(focusWindowInputCapture)
 			return nil
 		}
 
@@ -379,11 +459,20 @@ func run() {
 			return nil
 
 		}
+
+		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
+			isHelpScreen = !isHelpScreen
+			if isHelpScreen {
+				app.SetRoot(helpWindow, true)
+			} else {
+				app.SetRoot(prevWindow, true)
+			}
+		}
 		return event
 	}
 
 	// set the input capture for the app in app focus mode
-	focusModeInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
+	focusWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
 		// get the focused item
 		frame, ok := items[currentIndex].(*tview.TextView)
 		if !ok {
@@ -430,10 +519,15 @@ func run() {
 			composerTextView.SetWrap(!wordWrapEnabled)
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
 			return nil
 		}
-		// set 's' to toggle auto scrolling
-		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
+		// set 'a' to toggle auto scrolling
+		if event.Key() == tcell.KeyRune && event.Rune() == 'a' {
+			isAutoScrolling = !isAutoScrolling
 			if !isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
 				cometbftTextView.ScrollToEnd()
@@ -449,8 +543,15 @@ func run() {
 				currentOffset, _ = conductorTextView.GetScrollOffset()
 				conductorTextView.ScrollTo(currentOffset, 0)
 			}
-			isAutoScrolling = !isAutoScrolling
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+
+			return nil
 		}
+
+		// TODO: add a key to just to head of logs (automatically turn off auto scrolling)
+
 		// set 'esc' to exit fullscreen
 		if event.Key() == tcell.KeyEscape && isFullscreen {
 			isFullscreen = false
@@ -460,37 +561,58 @@ func run() {
 			}
 			frame.SetInputCapture(nil)
 			frame.SetMouseCapture(nil)
+			prevWindow = flex
 			app.SetRoot(flex, true)
-			app.SetInputCapture(fullscreenInputCapture)
+			app.SetInputCapture(mainWindowInputCapture)
 			return nil
 		}
 
 		switch event.Key() {
 		case tcell.KeyUp:
-			row, _ := frame.GetScrollOffset()
-			frame.ScrollTo(row-1, 0)
+			if !isAutoScrolling {
+				row, _ := frame.GetScrollOffset()
+				frame.ScrollTo(row-1, 0)
+				return nil
+			}
 		case tcell.KeyDown:
-			row, _ := frame.GetScrollOffset()
-			frame.ScrollTo(row+1, 0)
+			if !isAutoScrolling {
+				row, _ := frame.GetScrollOffset()
+				frame.ScrollTo(row+1, 0)
+				return nil
+			}
 		}
 
+		// TODO: fix the return values
 		frame.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 			switch action {
 			case tview.MouseScrollUp:
-				row, _ := frame.GetScrollOffset()
-				frame.ScrollTo(row-1, 0)
+				if !isAutoScrolling {
+					row, _ := frame.GetScrollOffset()
+					frame.ScrollTo(row-1, 0)
+				}
+				return action, event
 			case tview.MouseScrollDown:
-				row, _ := frame.GetScrollOffset()
-				frame.ScrollTo(row+1, 0)
+				if !isAutoScrolling {
+					row, _ := frame.GetScrollOffset()
+					frame.ScrollTo(row+1, 0)
+				}
+				return action, event
 			}
 			return action, event
 		})
-
+		if event.Key() == tcell.KeyRune && event.Rune() == 'h' {
+			isHelpScreen = !isHelpScreen
+			if isHelpScreen {
+				app.SetRoot(helpWindow, true)
+			} else {
+				app.SetRoot(prevWindow, true)
+			}
+		}
 		return event
 	}
 
 	// set the input capture for the app
-	app.SetInputCapture(fullscreenInputCapture)
+	app.SetInputCapture(mainWindowInputCapture)
 
 	// go routine for running the sequencer
 	go func() {
@@ -499,6 +621,13 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		stderr, err := seqCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		if err := seqCmd.Start(); err != nil {
 			panic(err)
@@ -507,16 +636,13 @@ func run() {
 		// let the cometbft go routine know that it can start
 		sequencerStartComplete <- true
 
-		// Create a scanner to read the output line by line.
-		stdoutScanner := bufio.NewScanner(stdout)
-
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterSequencerTextView, sequencerTextView)
+				appendText(line, aWriterSequencerTextView)
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := seqCmd.Wait(); err != nil {
@@ -531,22 +657,34 @@ func run() {
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
 
+		stdout, err := cometbftCmd.StdoutPipe()
+		if err != nil {
+			panic(err)
+		}
+		stderr, err := cometbftCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
+
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView, cometbftTextView)
+			appendText(p, aWriterCometbftTextView)
 		})
 
 		out, err := initCmd.CombinedOutput()
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		}
 		app.QueueUpdateDraw(func() {
-			appendText(string(out), aWriterCometbftTextView, cometbftTextView)
+			appendText(string(out), aWriterCometbftTextView)
 
 		})
 
@@ -562,14 +700,14 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		}
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView, cometbftTextView)
+			appendText(p, aWriterCometbftTextView)
 
 		})
 
@@ -585,14 +723,14 @@ func run() {
 		if err != nil {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		}
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView, cometbftTextView)
+			appendText(p, aWriterCometbftTextView)
 
 		})
 
@@ -604,22 +742,18 @@ func run() {
 		if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 			return
 		} else {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView, cometbftTextView)
+				appendText(p, aWriterCometbftTextView)
 
 			})
 		}
 
-		stdout, err := cometbftCmd.StdoutPipe()
-		if err != nil {
-			panic(err)
-		}
 		if err := cometbftCmd.Start(); err != nil {
 			panic(err)
 		}
@@ -627,16 +761,14 @@ func run() {
 		// let the composer go routine know that it can start
 		cometbftStartComplete <- true
 
-		stdoutScanner := bufio.NewScanner(stdout)
-
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterCometbftTextView, cometbftTextView)
+				appendText(line, aWriterCometbftTextView)
 
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := cometbftCmd.Wait(); err != nil {
@@ -652,6 +784,13 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		stderr, err := composerCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		if err := composerCmd.Start(); err != nil {
 			panic(err)
@@ -660,16 +799,13 @@ func run() {
 		// let the conductor go routine know that it can start
 		composerStartComplete <- true
 
-		// Create a scanner to read the output line by line.
-		stdoutScanner := bufio.NewScanner(stdout)
-
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterComposerTextView, composerTextView)
+				appendText(line, aWriterComposerTextView)
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := composerCmd.Wait(); err != nil {
@@ -686,22 +822,26 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		stderr, err := conductorCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		if err := conductorCmd.Start(); err != nil {
 			panic(err)
 		}
 
-		// Create a scanner to read the output line by line.
-		stdoutScanner := bufio.NewScanner(stdout)
-
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
-				appendText(line, aWriterConductorTextView, conductorTextView)
+				appendText(line, aWriterConductorTextView)
 
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := conductorCmd.Wait(); err != nil {
@@ -709,6 +849,7 @@ func run() {
 		}
 	}()
 
+	prevWindow = flex
 	app.SetFocus(focusedItem)
 	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)
