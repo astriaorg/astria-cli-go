@@ -179,10 +179,12 @@ func run() {
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
 	mainWindowHelpInfo := tview.NewTextView().
-		SetText(" Press 'Ctrl-C' or 'q' to exit | 'w' to toggle word wrap | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app")
+		SetDynamicColors(true).
+		SetText(" Press 'Ctrl-C' or 'q' to exit | 'tab' or 'up/down' arrows to select app focus | 'enter' to go fullscreen on selected app | 'w' to toggle word wrap | 's' to toggle auto scrolling")
 
 	fullscreenHelpInfo := tview.NewTextView().
-		SetText(" Press 'Ctrl-C' or 'q' to exit | 'w' to toggle word wrap | 'esc' to exit fullscreen")
+		SetDynamicColors(true).
+		SetText(" Press 'Ctrl-C' or 'q' to exit | 'esc' to exit fullscreen | 'w' to toggle word wrap | 's' to toggle auto scrolling | if not auto scrolling, use 'up/down' arrows or mousewheel to scroll")
 
 	flex := tview.NewFlex().
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
@@ -316,11 +318,13 @@ func run() {
 			composerTextView.SetWrap(!wordWrapEnabled)
 			conductorTextView.SetWrap(!wordWrapEnabled)
 			wordWrapEnabled = !wordWrapEnabled
+
 			return nil
 		}
 		// set 's' to toggle auto scrolling
 		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
-			if !isAutoScrolling {
+			isAutoScrolling = !isAutoScrolling
+			if isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
 				cometbftTextView.ScrollToEnd()
 				composerTextView.ScrollToEnd()
@@ -335,8 +339,12 @@ func run() {
 				currentOffset, _ = conductorTextView.GetScrollOffset()
 				conductorTextView.ScrollTo(currentOffset, 0)
 			}
-			isAutoScrolling = !isAutoScrolling
+
+			return nil
 		}
+
+		// TODO: add a key to just to head of logs (automatically turn off auto scrolling)
+
 		// set 'tab' to cycle through the apps
 		if event.Key() == tcell.KeyTab && !isFullscreen {
 			newIndex := (currentIndex + 1) % len(items)
@@ -434,6 +442,7 @@ func run() {
 		}
 		// set 's' to toggle auto scrolling
 		if event.Key() == tcell.KeyRune && event.Rune() == 's' {
+			isAutoScrolling = !isAutoScrolling
 			if !isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
 				cometbftTextView.ScrollToEnd()
@@ -449,8 +458,11 @@ func run() {
 				currentOffset, _ = conductorTextView.GetScrollOffset()
 				conductorTextView.ScrollTo(currentOffset, 0)
 			}
-			isAutoScrolling = !isAutoScrolling
+			return nil
 		}
+
+		// TODO: add a key to just to head of logs (automatically turn off auto scrolling)
+
 		// set 'esc' to exit fullscreen
 		if event.Key() == tcell.KeyEscape && isFullscreen {
 			isFullscreen = false
@@ -467,21 +479,34 @@ func run() {
 
 		switch event.Key() {
 		case tcell.KeyUp:
-			row, _ := frame.GetScrollOffset()
-			frame.ScrollTo(row-1, 0)
+			if !isAutoScrolling {
+				row, _ := frame.GetScrollOffset()
+				frame.ScrollTo(row-1, 0)
+				return nil
+			}
 		case tcell.KeyDown:
-			row, _ := frame.GetScrollOffset()
-			frame.ScrollTo(row+1, 0)
+			if !isAutoScrolling {
+				row, _ := frame.GetScrollOffset()
+				frame.ScrollTo(row+1, 0)
+				return nil
+			}
 		}
 
+		// TODO: fix the return values
 		frame.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 			switch action {
 			case tview.MouseScrollUp:
-				row, _ := frame.GetScrollOffset()
-				frame.ScrollTo(row-1, 0)
+				if !isAutoScrolling {
+					row, _ := frame.GetScrollOffset()
+					frame.ScrollTo(row-1, 0)
+				}
+				return action, event
 			case tview.MouseScrollDown:
-				row, _ := frame.GetScrollOffset()
-				frame.ScrollTo(row+1, 0)
+				if !isAutoScrolling {
+					row, _ := frame.GetScrollOffset()
+					frame.ScrollTo(row+1, 0)
+				}
+				return action, event
 			}
 			return action, event
 		})
@@ -499,6 +524,10 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
+		stderr, err := seqCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
 
 		if err := seqCmd.Start(); err != nil {
 			panic(err)
@@ -508,15 +537,16 @@ func run() {
 		sequencerStartComplete <- true
 
 		// Create a scanner to read the output line by line.
-		stdoutScanner := bufio.NewScanner(stdout)
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
+		for outputScanner.Scan() {
+			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterSequencerTextView, sequencerTextView)
 			})
 		}
-		if err := stdoutScanner.Err(); err != nil {
+		if err := outputScanner.Err(); err != nil {
 			panic(err)
 		}
 		if err := seqCmd.Wait(); err != nil {
