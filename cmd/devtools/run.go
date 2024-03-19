@@ -524,10 +524,13 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
-		// stderr, err := seqCmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
+		stderr, err := seqCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		if err := seqCmd.Start(); err != nil {
 			panic(err)
@@ -535,11 +538,6 @@ func run() {
 
 		// let the cometbft go routine know that it can start
 		sequencerStartComplete <- true
-
-		// Create a scanner to read the output line by line.
-		// output := io.MultiReader(stdout, stderr)
-		// outputScanner := bufio.NewScanner(output)
-		outputScanner := bufio.NewScanner(stdout)
 
 		for outputScanner.Scan() {
 			line := outputScanner.Text()
@@ -561,6 +559,18 @@ func run() {
 		initCmdArgs := []string{"init", "--home", cometbftDataPath}
 		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 		initCmd.Env = environment
+
+		stdout, err := cometbftCmd.StdoutPipe()
+		if err != nil {
+			panic(err)
+		}
+		stderr, err := cometbftCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
@@ -647,25 +657,12 @@ func run() {
 			})
 		}
 
-		stdout, err := cometbftCmd.StdoutPipe()
-		if err != nil {
-			panic(err)
-		}
-		// stderr, err := cometbftCmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
-
 		if err := cometbftCmd.Start(); err != nil {
 			panic(err)
 		}
 
 		// let the composer go routine know that it can start
 		cometbftStartComplete <- true
-
-		// output := io.MultiReader(stdout, stderr)
-		// outputScanner := bufio.NewScanner(output)
-		outputScanner := bufio.NewScanner(stdout)
 
 		for outputScanner.Scan() {
 			line := outputScanner.Text()
@@ -690,10 +687,13 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
-		// stderr, err := composerCmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
+		stderr, err := composerCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		if err := composerCmd.Start(); err != nil {
 			panic(err)
@@ -701,11 +701,6 @@ func run() {
 
 		// let the conductor go routine know that it can start
 		composerStartComplete <- true
-
-		// Create a scanner to read the output line by line.
-		// output := io.MultiReader(stdout, stderr)
-		// outputScanner := bufio.NewScanner(output)
-		outputScanner := bufio.NewScanner(stdout)
 
 		for outputScanner.Scan() {
 			line := outputScanner.Text()
@@ -730,19 +725,17 @@ func run() {
 		if err != nil {
 			panic(err)
 		}
-		// stderr, err := conductorCmd.StderrPipe()
-		// if err != nil {
-		// 	panic(err)
-		// }
+		stderr, err := conductorCmd.StderrPipe()
+		if err != nil {
+			panic(err)
+		}
+		// Create a scanner to read the output line by line.
+		output := io.MultiReader(stdout, stderr)
+		outputScanner := bufio.NewScanner(output)
 
 		if err := conductorCmd.Start(); err != nil {
 			panic(err)
 		}
-
-		// Create a scanner to read the output line by line.
-		// output := io.MultiReader(stdout, stderr)
-		// outputScanner := bufio.NewScanner(output)
-		outputScanner := bufio.NewScanner(stdout)
 
 		for outputScanner.Scan() {
 			line := outputScanner.Text()
