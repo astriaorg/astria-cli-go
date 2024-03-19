@@ -48,6 +48,8 @@ func NewApp(processrunners []*processrunner.ProcessRunner) *App {
 		AddItem(mainWindowHelpInfo, 1, 0, false)
 	flexView.SetTitle(MainTitle).SetBorder(true)
 
+	// TODO - callback for SetInputCapture
+
 	return &App{
 		Application:  tApp,
 		flexView:     flexView,
