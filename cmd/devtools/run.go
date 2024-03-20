@@ -179,10 +179,10 @@ func run() {
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
 	// app settings
-	isFullscreen := false     // controlled by the 'enter' and 'esc' keys
-	isAutoScrolling := true   // controlled by the 's' key
-	wordWrapEnabled := true   // controlled by the 'w' key
-	isBoarderlessLog := false // controlled by the 'b' key
+	isFullscreen := false    // controlled by the 'enter' and 'esc' keys
+	isAutoScrolling := true  // controlled by the 's' key
+	wordWrapEnabled := true  // controlled by the 'w' key
+	isBorderlessLog := false // controlled by the 'b' key
 	var focusedItem tview.Primitive = sequencerTextView
 
 	helpTextHelp := "(h)elp"
@@ -192,7 +192,7 @@ func run() {
 	helpTextExitFullscreen := "(esc) to exit fullscreen"
 	helpTextWordWrap := "(w)ord wrap"
 	helpTextAutoScroll := "(a)utoscroll"
-	helpTextBoarderless := "(b)oarderless"
+	helpTextBorderless := "(b)oarderless"
 	helpTextLogScroll := "if not auto scrolling: (up/down) arrows or mousewheel to scroll"
 
 	appendStatus := func(text string, status bool) string {
@@ -224,7 +224,7 @@ func run() {
 		output += helpTextExitFullscreen + " | "
 		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
 		output += appendStatus(helpTextAutoScroll, isAutoScrolling) + " | "
-		output += appendStatus(helpTextBoarderless, isBoarderlessLog) + " | "
+		output += appendStatus(helpTextBorderless, isBorderlessLog) + " | "
 		output += helpTextLogScroll
 		return output
 	}
@@ -245,9 +245,9 @@ func run() {
 		output += "\t[:darkslategray]w[:-]: Toggle if word wrap is on or off.\n\n"
 		output += "Autoscroll:\n"
 		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n\n"
-		output += "Boarderless:\n"
+		output += "Borderless:\n"
 		output += "\t[:darkslategray]b[:-]: [yellow:][When in focued window][-:]\n"
-		output += "\t\tToggle the boarder around the logs on or off.\n\n"
+		output += "\t\tToggle the border around the logs on or off.\n\n"
 		output += "Quitting:\n"
 		output += "\t[:darkslategray]q[:-]:      Quit the app.\n"
 		output += "\t[:darkslategray]ctrl-c[:-]: Quit the app.\n\n"
@@ -600,9 +600,9 @@ func run() {
 			// clear settings on the focused item
 			frame.SetInputCapture(nil)
 			frame.SetMouseCapture(nil)
-			// reenable the boarder on the focused item so it shows up in the main window
+			// reenable the border on the focused item so it shows up in the main window
 			frame.SetBorder(true)
-			isBoarderlessLog = false
+			isBorderlessLog = false
 			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
 			// set the app back to the main window and update the prev input and
 			// window for working with the help window
@@ -650,10 +650,10 @@ func run() {
 			app.SetInputCapture(helpWindowInputCapture)
 			app.SetRoot(helpScreenFlex, true)
 		}
-		// toggle the boarder on the longs with 'b'
+		// toggle the border on the longs with 'b'
 		if event.Key() == tcell.KeyRune && (event.Rune() == 'b' || event.Rune() == 'B') {
-			isBoarderlessLog = !isBoarderlessLog
-			if isBoarderlessLog {
+			isBorderlessLog = !isBorderlessLog
+			if isBorderlessLog {
 				frame, ok := items[currentIndex].(*tview.TextView)
 				if !ok {
 					return event
