@@ -180,7 +180,6 @@ func run() {
 
 	// app settings
 	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
-	isHelpScreen := false   // controlled by the 'h' key
 	isAutoScrolling := true // controlled by the 's' key
 	wordWrapEnabled := true // controlled by the 'w' key
 	var focusedItem tview.Primitive = sequencerTextView
@@ -230,9 +229,15 @@ func run() {
 	buildMainHelpScreenText := func() string {
 		output := "Navigation:\t\n"
 		output += "\t[:darkslategray]tab[:-]:            Cycle the focus to the next app.\n"
-		output += "\t[:darkslategray]up/down[:-] arrows: Change focus to the previous or next app.\n\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][For main window][-:]\n"
+		output += "\t\tChange focus to the previous or next app.\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][For focued window with autoscroll OFF][-:]\n"
+		output += "\t\tGo up or down a line in the focued logs.\n"
+		output += "\t[:darkslategray]mouse scroll[:-]:   [yellow:][For focued window with autoscroll OFF][-:]\n"
+		output += "\t\tScroll up or down in the focued logs.\n\n"
 		output += "Focus Control:\n"
-		output += "\t[:darkslategray]enter[:-]: Fullscreen the focused app's logs.\n\n"
+		output += "\t[:darkslategray]enter[:-]: Go from the main screen to fullscreen on the focused app's logs.\n"
+		output += "\t[:darkslategray]esc[:-]:   Go from the fullscreened log view back to the main window.\n\n"
 		output += "Word wrap:\n"
 		output += "\t[:darkslategray]w[:-]: Toggle if word wrap is on or off.\n\n"
 		output += "Autoscroll:\n"
@@ -241,10 +246,16 @@ func run() {
 		output += "\t[:darkslategray]q[:-]:      Quit the app.\n"
 		output += "\t[:darkslategray]ctrl-c[:-]: Quit the app.\n\n"
 		output += "Help:\n"
-		output += "\t[:darkslategray]h[:-]: Show this help screen.\n\n"
-
+		output += "\t[:darkslategray]h[:-]: Show this help screen or return to previous window.\n\n"
 		return output
 	}
+
+	helpscreenHelpInfo := tview.NewTextView().
+		SetDynamicColors(true).
+		SetText("(q)uit | (h) to return to previous window").
+		SetChangedFunc(func() {
+			app.Draw()
+		})
 
 	helpMainWindowInfo := tview.NewTextView().
 		SetDynamicColors(true).
@@ -254,6 +265,9 @@ func run() {
 			app.Draw()
 		})
 	helpMainWindowInfo.SetTitle(" Astria CLI Help ").SetBorder(true).SetBorderColor(tcell.ColorBlue).SetBorderPadding(0, 0, 1, 0)
+	helpScreenFlex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(helpMainWindowInfo, 0, 1, true).
+		AddItem(helpscreenHelpInfo, 1, 0, false), 0, 4, false)
 
 	mainWindowHelpInfo := tview.NewTextView().
 		SetDynamicColors(true).
@@ -269,17 +283,17 @@ func run() {
 			app.Draw()
 		})
 
-	flex := tview.NewFlex().
+	mainWindow := tview.NewFlex().
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(sequencerTextView, 0, 1, true).
 			AddItem(cometbftTextView, 0, 1, false).
 			AddItem(composerTextView, 0, 1, false).
 			AddItem(conductorTextView, 0, 1, false), 0, 4, false).SetDirection(tview.FlexRow).
 		AddItem(mainWindowHelpInfo, 1, 0, false)
-	flex.SetTitle(" Astria Dev ").SetBorder(true)
+	mainWindow.SetTitle(" Astria Dev ").SetBorder(true)
 
 	// prevWindow is used for toggling in and out of the help window
-	var prevWindow tview.Primitive = flex
+	var prevWindow tview.Primitive = mainWindow
 
 	// Create ANSI writers for the text views
 	aWriterSequencerTextView := tview.ANSIWriter(sequencerTextView)
@@ -352,7 +366,9 @@ func run() {
 	conductorCmd := exec.Command(conductorBinPath)
 	conductorCmd.Env = environment
 
-	var mainWindowInputCapture, focusWindowInputCapture func(event *tcell.EventKey) *tcell.EventKey
+	var mainWindowInputCapture, focusWindowInputCapture, helpWindowInputCapture func(event *tcell.EventKey) *tcell.EventKey
+	var prevInputCapture func(event *tcell.EventKey) *tcell.EventKey
+	// prevInputCapture = mainWindowInputCapture
 
 	// create the input capture for the app in fullscreen
 	mainWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
@@ -447,7 +463,9 @@ func run() {
 				AddItem(frame, 0, 1, true).
 				AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
 			prevWindow = fullscreenFlex
+			prevInputCapture = focusWindowInputCapture
 			app.SetRoot(fullscreenFlex, true)
+			app.SetInputCapture(nil)
 			app.SetInputCapture(focusWindowInputCapture)
 			return nil
 		}
@@ -475,15 +493,15 @@ func run() {
 		}
 
 		if event.Key() == tcell.KeyRune && (event.Rune() == 'h' || event.Rune() == 'H') {
-			isHelpScreen = !isHelpScreen
-			if isHelpScreen {
-				app.SetRoot(helpMainWindowInfo, true)
-			} else {
-				app.SetRoot(prevWindow, true)
-			}
+			prevWindow = mainWindow
+			prevInputCapture = mainWindowInputCapture
+			app.SetInputCapture(nil)
+			app.SetInputCapture(helpWindowInputCapture)
+			app.SetRoot(helpScreenFlex, true)
 		}
 		return event
 	}
+	prevInputCapture = mainWindowInputCapture
 
 	// set the input capture for the app in app focus mode
 	focusWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
@@ -542,7 +560,7 @@ func run() {
 		// set 'a' to toggle auto scrolling
 		if event.Key() == tcell.KeyRune && (event.Rune() == 'a' || event.Rune() == 'A') {
 			isAutoScrolling = !isAutoScrolling
-			if !isAutoScrolling {
+			if isAutoScrolling {
 				sequencerTextView.ScrollToEnd()
 				cometbftTextView.ScrollToEnd()
 				composerTextView.ScrollToEnd()
@@ -575,8 +593,9 @@ func run() {
 			}
 			frame.SetInputCapture(nil)
 			frame.SetMouseCapture(nil)
-			prevWindow = flex
-			app.SetRoot(flex, true)
+			prevInputCapture = mainWindowInputCapture
+			prevWindow = mainWindow
+			app.SetRoot(mainWindow, true)
 			app.SetInputCapture(mainWindowInputCapture)
 			return nil
 		}
@@ -615,12 +634,52 @@ func run() {
 			return action, event
 		})
 		if event.Key() == tcell.KeyRune && (event.Rune() == 'h' || event.Rune() == 'H') {
-			isHelpScreen = !isHelpScreen
-			if isHelpScreen {
-				app.SetRoot(helpMainWindowInfo, true)
-			} else {
-				app.SetRoot(prevWindow, true)
+			app.SetInputCapture(nil)
+			app.SetInputCapture(helpWindowInputCapture)
+			app.SetRoot(helpScreenFlex, true)
+		}
+		return event
+	}
+
+	helpWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
+		// properly handle ctrl-c and pass SIGINT to the running processes
+		if event.Key() == tcell.KeyCtrlC {
+			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
 			}
+			if err := cometbftCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			app.Stop()
+			return nil
+		}
+		// set 'q' to exit the app and pass SIGINT to the running processes
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'q' || event.Rune() == 'Q') {
+			if err := seqCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := cometbftCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := composerCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			if err := conductorCmd.Process.Signal(syscall.SIGINT); err != nil {
+				fmt.Println("Failed to send SIGINT to the process:", err)
+			}
+			app.Stop()
+			return nil
+		}
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'h' || event.Rune() == 'H') {
+			app.SetInputCapture(nil)
+			app.SetInputCapture(prevInputCapture)
+			app.SetRoot(prevWindow, true)
 		}
 		return event
 	}
@@ -863,9 +922,10 @@ func run() {
 		}
 	}()
 
-	prevWindow = flex
+	prevWindow = mainWindow
+	prevInputCapture = mainWindowInputCapture
 	app.SetFocus(focusedItem)
-	if err := app.SetRoot(flex, true).Run(); err != nil {
+	if err := app.SetRoot(mainWindow, true).Run(); err != nil {
 		panic(err)
 	}
 }
