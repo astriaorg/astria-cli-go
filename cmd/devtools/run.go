@@ -179,9 +179,10 @@ func run() {
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
 
 	// app settings
-	isFullscreen := false   // controlled by the 'enter' and 'esc' keys
-	isAutoScrolling := true // controlled by the 's' key
-	wordWrapEnabled := true // controlled by the 'w' key
+	isFullscreen := false     // controlled by the 'enter' and 'esc' keys
+	isAutoScrolling := true   // controlled by the 's' key
+	wordWrapEnabled := true   // controlled by the 'w' key
+	isBoarderlessLog := false // controlled by the 'b' key
 	var focusedItem tview.Primitive = sequencerTextView
 
 	helpTextHelp := "(h)elp"
@@ -191,6 +192,7 @@ func run() {
 	helpTextExitFullscreen := "(esc) to exit fullscreen"
 	helpTextWordWrap := "(w)ord wrap"
 	helpTextAutoScroll := "(a)utoscroll"
+	helpTextBoarderless := "(b)oarderless"
 	helpTextLogScroll := "if not auto scrolling: (up/down) arrows or mousewheel to scroll"
 
 	appendStatus := func(text string, status bool) string {
@@ -222,6 +224,7 @@ func run() {
 		output += helpTextExitFullscreen + " | "
 		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
 		output += appendStatus(helpTextAutoScroll, isAutoScrolling) + " | "
+		output += appendStatus(helpTextBoarderless, isBoarderlessLog) + " | "
 		output += helpTextLogScroll
 		return output
 	}
@@ -229,11 +232,11 @@ func run() {
 	buildMainHelpScreenText := func() string {
 		output := "Navigation:\t\n"
 		output += "\t[:darkslategray]tab[:-]:            Cycle the focus to the next app.\n"
-		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][For main window][-:]\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][When in main window][-:]\n"
 		output += "\t\tChange focus to the previous or next app.\n"
-		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][For focued window with autoscroll OFF][-:]\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][When in focued window with autoscroll OFF][-:]\n"
 		output += "\t\tGo up or down a line in the focued logs.\n"
-		output += "\t[:darkslategray]mouse scroll[:-]:   [yellow:][For focued window with autoscroll OFF][-:]\n"
+		output += "\t[:darkslategray]mouse scroll[:-]:   [yellow:][When in focued window with autoscroll OFF][-:]\n"
 		output += "\t\tScroll up or down in the focued logs.\n\n"
 		output += "Focus Control:\n"
 		output += "\t[:darkslategray]enter[:-]: Go from the main screen to fullscreen on the focused app's logs.\n"
@@ -242,6 +245,9 @@ func run() {
 		output += "\t[:darkslategray]w[:-]: Toggle if word wrap is on or off.\n\n"
 		output += "Autoscroll:\n"
 		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n\n"
+		output += "Boarderless:\n"
+		output += "\t[:darkslategray]b[:-]: [yellow:][When in focued window][-:]\n"
+		output += "\t\tToggle the boarder around the logs on or off.\n\n"
 		output += "Quitting:\n"
 		output += "\t[:darkslategray]q[:-]:      Quit the app.\n"
 		output += "\t[:darkslategray]ctrl-c[:-]: Quit the app.\n\n"
@@ -368,7 +374,6 @@ func run() {
 
 	var mainWindowInputCapture, focusWindowInputCapture, helpWindowInputCapture func(event *tcell.EventKey) *tcell.EventKey
 	var prevInputCapture func(event *tcell.EventKey) *tcell.EventKey
-	// prevInputCapture = mainWindowInputCapture
 
 	// create the input capture for the app in fullscreen
 	mainWindowInputCapture = func(event *tcell.EventKey) *tcell.EventKey {
@@ -566,6 +571,7 @@ func run() {
 				composerTextView.ScrollToEnd()
 				conductorTextView.ScrollToEnd()
 			} else {
+				// stop auto scrolling and allow the user to scroll manually
 				currentOffset, _ := sequencerTextView.GetScrollOffset()
 				sequencerTextView.ScrollTo(currentOffset, 0)
 				currentOffset, _ = cometbftTextView.GetScrollOffset()
@@ -591,8 +597,15 @@ func run() {
 			if !ok {
 				return event
 			}
+			// clear settings on the focused item
 			frame.SetInputCapture(nil)
 			frame.SetMouseCapture(nil)
+			// reenable the boarder on the focused item so it shows up in the main window
+			frame.SetBorder(true)
+			isBoarderlessLog = false
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+			// set the app back to the main window and update the prev input and
+			// window for working with the help window
 			prevInputCapture = mainWindowInputCapture
 			prevWindow = mainWindow
 			app.SetRoot(mainWindow, true)
@@ -614,8 +627,6 @@ func run() {
 				return nil
 			}
 		}
-
-		// TODO: fix the return values
 		frame.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 			switch action {
 			case tview.MouseScrollUp:
@@ -633,10 +644,45 @@ func run() {
 			}
 			return action, event
 		})
+		// jump to help screen
 		if event.Key() == tcell.KeyRune && (event.Rune() == 'h' || event.Rune() == 'H') {
 			app.SetInputCapture(nil)
 			app.SetInputCapture(helpWindowInputCapture)
 			app.SetRoot(helpScreenFlex, true)
+		}
+		// toggle the boarder on the longs with 'b'
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'b' || event.Rune() == 'B') {
+			isBoarderlessLog = !isBoarderlessLog
+			if isBoarderlessLog {
+				frame, ok := items[currentIndex].(*tview.TextView)
+				if !ok {
+					return event
+				}
+				// TODO: make the set focus stuff below into a function
+				fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+				frame.SetBorder(false)
+				fullscreenFlex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+					AddItem(frame, 0, 1, true).
+					AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
+				prevWindow = fullscreenFlex
+				prevInputCapture = focusWindowInputCapture
+				app.SetRoot(fullscreenFlex, true)
+			} else {
+				frame, ok := items[currentIndex].(*tview.TextView)
+				if !ok {
+					return event
+				}
+				// TODO: make the set focus stuff below into a function
+				fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+				frame.SetBorder(true)
+				fullscreenFlex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+					AddItem(frame, 0, 1, true).
+					AddItem(fullscreenHelpInfo, 1, 0, false), 0, 4, false)
+				prevWindow = fullscreenFlex
+				prevInputCapture = focusWindowInputCapture
+				app.SetRoot(fullscreenFlex, true)
+			}
+			return nil
 		}
 		return event
 	}
