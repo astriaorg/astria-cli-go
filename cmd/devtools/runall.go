@@ -40,6 +40,10 @@ func init() {
 }
 
 func runall() {
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
+	ctx := rootCmd.Context()
+
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("error getting home dir:", err)
@@ -47,51 +51,75 @@ func runall() {
 	}
 	defaultDir := filepath.Join(homePath, ".astria")
 
-	// Load the .env file and get the environment variables
+	// load the .env file and get the environment variables
+	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(defaultDir, "local-dev-astria/.env")
 	environment := loadAndGetEnvVariables(envPath)
-	//fmt.Printf("Environment: %v\n", environment)
 
-	sequencerBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer")
-	seqProcRunner := processrunner.NewProcessRunner("Sequencer", sequencerBinPath, environment, nil)
+	// sequencer
+	seqOpts := processrunner.NewProcessRunnerOpts{
+		Title:   "Sequencer",
+		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer"),
+		Env:     environment,
+		Args:    nil,
+	}
+	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 	// shouldStart acts as a control channel to start this first process
 	shouldStart := make(chan bool)
-	seqProcRunner, err = seqProcRunner.Start(shouldStart)
-	shouldStart <- true
+	close(shouldStart)
+	err = seqRunner.Start(shouldStart)
 	if err != nil {
 		fmt.Println("Error running sequencer:", err)
 		panic(err)
 	}
 
-	cometBinPath := filepath.Join(homePath, ".astria/local-dev-astria/cometbft")
+	// cometbft
 	cometDataPath := filepath.Join(homePath, ".astria/data/.cometbft")
-	cometArgs := []string{"node", "--home", cometDataPath}
-	cometProcRunner := processrunner.NewProcessRunner("Comet BFT", cometBinPath, environment, cometArgs)
-	cometProcRunner, err = cometProcRunner.Start(seqProcRunner.IsRunning)
+	cometOpts := processrunner.NewProcessRunnerOpts{
+		Title:   "Comet BFT",
+		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/cometbft"),
+		Env:     environment,
+		Args:    []string{"node", "--home", cometDataPath},
+	}
+	cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
+	err = cometRunner.Start(seqRunner.DidStart())
 	if err != nil {
 		fmt.Println("Error running composer:", err)
 		panic(err)
 	}
 
-	composeBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-composer")
-	compProcRunner := processrunner.NewProcessRunner("Composer", composeBinPath, environment, nil)
-	compProcRunner, err = compProcRunner.Start(cometProcRunner.IsRunning)
+	// composer
+	composerOpts := processrunner.NewProcessRunnerOpts{
+		Title:   "Composer",
+		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/astria-composer"),
+		Env:     environment,
+		Args:    nil,
+	}
+	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
+	err = compRunner.Start(cometRunner.DidStart())
 	if err != nil {
 		fmt.Println("Error running composer:", err)
 		panic(err)
 	}
 
-	conductorBinPath := filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor")
-	condProcRunner := processrunner.NewProcessRunner("Conductor", conductorBinPath, environment, nil)
-	condProcRunner, err = condProcRunner.Start(compProcRunner.IsRunning)
+	// conductor
+	conductorOpts := processrunner.NewProcessRunnerOpts{
+		Title:   "Conductor",
+		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor"),
+		Env:     environment,
+		Args:    nil,
+	}
+	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
+	err = condRunner.Start(compRunner.DidStart())
 	if err != nil {
 		fmt.Println("Error running conductor:", err)
 		panic(err)
 	}
 
-	runners := []*processrunner.ProcessRunner{seqProcRunner, cometProcRunner, compProcRunner, condProcRunner}
-	app := ui.NewApp(runners)
+	runners := []*processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
 
+	// create and start ui app
+	app := ui.NewApp(runners)
 	app.Start()
 }

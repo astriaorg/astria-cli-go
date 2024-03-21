@@ -35,14 +35,13 @@ func NewProcessPane(tApp *tview.Application, pr *processrunner.ProcessRunner) *P
 
 // StartScan starts scanning the stdout of the process and writes to the textView
 func (pp *ProcessPane) StartScan() {
-	// ansi writer
-	ansiWriter := tview.ANSIWriter(pp.textView)
-
-	// new scanner to scan stdout
-	stdoutScanner := bufio.NewScanner(pp.pr.Stdout)
-
 	// scan stdout and write using ansiWriter
 	go func() {
+		// ansi writer
+		ansiWriter := tview.ANSIWriter(pp.textView)
+
+		// new scanner to scan stdout
+		stdoutScanner := bufio.NewScanner(pp.pr.GetStdout())
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			pp.tApp.QueueUpdateDraw(func() {
@@ -55,7 +54,7 @@ func (pp *ProcessPane) StartScan() {
 		if err := stdoutScanner.Err(); err != nil {
 			panic(err)
 		}
-		if err := pp.pr.Cmd.Wait(); err != nil {
+		if err := pp.pr.Wait(); err != nil {
 			panic(err)
 		}
 	}()
