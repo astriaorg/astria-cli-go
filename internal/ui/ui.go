@@ -34,6 +34,7 @@ func NewApp(processrunners []*processrunner.ProcessRunner) *App {
 
 		shouldFocus := false
 		if index == 0 {
+			// select and focus the first pane
 			shouldFocus = true
 			selectedPane = pp
 		}
