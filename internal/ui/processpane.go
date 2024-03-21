@@ -23,13 +23,13 @@ func NewProcessPane(tApp *tview.Application, pr *processrunner.ProcessRunner) *P
 		SetChangedFunc(func() {
 			tApp.Draw()
 		})
-	tv.SetTitle(pr.Title).SetBorder(true)
+	tv.SetTitle(pr.GetTitle()).SetBorder(true)
 
 	return &ProcessPane{
 		tApp:     tApp,
 		textView: tv,
 		pr:       pr,
-		title:    pr.Title,
+		title:    pr.GetTitle(),
 	}
 }
 

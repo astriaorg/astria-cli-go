@@ -14,7 +14,7 @@ type ProcessRunner struct {
 	// cmd is the exec.Cmd to be run
 	cmd *exec.Cmd
 	// Title is the title of the process
-	Title string
+	title string
 
 	didStart chan bool
 	stdout   io.ReadCloser
@@ -39,7 +39,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) *ProcessRu
 	cmd.Env = opts.Env
 	return &ProcessRunner{
 		cmd:      cmd,
-		Title:    opts.Title,
+		title:    opts.Title,
 		didStart: make(chan bool),
 		ctx:      ctx,
 		cancel:   cancel,
@@ -112,8 +112,8 @@ func (pr *ProcessRunner) Stop() error {
 	return nil
 }
 
-// DidStart returns a channel that's closed when the process starts.
-func (pr *ProcessRunner) DidStart() <-chan bool {
+// GetDidStart returns a channel that's closed when the process starts.
+func (pr *ProcessRunner) GetDidStart() <-chan bool {
 	return pr.didStart
 }
 
@@ -125,4 +125,9 @@ func (pr *ProcessRunner) GetStdout() io.ReadCloser {
 // GetStderr provides a reader for the process's stderr.
 func (pr *ProcessRunner) GetStderr() io.ReadCloser {
 	return pr.stderr
+}
+
+// GetTitle returns the title of the process.
+func (pr *ProcessRunner) GetTitle() string {
+	return pr.title
 }

@@ -83,7 +83,7 @@ func runall() {
 		Args:    []string{"node", "--home", cometDataPath},
 	}
 	cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
-	err = cometRunner.Start(seqRunner.DidStart())
+	err = cometRunner.Start(seqRunner.GetDidStart())
 	if err != nil {
 		fmt.Println("Error running composer:", err)
 		panic(err)
@@ -97,7 +97,7 @@ func runall() {
 		Args:    nil,
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
-	err = compRunner.Start(cometRunner.DidStart())
+	err = compRunner.Start(cometRunner.GetDidStart())
 	if err != nil {
 		fmt.Println("Error running composer:", err)
 		panic(err)
@@ -111,7 +111,7 @@ func runall() {
 		Args:    nil,
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
-	err = condRunner.Start(compRunner.DidStart())
+	err = condRunner.Start(compRunner.GetDidStart())
 	if err != nil {
 		fmt.Println("Error running conductor:", err)
 		panic(err)
