@@ -4,6 +4,7 @@ import (
 	"bufio"
 
 	"github.com/astria/astria-cli-go/internal/processrunner"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -12,7 +13,7 @@ type ProcessPane struct {
 	tApp     *tview.Application
 	textView *tview.TextView
 	pr       *processrunner.ProcessRunner
-	title    string
+	Title    string
 
 	isAutoScroll bool
 	isWordWrap   bool
@@ -26,13 +27,15 @@ func NewProcessPane(tApp *tview.Application, pr *processrunner.ProcessRunner) *P
 		SetChangedFunc(func() {
 			tApp.Draw()
 		})
-	tv.SetTitle(pr.GetTitle()).SetBorder(true)
+	tv.SetBorder(true).
+		SetBorderColor(tcell.ColorGray).
+		SetTitle(pr.GetTitle())
 
 	return &ProcessPane{
 		tApp:     tApp,
 		textView: tv,
 		pr:       pr,
-		title:    pr.GetTitle(),
+		Title:    pr.GetTitle(),
 
 		isAutoScroll: true,
 		isWordWrap:   false,
@@ -71,4 +74,19 @@ func (pp *ProcessPane) ToggleIsWordWrapped() {
 	pp.isWordWrap = !pp.isWordWrap
 	// set the textview's word wrap
 	pp.textView.SetWrap(pp.isWordWrap)
+}
+
+// GetTextView returns the textView associated with the ProcessPane.
+func (pp *ProcessPane) GetTextView() *tview.TextView {
+	return pp.textView
+}
+
+// Highlight highlights or unhighlights the ProcessPane's textView.
+func (pp *ProcessPane) Highlight(highlight bool) {
+	if highlight {
+		title := "[black:lightblue]" + pp.Title + "[::-]"
+		pp.textView.SetBorderColor(tcell.ColorLightBlue).SetTitle(title)
+	} else {
+		pp.textView.SetBorderColor(tcell.ColorGray).SetTitle(pp.Title)
+	}
 }
