@@ -102,14 +102,13 @@ func (pr *ProcessRunner) Wait() error {
 }
 
 // Stop stops the process.
-func (pr *ProcessRunner) Stop() error {
+func (pr *ProcessRunner) Stop() {
 	// send SIGINT to the process
 	if err := pr.cmd.Process.Signal(syscall.SIGINT); err != nil {
 		fmt.Println("Error sending SIGINT:", err)
 	}
 	// this will terminate the process if it's running
 	pr.cancel()
-	return nil
 }
 
 // GetDidStart returns a channel that's closed when the process starts.

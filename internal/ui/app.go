@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/astria/astria-cli-go/internal/processrunner"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -53,8 +54,6 @@ func NewApp(processrunners []*processrunner.ProcessRunner) *App {
 		AddItem(mainWindowHelpInfo, 1, 0, false)
 	flex.SetTitle(MainTitle).SetBorder(true)
 
-	// TODO - callback for SetInputCapture
-
 	return &App{
 		Application:  tviewApp,
 		flex:         flex,
@@ -69,9 +68,47 @@ func (a *App) Start() {
 	for _, pr := range a.processPanes {
 		pr.StartScan()
 	}
+
+	// keyboard shortcuts
+	a.Application.SetInputCapture(a.KeyboardMainView)
+
 	// set the ui root primitive and run the tview application
 	a.Application.SetRoot(a.flex, true)
 	if err := a.Application.Run(); err != nil {
 		panic(err)
 	}
+}
+
+func (a *App) Stop() {
+	// stop each process
+	for _, pp := range a.processPanes {
+		pp.pr.Stop()
+	}
+	// stop the tview application
+	a.Application.Stop()
+}
+
+func (a *App) KeyboardMainView(evt *tcell.EventKey) *tcell.EventKey {
+	switch evt.Key() {
+	case tcell.KeyCtrlC:
+		a.Stop()
+	case tcell.KeyRune:
+		switch evt.Rune() {
+		case 'a':
+			// TODO - autoscroll
+		case 'q':
+			a.Stop()
+		case 'w':
+			for _, pp := range a.processPanes {
+				pp.ToggleIsWordWrapped()
+			}
+		}
+	case tcell.KeyUp:
+
+	case tcell.KeyDown:
+		// TODO - select pane
+	case tcell.KeyEnter:
+		// TODO - enter fullscreen
+	}
+	return evt
 }

@@ -13,6 +13,9 @@ type ProcessPane struct {
 	textView *tview.TextView
 	pr       *processrunner.ProcessRunner
 	title    string
+
+	isAutoScroll bool
+	isWordWrap   bool
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -30,6 +33,9 @@ func NewProcessPane(tApp *tview.Application, pr *processrunner.ProcessRunner) *P
 		textView: tv,
 		pr:       pr,
 		title:    pr.GetTitle(),
+
+		isAutoScroll: true,
+		isWordWrap:   false,
 	}
 }
 
@@ -58,4 +64,11 @@ func (pp *ProcessPane) StartScan() {
 			panic(err)
 		}
 	}()
+}
+
+// ToggleIsWordWrapped sets the word wrap of the textView.
+func (pp *ProcessPane) ToggleIsWordWrapped() {
+	pp.isWordWrap = !pp.isWordWrap
+	// set the textview's word wrap
+	pp.textView.SetWrap(pp.isWordWrap)
 }
