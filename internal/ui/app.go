@@ -184,7 +184,7 @@ func (a *App) decrementSelectedPaneIdx() {
 	a.redraw()
 }
 
-// redraw updates the panes to show visual treatment for selected pane.
+// redraw sets the tview's Root primitive and ensures correct visual state.
 func (a *App) redraw() {
 	// set the root primitive
 	a.Application.SetRoot(a.flex, true)
