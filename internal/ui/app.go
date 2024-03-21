@@ -54,11 +54,12 @@ func NewApp(processrunners []*processrunner.ProcessRunner) *App {
 	flex.SetTitle(MainTitle).SetBorder(true)
 
 	return &App{
-		Application:  tviewApp,
-		flex:         flex,
-		processPanes: processPanes,
-		// select first pane on start
-		selectedPaneIdx: 0,
+		Application:     tviewApp,
+		flex:            flex,
+		processPanes:    processPanes,
+		selectedPaneIdx: 0, // select first pane on start
+		isAutoScroll:    true,
+		isWordWrap:      false,
 	}
 }
 
@@ -71,6 +72,16 @@ func (a *App) Start() {
 
 	// keyboard shortcuts
 	a.setInputCapture(a.getKeyboardMainView)
+
+	// set initial process pane local state
+	// NOTE - right now, we're keeping all the panes' local ui state in sync with
+	//  the top level ui state defined in this struct. This means that toggling
+	//  e.g. word wrap happens at the global level and affects all panes, even
+	//  when in fullscreen view. This is a design decision that can be changed.
+	for _, pp := range a.processPanes {
+		pp.SetIsAutoScroll(a.isAutoScroll)
+		pp.SetIsWordWrap(a.isWordWrap)
+	}
 
 	// redraw after startup to ensure ui state is correct
 	a.redraw()
@@ -95,6 +106,8 @@ func (a *App) stop() {
 func (a *App) setIsFullscreen(isFullscreen bool) {
 	if isFullscreen {
 		// set prevFlex to current flex
+		// NOTE - we only have 2 views right now, so this is okay to do as an easy way to go between views,
+		//  but creating a View struct or similar would be a good place to start refactoring.
 		a.prevFlex = a.flex
 		// build tview text views and flex
 		help := tview.NewTextView().

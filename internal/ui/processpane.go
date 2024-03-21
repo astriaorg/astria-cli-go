@@ -79,7 +79,12 @@ func (pp *ProcessPane) StopProcess() {
 // SetIsAutoScroll sets the auto scroll of the textView.
 func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
 	pp.isAutoScroll = isAutoScroll
-	// TODO - ui logic that handles auto scroll
+	if pp.isAutoScroll {
+		pp.textView.ScrollToEnd()
+	} else {
+		currentOffset, _ := pp.textView.GetScrollOffset()
+		pp.textView.ScrollTo(currentOffset, 0)
+	}
 }
 
 // SetIsWordWrap sets the word wrap of the textView.
