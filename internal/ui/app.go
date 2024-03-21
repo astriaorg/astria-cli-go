@@ -26,6 +26,10 @@ type App struct {
 	processPanes []*ProcessPane
 	// selectedPaneIdx is the index of the currently selected ProcessPane
 	selectedPaneIdx int
+
+	// ui state
+	isAutoScroll bool
+	isWordWrap   bool
 }
 
 // NewApp creates a new tview.Application with the necessary components
@@ -61,8 +65,8 @@ func NewApp(processrunners []*processrunner.ProcessRunner) *App {
 // Start starts the tview application.
 func (a *App) Start() {
 	// start scanning stdout for each process
-	for _, pr := range a.processPanes {
-		pr.StartScan()
+	for _, pp := range a.processPanes {
+		pp.StartScan()
 	}
 
 	// keyboard shortcuts
@@ -81,7 +85,7 @@ func (a *App) Start() {
 func (a *App) stop() {
 	// stop each process
 	for _, pp := range a.processPanes {
-		pp.pr.Stop()
+		pp.StopProcess()
 	}
 	// stop the tview application
 	a.Application.Stop()
@@ -129,16 +133,15 @@ func (a *App) getKeyboardMainView(evt *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyRune:
 		switch evt.Rune() {
 		case 'a':
-			// TODO - autoscroll
+			a.toggleAutoScroll()
 		case 'q':
 			a.stop()
 		case 'w':
-			for _, pp := range a.processPanes {
-				pp.ToggleIsWordWrapped()
-			}
+			a.toggleWordWrap()
 		}
 	case tcell.KeyDown:
-		// we want the down key to increment the selected index, bc top starts at 0
+		// we want the down key to increment the selected index,
+		// bc top pane starts at 0
 		a.incrementSelectedPaneIdx()
 	case tcell.KeyUp:
 		a.decrementSelectedPaneIdx()
@@ -152,18 +155,17 @@ func (a *App) getKeyboardMainView(evt *tcell.EventKey) *tcell.EventKey {
 func (a *App) getKeyboardFullscreenView(evt *tcell.EventKey) *tcell.EventKey {
 	switch evt.Key() {
 	case tcell.KeyCtrlC:
-		// CtrlC should always stop the app no matter the view
+		// CtrlC should always completely stop the app no matter the view
 		a.stop()
 	case tcell.KeyRune:
 		switch evt.Rune() {
 		case 'a':
-			// TODO - autoscroll
+			a.toggleAutoScroll()
 		case 'q':
+			// q goes back to main view when on fullscreen view
 			a.setIsFullscreen(false)
 		case 'w':
-			for _, pp := range a.processPanes {
-				pp.ToggleIsWordWrapped()
-			}
+			a.toggleWordWrap()
 		}
 	case tcell.KeyEscape:
 		a.setIsFullscreen(false)
@@ -182,6 +184,22 @@ func (a *App) decrementSelectedPaneIdx() {
 	paneLen := len(a.processPanes)
 	a.selectedPaneIdx = (a.selectedPaneIdx - 1 + paneLen) % paneLen
 	a.redraw()
+}
+
+// toggleAutoScroll toggles the ui state and updates the ProcessPanes.
+func (a *App) toggleAutoScroll() {
+	a.isAutoScroll = !a.isAutoScroll
+	for _, pp := range a.processPanes {
+		pp.SetIsAutoScroll(a.isAutoScroll)
+	}
+}
+
+// toggleWordWrap toggles the ui state and updates the ProcessPanes.
+func (a *App) toggleWordWrap() {
+	a.isWordWrap = !a.isWordWrap
+	for _, pp := range a.processPanes {
+		pp.SetIsWordWrap(a.isWordWrap)
+	}
 }
 
 // redraw sets the tview's Root primitive and ensures correct visual state.

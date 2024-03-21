@@ -15,6 +15,8 @@ type ProcessPane struct {
 	pr       *processrunner.ProcessRunner
 	Title    string
 
+	// local ui state. Right now, this state is kept in sync with
+	//  the top level ui state in App
 	isAutoScroll bool
 	isWordWrap   bool
 }
@@ -69,9 +71,20 @@ func (pp *ProcessPane) StartScan() {
 	}()
 }
 
-// ToggleIsWordWrapped sets the word wrap of the textView.
-func (pp *ProcessPane) ToggleIsWordWrapped() {
-	pp.isWordWrap = !pp.isWordWrap
+// StopProcess stops the process associated with the ProcessPane.
+func (pp *ProcessPane) StopProcess() {
+	pp.pr.Stop()
+}
+
+// SetIsAutoScroll sets the auto scroll of the textView.
+func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
+	pp.isAutoScroll = isAutoScroll
+	// TODO - ui logic that handles auto scroll
+}
+
+// SetIsWordWrap sets the word wrap of the textView.
+func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
+	pp.isWordWrap = isWordWrap
 	// set the textview's word wrap
 	pp.textView.SetWrap(pp.isWordWrap)
 }
