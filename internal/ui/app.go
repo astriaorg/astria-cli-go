@@ -24,12 +24,12 @@ type App struct {
 
 	// processPanes holds ProcessPanes, one for each process.
 	processPanes []*ProcessPane
-	// selectedPaneIdx is the index of the currently selected ProcessPane
-	selectedPaneIdx int
 
 	// ui state
-	isAutoScroll bool
-	isWordWrap   bool
+	// selectedPaneIdx is the index of the currently selected ProcessPane
+	selectedPaneIdx int
+	isAutoScroll    bool
+	isWordWrap      bool
 }
 
 // NewApp creates a new tview.Application with the necessary components

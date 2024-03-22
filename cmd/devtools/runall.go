@@ -40,8 +40,6 @@ func init() {
 }
 
 func runall() {
-	//ctx, cancel := context.WithCancel(context.Background())
-	//defer cancel()
 	ctx := rootCmd.Context()
 
 	homePath, err := os.UserHomeDir()
