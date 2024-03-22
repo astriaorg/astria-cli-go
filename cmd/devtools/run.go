@@ -83,10 +83,10 @@ func checkIfInitialized(path string) bool {
 	// all dirs/files that should exist
 	filePaths := []string{
 		"local-dev-astria/.env",
-		"local-dev-astria/astria-sequencer",
+		// "local-dev-astria/astria-sequencer",
 		"local-dev-astria/astria-conductor",
 		"local-dev-astria/astria-composer",
-		"local-dev-astria/cometbft",
+		// "local-dev-astria/cometbft",
 		"local-dev-astria/genesis.json",
 		"local-dev-astria/priv_validator_key.json",
 		"data",
