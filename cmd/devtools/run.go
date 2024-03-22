@@ -150,6 +150,7 @@ func run() {
 			app.Draw()
 		})
 	sequencerTextView.SetTitle(" Sequencer ").SetBorder(true)
+	sequencerTVRowCount := 0
 
 	// create text view object for the cometbft
 	cometbftTextView := tview.NewTextView().
@@ -159,6 +160,7 @@ func run() {
 			app.Draw()
 		})
 	cometbftTextView.SetTitle(" Cometbft ").SetBorder(true)
+	cometbftTVRowCount := 0
 
 	// create text view object for the composer
 	composerTextView := tview.NewTextView().
@@ -168,6 +170,7 @@ func run() {
 			app.Draw()
 		})
 	composerTextView.SetTitle(" Composer ").SetBorder(true)
+	composerTVRowCount := 0
 
 	// create text view object for the conductor
 	conductorTextView := tview.NewTextView().
@@ -177,6 +180,7 @@ func run() {
 			app.Draw()
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
+	conductorTVRowCount := 0
 
 	// app settings
 	isFullscreen := false    // controlled by the 'enter' and 'esc' keys
@@ -684,6 +688,33 @@ func run() {
 			}
 			return nil
 		}
+		// using 'd' for hea(d), 'h' already in use for help
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'd' || event.Rune() == 'D') {
+			// disable auto scrolling and jump to the head of the logs
+			isAutoScrolling = false
+			sequencerTextView.ScrollToBeginning()
+			cometbftTextView.ScrollToBeginning()
+			composerTextView.ScrollToBeginning()
+			conductorTextView.ScrollToBeginning()
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+			return nil
+		}
+		if event.Key() == tcell.KeyRune && (event.Rune() == 't' || event.Rune() == 'T') {
+			// disable auto scrolling and jump to the tail of the logs
+			// stop auto scrolling and allow the user to scroll manually
+			isAutoScrolling = false
+
+			sequencerTextView.ScrollTo(sequencerTVRowCount, 0)
+			cometbftTextView.ScrollTo(cometbftTVRowCount, 0)
+			composerTextView.ScrollTo(composerTVRowCount, 0)
+			conductorTextView.ScrollTo(conductorTVRowCount, 0)
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+			return nil
+		}
 		return event
 	}
 
@@ -759,6 +790,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterSequencerTextView)
+				sequencerTVRowCount++
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
@@ -791,6 +823,7 @@ func run() {
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
 			appendText(p, aWriterCometbftTextView)
+			cometbftTVRowCount++
 		})
 
 		out, err := initCmd.CombinedOutput()
@@ -798,12 +831,14 @@ func run() {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
 		}
 		app.QueueUpdateDraw(func() {
 			appendText(string(out), aWriterCometbftTextView)
+			cometbftTVRowCount++
 
 		})
 
@@ -820,6 +855,7 @@ func run() {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
@@ -827,6 +863,7 @@ func run() {
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
 			appendText(p, aWriterCometbftTextView)
+			cometbftTVRowCount++
 
 		})
 
@@ -843,6 +880,7 @@ func run() {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
@@ -850,6 +888,7 @@ func run() {
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
 			appendText(p, aWriterCometbftTextView)
+			cometbftTVRowCount++
 
 		})
 
@@ -862,6 +901,7 @@ func run() {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
@@ -869,6 +909,7 @@ func run() {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 		}
@@ -884,6 +925,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 		}
@@ -922,6 +964,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterComposerTextView)
+				composerTVRowCount++
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
@@ -957,7 +1000,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterConductorTextView)
-
+				conductorTVRowCount++
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
