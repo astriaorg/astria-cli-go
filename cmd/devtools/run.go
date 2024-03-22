@@ -198,6 +198,8 @@ func run() {
 	helpTextAutoScroll := "(a)utoscroll"
 	helpTextBorderless := "(b)oarderless"
 	helpTextLogScroll := "if not auto scrolling: (up/down) arrows or mousewheel to scroll"
+	helpTextHead := "(0) jump to head"
+	helpTextTail := "(1) jump to tail"
 
 	appendStatus := func(text string, status bool) string {
 		output := ""
@@ -229,6 +231,8 @@ func run() {
 		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
 		output += appendStatus(helpTextAutoScroll, isAutoScrolling) + " | "
 		output += appendStatus(helpTextBorderless, isBorderlessLog) + " | "
+		output += helpTextTail + " | "
+		output += helpTextHead + " | "
 		output += helpTextLogScroll
 		return output
 	}
@@ -247,8 +251,12 @@ func run() {
 		output += "\t[:darkslategray]esc[:-]:   Go from the fullscreened log view back to the main window.\n\n"
 		output += "Word wrap:\n"
 		output += "\t[:darkslategray]w[:-]: Toggle if word wrap is on or off.\n\n"
-		output += "Autoscroll:\n"
-		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n\n"
+		output += "Logs Controls:\n"
+		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n"
+		output += "\t[:darkslategray]1[:-]:   [yellow:][When in focued window][-:]\n"
+		output += "\t\tJump to tail of logs and disable autoscrolling.\n"
+		output += "\t[:darkslategray]0[:-]:   [yellow:][When in focued window][-:]\n"
+		output += "\t\tJump to head of logs and disable autoscrolling.\n\n"
 		output += "Borderless:\n"
 		output += "\t[:darkslategray]b[:-]: [yellow:][When in focued window][-:]\n"
 		output += "\t\tToggle the border around the logs on or off.\n\n"
@@ -688,8 +696,8 @@ func run() {
 			}
 			return nil
 		}
-		// using 'd' for hea(d), 'h' already in use for help
-		if event.Key() == tcell.KeyRune && (event.Rune() == 'd' || event.Rune() == 'D') {
+		// using '0' for head, 'h' already in use for help
+		if event.Key() == tcell.KeyRune && (event.Rune() == '0' || event.Rune() == ')') {
 			// disable auto scrolling and jump to the head of the logs
 			isAutoScrolling = false
 			sequencerTextView.ScrollToBeginning()
@@ -701,7 +709,7 @@ func run() {
 			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
 			return nil
 		}
-		if event.Key() == tcell.KeyRune && (event.Rune() == 't' || event.Rune() == 'T') {
+		if event.Key() == tcell.KeyRune && (event.Rune() == '1' || event.Rune() == '!') {
 			// disable auto scrolling and jump to the tail of the logs
 			// stop auto scrolling and allow the user to scroll manually
 			isAutoScrolling = false
