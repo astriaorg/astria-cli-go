@@ -21,4 +21,4 @@ run args=defaultargs:
 
 # kill all processes that may be hanging because of improper shutdown of the tview app
 pskill:
-    ps aux | grep -E '[c]omposer|[c]onductor|[s]equencer|[c]omelette' | awk '{print $2}' | xargs kill -9
+    ps aux | grep -E '[c]omposer|[c]onductor|[s]equencer|[c]ometbft' | awk '{print $2}' | xargs kill -9
