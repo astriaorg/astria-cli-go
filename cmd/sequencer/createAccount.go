@@ -15,7 +15,11 @@ var createAccountCmd = &cobra.Command{
 	Long: `Create an account for the sequencer. The account will be used to sign
 transactions and blocks. The account will be created with a private key, public key, and address.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		account := sequencer.CreateAccount()
+		account, err := sequencer.CreateAccount()
+		if err != nil {
+			fmt.Println("Error creating account:", err)
+			os.Exit(1)
+		}
 		// FIXME - improve output. this is just a placeholder for now.
 		fmt.Println("Created account:")
 		fmt.Println("  Private Key:", account.PrivateKey)

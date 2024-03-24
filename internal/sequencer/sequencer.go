@@ -2,8 +2,6 @@ package sequencer
 
 import (
 	"encoding/hex"
-	"fmt"
-	"os"
 
 	"github.com/astriaorg/go-sequencer-client/client"
 )
@@ -15,11 +13,10 @@ type Account struct {
 }
 
 // CreateAccount creates a new account for the sequencer.
-func CreateAccount() *Account {
+func CreateAccount() (*Account, error) {
 	signer, err := client.GenerateSigner()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return nil, err
 	}
 	address := signer.Address()
 	seed := signer.Seed()
@@ -27,5 +24,5 @@ func CreateAccount() *Account {
 		Address:    hex.EncodeToString(address[:]),
 		PublicKey:  hex.EncodeToString(signer.PublicKey()),
 		PrivateKey: hex.EncodeToString(seed[:]),
-	}
+	}, nil
 }
