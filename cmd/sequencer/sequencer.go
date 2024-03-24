@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/spf13/cobra"
 )
@@ -10,28 +8,17 @@ import (
 // sequencerCmd represents the sequencer command
 var sequencerCmd = &cobra.Command{
 	Use:   "sequencer",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("sequencer called")
-	},
+	Short: "Interact with the Astria Shared Sequencer.",
+	Long: `Use this command to interact with the Astria Shared Sequencer.
+Generate accounts, get account balances, transfer tokens, and more.`,
+	// TODO - could be neat to have this base sequencer command print out details
+	//  about the sequencer and its current state, like block height, etc. should
+	//  take flag like `--sequencer-url`, where default would be url for local sequencer.
+	//Run: func(cmd *cobra.Command, args []string) {
+	//	fmt.Println("sequencer called")
+	//},
 }
 
 func init() {
 	cmd.RootCmd.AddCommand(sequencerCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// sequencerCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// sequencerCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
