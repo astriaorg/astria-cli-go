@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	MainLegendText       = " (q)uit | (a)utoscroll | (w)ord wrap | (up/down) select pane | (enter) fullscreen"
-	FullscreenLegendText = " (q/esc) back | (a)utoscroll | (w)ord wrap "
+	MainLegendText       = " (q)uit | (a)utoscroll | (w)rap lines | (up/down) select pane | (enter) fullscreen selected pane"
+	FullscreenLegendText = " (q/esc) back | (a)utoscroll | (w)rap lines "
 	MainTitle            = "Astria Dev"
 )
 
