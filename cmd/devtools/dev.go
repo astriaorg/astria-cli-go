@@ -1,11 +1,9 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
-package cmd
+package devtools
 
 import (
 	"fmt"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +13,7 @@ var devCmd = &cobra.Command{
 	Short: "TODO: short description",
 	Long:  `TODO: longer description`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: print out the help for all dev commands
 		fmt.Println("dev called")
 	},
 }
@@ -22,7 +21,7 @@ var devCmd = &cobra.Command{
 // TODO: add a func here to print out an explanation for how to use the dev command
 
 func init() {
-	rootCmd.AddCommand(devCmd)
+	cmd.RootCmd.AddCommand(devCmd)
 
 	// Here you will define your flags and configuration settings.
 

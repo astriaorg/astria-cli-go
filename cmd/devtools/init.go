@@ -1,7 +1,4 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
-package cmd
+package devtools
 
 import (
 	"archive/tar"
@@ -14,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -22,19 +20,19 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initializes the local development environment.",
-	Long:  `The init command will download the nessesary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
+	Long:  `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runInitialization()
 	},
 }
 
 func runInitialization() {
-	// TODO: make the home dir configuratble
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("error getting home dir:", err)
 		return
 	}
+	// TODO: make the default home dir configurable
 	defaultDir := filepath.Join(homeDir, ".astria")
 
 	dataDir := "data"
@@ -108,11 +106,21 @@ var embeddedEnvironmentFile embed.FS
 
 // TODO: add error handling
 func recreateEnvFile(path string) {
+	// Determine the user's home directory
+	// TODO: replace homeDir with chose dir when custom home dir is implemented
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("failed to get user home directory: %v", err)
+	}
+
 	// Read the content from the embedded file
 	data, err := fs.ReadFile(embeddedEnvironmentFile, "config/local.env.example")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
+
+	// Convert data to a string and replace "~" with the user's home directory
+	content := strings.ReplaceAll(string(data), "~", homeDir)
 
 	// Specify the path for the new file
 	newPath := filepath.Join(path, ".env")
@@ -125,7 +133,7 @@ func recreateEnvFile(path string) {
 	defer newFile.Close()
 
 	// Write the data to the new file
-	_, err = newFile.Write(data)
+	_, err = newFile.WriteString(content)
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
@@ -163,8 +171,8 @@ func downloadFile(url, filepath string) error {
 	return err
 }
 
-// extractTarGz extracts a .tar.gz file to the current directory.
-func extractTarGz(placePath string, gzipStream io.Reader) error {
+// extractTarGz extracts a .tar.gz file to dest.
+func extractTarGz(dest string, gzipStream io.Reader) error {
 	uncompressedStream, err := gzip.NewReader(gzipStream)
 	if err != nil {
 		return err
@@ -185,7 +193,7 @@ func extractTarGz(placePath string, gzipStream io.Reader) error {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(placePath, header.Name)
+		target := filepath.Join(dest, header.Name)
 
 		// the following switch could also be done using if/else statements
 		switch header.Typeflag {
@@ -238,6 +246,7 @@ func downloadAndUnpack(url string, placePath string, packageName string) {
 	}
 
 	// Delete the .tar.gz file
+	// TODO: should this be configuratble?
 	err = os.Remove(dest)
 	if err != nil {
 		log.Fatalf("Failed to delete downloaded %s.tar.gz file: %v", packageName, err)
