@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/astria/astria-cli-go/internal/ui"
 	"github.com/spf13/cobra"
@@ -26,7 +27,7 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(runallCmd)
+	cmd.RootCmd.AddCommand(runallCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -40,7 +41,7 @@ func init() {
 }
 
 func runall() {
-	ctx := rootCmd.Context()
+	ctx := cmd.RootCmd.Context()
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {

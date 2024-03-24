@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +21,7 @@ var devCmd = &cobra.Command{
 // TODO: add a func here to print out an explanation for how to use the dev command
 
 func init() {
-	rootCmd.AddCommand(devCmd)
+	cmd.RootCmd.AddCommand(devCmd)
 
 	// Here you will define your flags and configuration settings.
 

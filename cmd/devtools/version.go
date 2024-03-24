@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ func printVersion() {
 }
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	cmd.RootCmd.AddCommand(versionCmd)
 
 	// Here you will define your flags and configuration settings.
 
