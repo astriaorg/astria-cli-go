@@ -7,11 +7,8 @@ on:
       - "main"
 
 jobs:
-  test-go:
+  test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
     steps:
       - uses: actions/checkout@master
       - name: Use Go 1.21.3
