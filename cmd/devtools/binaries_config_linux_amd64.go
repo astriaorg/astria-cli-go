@@ -1,6 +1,6 @@
 //go:build linux && amd64
 
-package cmd
+package devtools
 
 // Your code here
 type Binary struct {
