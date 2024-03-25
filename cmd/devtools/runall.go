@@ -116,7 +116,7 @@ func runall() {
 		panic(err)
 	}
 
-	runners := []*processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
+	runners := []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
 
 	// create and start ui app
 	app := ui.NewApp(runners)

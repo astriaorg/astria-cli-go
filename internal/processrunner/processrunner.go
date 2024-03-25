@@ -9,8 +9,19 @@ import (
 	"syscall"
 )
 
+// ProcessRunner is an interface that represents a process to be run.
+type ProcessRunner interface {
+	Start(depStarted <-chan bool) error
+	Wait() error
+	Stop()
+	GetDidStart() <-chan bool
+	GetStdout() io.ReadCloser
+	GetStderr() io.ReadCloser
+	GetTitle() string
+}
+
 // ProcessRunner is a struct that represents a process to be run.
-type ProcessRunner struct {
+type processRunner struct {
 	// cmd is the exec.Cmd to be run
 	cmd *exec.Cmd
 	// Title is the title of the process
@@ -32,12 +43,12 @@ type NewProcessRunnerOpts struct {
 
 // NewProcessRunner creates a new ProcessRunner.
 // It creates a new exec.Cmd with the given binPath and args, and sets the environment.
-func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) *ProcessRunner {
+func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
 	ctx, cancel := context.WithCancel(ctx)
 
 	cmd := exec.Command(opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
-	return &ProcessRunner{
+	return &processRunner{
 		cmd:      cmd,
 		title:    opts.Title,
 		didStart: make(chan bool),
@@ -49,7 +60,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) *ProcessRu
 // Start starts the process and returns the ProcessRunner and an error.
 // It takes a channel that's closed when the dependency starts.
 // This allows us to control the order of process startup.
-func (pr *ProcessRunner) Start(depStarted <-chan bool) error {
+func (pr *processRunner) Start(depStarted <-chan bool) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -97,12 +108,12 @@ func (pr *ProcessRunner) Start(depStarted <-chan bool) error {
 }
 
 // Wait waits for the process to finish.
-func (pr *ProcessRunner) Wait() error {
+func (pr *processRunner) Wait() error {
 	return pr.cmd.Wait()
 }
 
 // Stop stops the process.
-func (pr *ProcessRunner) Stop() {
+func (pr *processRunner) Stop() {
 	// send SIGINT to the process
 	if err := pr.cmd.Process.Signal(syscall.SIGINT); err != nil {
 		fmt.Println("Error sending SIGINT:", err)
@@ -112,21 +123,21 @@ func (pr *ProcessRunner) Stop() {
 }
 
 // GetDidStart returns a channel that's closed when the process starts.
-func (pr *ProcessRunner) GetDidStart() <-chan bool {
+func (pr *processRunner) GetDidStart() <-chan bool {
 	return pr.didStart
 }
 
 // GetStdout provides a reader for the process's stdout.
-func (pr *ProcessRunner) GetStdout() io.ReadCloser {
+func (pr *processRunner) GetStdout() io.ReadCloser {
 	return pr.stdout
 }
 
 // GetStderr provides a reader for the process's stderr.
-func (pr *ProcessRunner) GetStderr() io.ReadCloser {
+func (pr *processRunner) GetStderr() io.ReadCloser {
 	return pr.stderr
 }
 
 // GetTitle returns the title of the process.
-func (pr *ProcessRunner) GetTitle() string {
+func (pr *processRunner) GetTitle() string {
 	return pr.title
 }
