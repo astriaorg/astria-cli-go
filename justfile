@@ -21,6 +21,11 @@ defaultargs := ''
 run args=defaultargs:
     go run main.go {{args}} > tview_log.txt 2>&1
 
+# show any running Astria processes
+[no-exit-message]
+@pscheck:
+    ps aux | grep -E '[c]omposer|[c]onductor|[s]equencer|[c]ometbft'
+
 # kill all processes that may be hanging because of improper shutdown of the tview app
 pskill:
     ps aux | grep -E '[c]omposer|[c]onductor|[s]equencer|[c]ometbft' | awk '{print $2}' | xargs kill -9
