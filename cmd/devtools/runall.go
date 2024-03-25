@@ -14,13 +14,8 @@ import (
 // runallCmd represents the runall command
 var runallCmd = &cobra.Command{
 	Use:   "runall",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Run all the Astria services locally.",
+	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runall()
 	},
@@ -28,16 +23,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	cmd.RootCmd.AddCommand(runallCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// runallCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// runallCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func runall() {
@@ -64,15 +49,6 @@ func runall() {
 	}
 	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
-	// shouldStart acts as a control channel to start this first process
-	shouldStart := make(chan bool)
-	close(shouldStart)
-	err = seqRunner.Start(shouldStart)
-	if err != nil {
-		fmt.Println("Error running sequencer:", err)
-		panic(err)
-	}
-
 	// cometbft
 	cometDataPath := filepath.Join(homePath, ".astria/data/.cometbft")
 	cometOpts := processrunner.NewProcessRunnerOpts{
@@ -82,11 +58,6 @@ func runall() {
 		Args:    []string{"node", "--home", cometDataPath},
 	}
 	cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
-	err = cometRunner.Start(seqRunner.GetDidStart())
-	if err != nil {
-		fmt.Println("Error running composer:", err)
-		panic(err)
-	}
 
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
@@ -96,11 +67,6 @@ func runall() {
 		Args:    nil,
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
-	err = compRunner.Start(cometRunner.GetDidStart())
-	if err != nil {
-		fmt.Println("Error running composer:", err)
-		panic(err)
-	}
 
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
@@ -110,9 +76,40 @@ func runall() {
 		Args:    nil,
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
+
+	// cleanup function to stop processes if there is an error starting another process
+	cleanup := func() {
+		seqRunner.Stop()
+		cometRunner.Stop()
+		compRunner.Stop()
+		condRunner.Stop()
+	}
+
+	// shouldStart acts as a control channel to start this first process
+	shouldStart := make(chan bool)
+	close(shouldStart)
+	err = seqRunner.Start(shouldStart)
+	if err != nil {
+		fmt.Println("Error running sequencer:", err)
+		cleanup()
+		panic(err)
+	}
+	err = cometRunner.Start(seqRunner.GetDidStart())
+	if err != nil {
+		fmt.Println("Error running composer:", err)
+		cleanup()
+		panic(err)
+	}
+	err = compRunner.Start(cometRunner.GetDidStart())
+	if err != nil {
+		fmt.Println("Error running composer:", err)
+		cleanup()
+		panic(err)
+	}
 	err = condRunner.Start(compRunner.GetDidStart())
 	if err != nil {
 		fmt.Println("Error running conductor:", err)
+		cleanup()
 		panic(err)
 	}
 
