@@ -12,7 +12,7 @@ import (
 type ProcessPane struct {
 	tApp     *tview.Application
 	textView *tview.TextView
-	pr       *processrunner.ProcessRunner
+	pr       processrunner.ProcessRunner
 	Title    string
 
 	// local ui state. Right now, this state is kept in sync with
@@ -22,7 +22,7 @@ type ProcessPane struct {
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
-func NewProcessPane(tApp *tview.Application, pr *processrunner.ProcessRunner) *ProcessPane {
+func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *ProcessPane {
 	tv := tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true).
