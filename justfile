@@ -10,6 +10,8 @@ build:
 test:
     go test ./...
 
+alias t := test
+
 # format all go files
 fmt:
     go fmt ./...
