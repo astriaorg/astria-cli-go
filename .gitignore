@@ -22,3 +22,11 @@ go.work
 
 # ide
 .idea
+
+# binaries
+/bin
+/local-dev-astria
+/data
+
+**/.DS_Store
+tview_log.txt
