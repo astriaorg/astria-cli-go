@@ -1,4 +1,4 @@
-package devtools
+package cmd
 
 import (
 	"bufio"
@@ -150,6 +150,7 @@ func run() {
 			app.Draw()
 		})
 	sequencerTextView.SetTitle(" Sequencer ").SetBorder(true)
+	sequencerTVRowCount := 0
 
 	// create text view object for the cometbft
 	cometbftTextView := tview.NewTextView().
@@ -159,6 +160,7 @@ func run() {
 			app.Draw()
 		})
 	cometbftTextView.SetTitle(" Cometbft ").SetBorder(true)
+	cometbftTVRowCount := 0
 
 	// create text view object for the composer
 	composerTextView := tview.NewTextView().
@@ -168,6 +170,7 @@ func run() {
 			app.Draw()
 		})
 	composerTextView.SetTitle(" Composer ").SetBorder(true)
+	composerTVRowCount := 0
 
 	// create text view object for the conductor
 	conductorTextView := tview.NewTextView().
@@ -177,6 +180,7 @@ func run() {
 			app.Draw()
 		})
 	conductorTextView.SetTitle(" Conductor ").SetBorder(true)
+	conductorTVRowCount := 0
 
 	// app settings
 	isFullscreen := false    // controlled by the 'enter' and 'esc' keys
@@ -194,6 +198,8 @@ func run() {
 	helpTextAutoScroll := "(a)utoscroll"
 	helpTextBorderless := "(b)oarderless"
 	helpTextLogScroll := "if not auto scrolling: (up/down) arrows or mousewheel to scroll"
+	helpTextHead := "(0) jump to head"
+	helpTextTail := "(1) jump to tail"
 
 	appendStatus := func(text string, status bool) string {
 		output := ""
@@ -225,29 +231,29 @@ func run() {
 		output += appendStatus(helpTextWordWrap, wordWrapEnabled) + " | "
 		output += appendStatus(helpTextAutoScroll, isAutoScrolling) + " | "
 		output += appendStatus(helpTextBorderless, isBorderlessLog) + " | "
+		output += helpTextTail + " | "
+		output += helpTextHead + " | "
 		output += helpTextLogScroll
 		return output
 	}
 
 	buildMainHelpScreenText := func() string {
 		output := "Navigation:\t\n"
-		output += "\t[:darkslategray]tab[:-]:            Cycle the focus to the next app.\n"
-		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][When in main window][-:]\n"
-		output += "\t\tChange focus to the previous or next app.\n"
-		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][When in focued window with autoscroll OFF][-:]\n"
-		output += "\t\tGo up or down a line in the focued logs.\n"
-		output += "\t[:darkslategray]mouse scroll[:-]:   [yellow:][When in focued window with autoscroll OFF][-:]\n"
-		output += "\t\tScroll up or down in the focued logs.\n\n"
+		output += "\t[:darkslategray]tab[:-]: Cycle the focus to the next app.\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][When in main window][-:] Change focus to the previous or next app.\n"
+		output += "\t[:darkslategray]up/down[:-] arrows: [yellow:][When in focued window with autoscroll OFF][-:] Go up or down a line in the focued logs.\n"
+		output += "\t[:darkslategray]mouse scroll[:-]: [yellow:][When in focued window with autoscroll OFF][-:] Scroll up or down in the focued logs.\n\n"
 		output += "Focus Control:\n"
 		output += "\t[:darkslategray]enter[:-]: Go from the main screen to fullscreen on the focused app's logs.\n"
 		output += "\t[:darkslategray]esc[:-]:   Go from the fullscreened log view back to the main window.\n\n"
 		output += "Word wrap:\n"
 		output += "\t[:darkslategray]w[:-]: Toggle if word wrap is on or off.\n\n"
-		output += "Autoscroll:\n"
-		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n\n"
+		output += "Logs Controls:\n"
+		output += "\t[:darkslategray]a[:-]: Toggle if autoscroll is on or off.\n"
+		output += "\t[:darkslategray]1[:-]: [yellow:][When in focued window][-:] Jump to tail of logs and disable autoscrolling.\n"
+		output += "\t[:darkslategray]0[:-]: [yellow:][When in focued window][-:] Jump to head of logs and disable autoscrolling.\n\n"
 		output += "Borderless:\n"
-		output += "\t[:darkslategray]b[:-]: [yellow:][When in focued window][-:]\n"
-		output += "\t\tToggle the border around the logs on or off.\n\n"
+		output += "\t[:darkslategray]b[:-]: [yellow:][When in focued window][-:] Toggle the border around the logs on or off.\n\n"
 		output += "Quitting:\n"
 		output += "\t[:darkslategray]q[:-]:      Quit the app.\n"
 		output += "\t[:darkslategray]ctrl-c[:-]: Quit the app.\n\n"
@@ -684,6 +690,33 @@ func run() {
 			}
 			return nil
 		}
+		// using '0' for head, 'h' already in use for help
+		if event.Key() == tcell.KeyRune && (event.Rune() == '0' || event.Rune() == ')') {
+			// disable auto scrolling and jump to the head of the logs
+			isAutoScrolling = false
+			sequencerTextView.ScrollToBeginning()
+			cometbftTextView.ScrollToBeginning()
+			composerTextView.ScrollToBeginning()
+			conductorTextView.ScrollToBeginning()
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+			return nil
+		}
+		if event.Key() == tcell.KeyRune && (event.Rune() == '1' || event.Rune() == '!') {
+			// disable auto scrolling and jump to the tail of the logs
+			// stop auto scrolling and allow the user to scroll manually
+			isAutoScrolling = false
+
+			sequencerTextView.ScrollTo(sequencerTVRowCount, 0)
+			cometbftTextView.ScrollTo(cometbftTVRowCount, 0)
+			composerTextView.ScrollTo(composerTVRowCount, 0)
+			conductorTextView.ScrollTo(conductorTVRowCount, 0)
+
+			mainWindowHelpInfo.SetText(buildMainWindowHelpInfo())
+			fullscreenHelpInfo.SetText(buildFullscreenHelpInfo())
+			return nil
+		}
 		return event
 	}
 
@@ -759,6 +792,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterSequencerTextView)
+				sequencerTVRowCount++
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
@@ -791,6 +825,7 @@ func run() {
 		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
 		app.QueueUpdateDraw(func() {
 			appendText(p, aWriterCometbftTextView)
+			cometbftTVRowCount++
 		})
 
 		out, err := initCmd.CombinedOutput()
@@ -798,12 +833,14 @@ func run() {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
 		}
 		app.QueueUpdateDraw(func() {
 			appendText(string(out), aWriterCometbftTextView)
+			cometbftTVRowCount++
 
 		})
 
@@ -820,6 +857,7 @@ func run() {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
@@ -827,6 +865,7 @@ func run() {
 		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
 		app.QueueUpdateDraw(func() {
 			appendText(p, aWriterCometbftTextView)
+			cometbftTVRowCount++
 
 		})
 
@@ -843,6 +882,7 @@ func run() {
 			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
@@ -850,6 +890,7 @@ func run() {
 		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
 		app.QueueUpdateDraw(func() {
 			appendText(p, aWriterCometbftTextView)
+			cometbftTVRowCount++
 
 		})
 
@@ -862,6 +903,7 @@ func run() {
 			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 			return
@@ -869,6 +911,7 @@ func run() {
 			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
 			app.QueueUpdateDraw(func() {
 				appendText(p, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 		}
@@ -884,6 +927,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterCometbftTextView)
+				cometbftTVRowCount++
 
 			})
 		}
@@ -922,6 +966,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterComposerTextView)
+				composerTVRowCount++
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
@@ -957,7 +1002,7 @@ func run() {
 			line := outputScanner.Text()
 			app.QueueUpdateDraw(func() {
 				appendText(line, aWriterConductorTextView)
-
+				conductorTVRowCount++
 			})
 		}
 		if err := outputScanner.Err(); err != nil {
