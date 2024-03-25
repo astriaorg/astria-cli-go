@@ -1,4 +1,4 @@
-package cmd
+package sequencer
 
 import (
 	"fmt"

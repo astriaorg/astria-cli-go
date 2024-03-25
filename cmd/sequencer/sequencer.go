@@ -1,4 +1,4 @@
-package cmd
+package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
