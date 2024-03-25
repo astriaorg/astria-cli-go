@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -48,9 +49,10 @@ func runInitialization() {
 	recreateCometbftAndSequencerGenesisData(fullPath)
 
 	for _, bin := range Binaries {
-
 		downloadAndUnpack(bin.Url, fullPath, bin.Name)
 	}
+
+	initCometbft(defaultDir)
 
 }
 
@@ -252,6 +254,108 @@ func downloadAndUnpack(url string, placePath string, packageName string) {
 		log.Fatalf("Failed to delete downloaded %s.tar.gz file: %v", packageName, err)
 	}
 	fmt.Printf("%s downloaded and extracted successfully.\n", packageName)
+}
+
+func initCometbft(defaultDir string) {
+	fmt.Println("Initializing CometBFT:")
+	cometbftDataPath := filepath.Join(defaultDir, "data/.cometbft")
+
+	// verify that cometbft was downloaded and extracted to the correct location
+	cometbftBin := filepath.Join(defaultDir, "local-dev-astria/cometbft")
+	if !exists(cometbftBin) {
+		fmt.Println("Error: cometbft binary not found here", cometbftBin)
+		fmt.Println("\tCannot continue with initialization.")
+		return
+	}
+
+	cometbftCmdPath := filepath.Join(defaultDir, "local-dev-astria/cometbft")
+
+	initCmdArgs := []string{"init", "--home", cometbftDataPath}
+	initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
+
+	fmt.Println("Running:", initCmd)
+
+	_, err := initCmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("Error executing command", initCmd, ":", err)
+		return
+	} else {
+		fmt.Println("\tSuccess")
+	}
+
+	// create the comand to replace the defualt genesis.json with the
+	// configured one
+	initGenesisJsonPath := filepath.Join(defaultDir, "local-dev-astria/genesis.json")
+	endGenesisJsonPath := filepath.Join(defaultDir, "data/.cometbft/config/genesis.json")
+	copyArgs := []string{initGenesisJsonPath, endGenesisJsonPath}
+	copyCmd := exec.Command("cp", copyArgs...)
+
+	_, err = copyCmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("Error executing command", copyCmd, ":", err)
+		return
+	}
+	fmt.Println("Copied genesis.json to", endGenesisJsonPath)
+
+	// create the comand to replace the defualt priv_validator_key.json with the
+	// configured one
+	initPrivValidatorJsonPath := filepath.Join(defaultDir, "local-dev-astria/priv_validator_key.json")
+	endPrivValidatorJsonPath := filepath.Join(defaultDir, "data/.cometbft/config/priv_validator_key.json")
+	copyArgs = []string{initPrivValidatorJsonPath, endPrivValidatorJsonPath}
+	copyCmd = exec.Command("cp", copyArgs...)
+
+	_, err = copyCmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("Error executing command", copyCmd, ":", err)
+		return
+	}
+	fmt.Println("Copied priv_validator_key.json to", endPrivValidatorJsonPath)
+
+	// update the cometbft config.toml file to have the proper block time
+	cometbftConfigPath := filepath.Join(defaultDir, "data/.cometbft/config/config.toml")
+	oldValue := `timeout_commit = "1s"`
+	newValue := `timeout_commit = "2s"`
+
+	if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
+		fmt.Println("Error updating the file:", cometbftConfigPath, ":", err)
+		return
+	} else {
+		fmt.Println("Successfully updated", cometbftConfigPath)
+	}
+}
+
+// replaceInFile replaces oldValue with newValue in the file at filename.
+// it is used here to update the block time in the cometbft config.toml file.
+func replaceInFile(filename, oldValue, newValue string) error {
+	// Read the original file.
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return fmt.Errorf("failed to read the file: %w", err)
+	}
+
+	// Perform the replacement.
+	modifiedContent := strings.ReplaceAll(string(content), oldValue, newValue)
+
+	// Write the modified content to a new temporary file.
+	tmpFilename := filename + ".tmp"
+	if err := os.WriteFile(tmpFilename, []byte(modifiedContent), 0666); err != nil {
+		return fmt.Errorf("failed to write to temporary file: %w", err)
+	}
+
+	// Rename the original file to filename.bak.
+	backupFilename := filename + ".bak"
+	if err := os.Rename(filename, backupFilename); err != nil {
+		return fmt.Errorf("failed to rename original file to backup: %w", err)
+	}
+
+	// Rename the temporary file to the original file name.
+	if err := os.Rename(tmpFilename, filename); err != nil {
+		// Attempt to restore the original file if renaming fails.
+		os.Rename(backupFilename, filename)
+		return fmt.Errorf("failed to rename temporary file to original: %w", err)
+	}
+
+	return nil
 }
 
 func init() {
