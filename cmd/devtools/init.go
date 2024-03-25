@@ -277,7 +277,7 @@ func initCometbft(defaultDir string) {
 
 	_, err := initCmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("Error executing command `%v`: %v\n", initCmd, err)
+		fmt.Println("Error executing command", initCmd, ":", err)
 		return
 	} else {
 		fmt.Println("\tSuccess")
@@ -317,7 +317,7 @@ func initCometbft(defaultDir string) {
 	newValue := `timeout_commit = "2s"`
 
 	if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
-		fmt.Println("Error updating the file: %v : %v", cometbftConfigPath, err)
+		fmt.Println("Error updating the file:", cometbftConfigPath, ":", err)
 		return
 	} else {
 		fmt.Println("Successfully updated", cometbftConfigPath)
