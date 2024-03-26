@@ -3,8 +3,6 @@
 The `astria-dev` cli is a tool designed to make local rollup development as
 simple and dependency free as possible.
 
-Currently the cli only works on arm Macos.
-
 # Locally Build the CLI
 
 Dependencies: (only required for development)
@@ -15,7 +13,6 @@ Dependencies: (only required for development)
 ```
 git clone git@github.com:astriaorg/astria-cli-go.git
 cd astria-cli-go
-git checkout feat/local-binaries
 just build
 just run "dev init"
 just run "dev run"
