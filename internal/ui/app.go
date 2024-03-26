@@ -8,7 +8,7 @@ import (
 
 const (
 	MainLegendText       = " (q)uit | (a)utoscroll | (w)rap lines | (up/down) select pane | (enter) fullscreen selected pane"
-	FullscreenLegendText = " (q/esc) back | (a)utoscroll | (w)rap lines "
+	FullscreenLegendText = " (q/esc) back | (a)utoscroll | (w)rap lines | (b)orderless"
 	MainTitle            = "Astria Dev"
 )
 
@@ -30,6 +30,7 @@ type App struct {
 	selectedPaneIdx int
 	isAutoScroll    bool
 	isWordWrap      bool
+	isBorderless    bool
 }
 
 // NewApp creates a new tview.Application with the necessary components
@@ -60,6 +61,7 @@ func NewApp(processrunners []processrunner.ProcessRunner) *App {
 		selectedPaneIdx: 0, // select first pane on start
 		isAutoScroll:    true,
 		isWordWrap:      false,
+		isBorderless:    false,
 	}
 }
 
@@ -81,6 +83,7 @@ func (a *App) Start() {
 	for _, pp := range a.processPanes {
 		pp.SetIsAutoScroll(a.isAutoScroll)
 		pp.SetIsWordWrap(a.isWordWrap)
+		pp.SetIsBorderless(a.isBorderless)
 	}
 
 	// redraw after startup to ensure ui state is correct
@@ -131,6 +134,14 @@ func (a *App) setIsFullscreen(isFullscreen bool) {
 	a.redraw()
 }
 
+func (a *App) setIsBorderless(isBorderless bool) {
+	a.isBorderless = isBorderless
+	for _, pp := range a.processPanes {
+		pp.SetIsBorderless(a.isBorderless)
+	}
+	a.redraw()
+}
+
 // setInputCapture sets the input capture function for the tview.Application.
 // It must first set the input capture to nil before setting the new input capture.
 func (a *App) setInputCapture(cb func(*tcell.EventKey) *tcell.EventKey) {
@@ -175,12 +186,16 @@ func (a *App) getKeyboardFullscreenView(evt *tcell.EventKey) *tcell.EventKey {
 		case 'a':
 			a.toggleAutoScroll()
 		case 'q':
+			a.setIsBorderless(false)
 			// q goes back to main view when on fullscreen view
 			a.setIsFullscreen(false)
 		case 'w':
 			a.toggleWordWrap()
+		case 'b':
+			a.toggleBorderless()
 		}
 	case tcell.KeyEscape:
+		a.setIsBorderless(false)
 		a.setIsFullscreen(false)
 	}
 	return evt
@@ -212,6 +227,13 @@ func (a *App) toggleWordWrap() {
 	a.isWordWrap = !a.isWordWrap
 	for _, pp := range a.processPanes {
 		pp.SetIsWordWrap(a.isWordWrap)
+	}
+}
+
+func (a *App) toggleBorderless() {
+	a.isBorderless = !a.isBorderless
+	for _, pp := range a.processPanes {
+		pp.SetIsBorderless(a.isBorderless)
 	}
 }
 
