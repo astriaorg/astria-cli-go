@@ -109,8 +109,8 @@ func (pp *ProcessPane) GetTextView() *tview.TextView {
 // Highlight highlights or unhighlights the ProcessPane's textView.
 func (pp *ProcessPane) Highlight(highlight bool) {
 	if highlight {
-		title := "[black:lightblue]" + pp.Title + "[::-]"
-		pp.textView.SetBorderColor(tcell.ColorLightBlue).SetTitle(title)
+		title := "[black:blue]" + pp.Title + "[::-]"
+		pp.textView.SetBorderColor(tcell.ColorBlue).SetTitle(title)
 	} else {
 		pp.textView.SetBorderColor(tcell.ColorGray).SetTitle(pp.Title)
 	}
