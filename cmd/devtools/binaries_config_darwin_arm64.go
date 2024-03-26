@@ -1,6 +1,6 @@
 //go:build darwin && arm64
 
-package cmd
+package devtools
 
 // Your code here
 type Binary struct {

@@ -1,4 +1,4 @@
-package cmd
+package devtools
 
 import (
 	"bufio"
@@ -806,9 +806,6 @@ func run() {
 	// go routine for running cometbft
 	go func() {
 		<-sequencerStartComplete
-		initCmdArgs := []string{"init", "--home", cometbftDataPath}
-		initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
-		initCmd.Env = environment
 
 		stdout, err := cometbftCmd.StdoutPipe()
 		if err != nil {
@@ -821,100 +818,6 @@ func run() {
 		// Create a scanner to read the output line by line.
 		output := io.MultiReader(stdout, stderr)
 		outputScanner := bufio.NewScanner(output)
-
-		p := fmt.Sprintf("Running command `%v %v %v %v`\n", initCmd, initCmdArgs[0], initCmdArgs[1], initCmdArgs[2])
-		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView)
-			cometbftTVRowCount++
-		})
-
-		out, err := initCmd.CombinedOutput()
-		if err != nil {
-			p := fmt.Sprintf("Error executing command `%v`: %v\n", initCmd, err)
-			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView)
-				cometbftTVRowCount++
-
-			})
-			return
-		}
-		app.QueueUpdateDraw(func() {
-			appendText(string(out), aWriterCometbftTextView)
-			cometbftTVRowCount++
-
-		})
-
-		// create the comand to replace the defualt genesis.json with the
-		// configured one
-		initGenesisJsonPath := filepath.Join(homePath, ".astria/local-dev-astria/genesis.json")
-		endGenesisJsonPath := filepath.Join(homePath, ".astria/data/.cometbft/config/genesis.json")
-		copyArgs := []string{initGenesisJsonPath, endGenesisJsonPath}
-		copyCmd := exec.Command("cp", copyArgs...)
-		copyCmd.Env = environment
-
-		_, err = copyCmd.CombinedOutput()
-		if err != nil {
-			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
-			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView)
-				cometbftTVRowCount++
-
-			})
-			return
-		}
-		p = fmt.Sprintf("Copied genesis.json to %s\n", endGenesisJsonPath)
-		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView)
-			cometbftTVRowCount++
-
-		})
-
-		// create the comand to replace the defualt priv_validator_key.json with the
-		// configured one
-		initPrivValidatorJsonPath := filepath.Join(homePath, ".astria/local-dev-astria/priv_validator_key.json")
-		endPrivValidatorJsonPath := filepath.Join(homePath, ".astria/data/.cometbft/config/priv_validator_key.json")
-		copyArgs = []string{initPrivValidatorJsonPath, endPrivValidatorJsonPath}
-		copyCmd = exec.Command("cp", copyArgs...)
-		copyCmd.Env = environment
-
-		_, err = copyCmd.CombinedOutput()
-		if err != nil {
-			p := fmt.Sprintf("Error executing command `%v`: %v\n", copyCmd, err)
-			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView)
-				cometbftTVRowCount++
-
-			})
-			return
-		}
-		p = fmt.Sprintf("Copied priv_validator_key.json to %s\n", endPrivValidatorJsonPath)
-		app.QueueUpdateDraw(func() {
-			appendText(p, aWriterCometbftTextView)
-			cometbftTVRowCount++
-
-		})
-
-		// update the cometbft config.toml file to have the proper block time
-		cometbftConfigPath := filepath.Join(homePath, ".astria/data/.cometbft/config/config.toml")
-		oldValue := `timeout_commit = "1s"`
-		newValue := `timeout_commit = "2s"`
-
-		if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
-			p := fmt.Sprintf("Error updating the file: %v : %v", cometbftConfigPath, err)
-			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView)
-				cometbftTVRowCount++
-
-			})
-			return
-		} else {
-			p := fmt.Sprintf("Updated %v successfully", cometbftConfigPath)
-			app.QueueUpdateDraw(func() {
-				appendText(p, aWriterCometbftTextView)
-				cometbftTVRowCount++
-
-			})
-		}
 
 		if err := cometbftCmd.Start(); err != nil {
 			panic(err)
@@ -1033,38 +936,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// replaceInFile replaces oldValue with newValue in the file at filename.
-// it is used here to update the block time in the cometbft config.toml file.
-func replaceInFile(filename, oldValue, newValue string) error {
-	// Read the original file.
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return fmt.Errorf("failed to read the file: %w", err)
-	}
-
-	// Perform the replacement.
-	modifiedContent := strings.ReplaceAll(string(content), oldValue, newValue)
-
-	// Write the modified content to a new temporary file.
-	tmpFilename := filename + ".tmp"
-	if err := os.WriteFile(tmpFilename, []byte(modifiedContent), 0666); err != nil {
-		return fmt.Errorf("failed to write to temporary file: %w", err)
-	}
-
-	// Rename the original file to filename.bak.
-	backupFilename := filename + ".bak"
-	if err := os.Rename(filename, backupFilename); err != nil {
-		return fmt.Errorf("failed to rename original file to backup: %w", err)
-	}
-
-	// Rename the temporary file to the original file name.
-	if err := os.Rename(tmpFilename, filename); err != nil {
-		// Attempt to restore the original file if renaming fails.
-		os.Rename(backupFilename, filename)
-		return fmt.Errorf("failed to rename temporary file to original: %w", err)
-	}
-
-	return nil
 }
