@@ -19,6 +19,7 @@ type ProcessPane struct {
 	//  the top level ui state in App
 	isAutoScroll bool
 	isWordWrap   bool
+	isBorderless bool
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -41,6 +42,7 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 
 		isAutoScroll: true,
 		isWordWrap:   false,
+		isBorderless: false,
 	}
 }
 
@@ -92,6 +94,11 @@ func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
 	pp.isWordWrap = isWordWrap
 	// set the textview's word wrap
 	pp.textView.SetWrap(pp.isWordWrap)
+}
+
+func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
+	pp.isBorderless = isBorderless
+	pp.textView.SetBorder(!pp.isBorderless)
 }
 
 // GetTextView returns the textView associated with the ProcessPane.
