@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -22,38 +21,22 @@ type View interface {
 // MainView represents the initial view when the app is started.
 // It shows all the process panes in a vertical layout.
 type MainView struct {
-	tApp           *tview.Application
-	processRunners []processrunner.ProcessRunner
-	processPanes   []*ProcessPane
+	tApp         *tview.Application
+	processPanes []*ProcessPane
 
 	selectedPaneIdx int
-	isAutoScroll    bool
-	isWordWrap      bool
 }
 
-func NewMainView(tApp *tview.Application, processRunners []processrunner.ProcessRunner) *MainView {
-	var processPanes []*ProcessPane
-	for _, pr := range processRunners {
-		pp := NewProcessPane(tApp, pr)
-		processPanes = append(processPanes, pp)
-		pp.StartScan()
-	}
-
-	for _, pp := range processPanes {
-		pp.SetIsAutoScroll(true)
-		pp.SetIsWordWrap(false)
-		pp.SetIsBorderless(false)
-	}
+// NewMainView creates a new MainView with the given tview.Application and ProcessPanes.
+func NewMainView(tApp *tview.Application, processPanes []*ProcessPane) *MainView {
 	return &MainView{
 		tApp:            tApp,
-		processRunners:  processRunners,
 		processPanes:    processPanes,
 		selectedPaneIdx: 0,
-		isAutoScroll:    true,
-		isWordWrap:      false,
 	}
 }
 
+// Render returns the tview.Flex that represents the MainView.
 func (mv *MainView) Render() *tview.Flex {
 	innerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	for _, pp := range mv.processPanes {
@@ -71,6 +54,7 @@ func (mv *MainView) Render() *tview.Flex {
 	return flex
 }
 
+// GetKeyboard is a callback for defining keyboard shortcuts.
 func (mv *MainView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.EventKey {
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		switch evt.Key() {
@@ -100,17 +84,15 @@ func (mv *MainView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.EventKey
 
 // toggleAutoScroll toggles the ui state and updates the ProcessPanes.
 func (mv *MainView) toggleAutoScroll() {
-	mv.isAutoScroll = !mv.isAutoScroll
 	for _, pp := range mv.processPanes {
-		pp.SetIsAutoScroll(mv.isAutoScroll)
+		pp.SetIsAutoScroll(!pp.isAutoScroll)
 	}
 }
 
 // toggleWordWrap toggles the ui state and updates the ProcessPanes.
 func (mv *MainView) toggleWordWrap() {
-	mv.isWordWrap = !mv.isWordWrap
 	for _, pp := range mv.processPanes {
-		pp.SetIsWordWrap(mv.isWordWrap)
+		pp.SetIsWordWrap(!pp.isWordWrap)
 	}
 }
 
@@ -140,27 +122,22 @@ func (mv *MainView) redraw() {
 	}
 }
 
+// FullscreenView represents the fullscreen view when a pane is selected.
 type FullscreenView struct {
 	tApp        *tview.Application
 	processPane *ProcessPane
-
-	// ui state
-	isAutoScroll bool
-	isWordWrap   bool
-	isBorderless bool
 }
 
+// NewFullscreenView creates a new FullscreenView with the given tview.Application and ProcessPane.
 func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane) *FullscreenView {
 	processPane.StartScan()
 	return &FullscreenView{
-		tApp:         tApp,
-		processPane:  processPane,
-		isAutoScroll: true,
-		isWordWrap:   false,
-		isBorderless: false,
+		tApp:        tApp,
+		processPane: processPane,
 	}
 }
 
+// Render returns the tview.Flex that represents the FullscreenView.
 func (fv *FullscreenView) Render() *tview.Flex {
 	// build tview text views and flex
 	help := tview.NewTextView().
@@ -175,6 +152,7 @@ func (fv *FullscreenView) Render() *tview.Flex {
 	return flex
 }
 
+// GetKeyboard is a callback for defining keyboard shortcuts.
 func (fv *FullscreenView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.EventKey {
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		switch evt.Key() {
@@ -198,17 +176,10 @@ func (fv *FullscreenView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.Ev
 
 // toggleAutoScroll toggles the ui state and updates the ProcessPanes.
 func (fv *FullscreenView) toggleAutoScroll() {
-	fv.isAutoScroll = !fv.isAutoScroll
-	fv.processPane.SetIsAutoScroll(fv.isAutoScroll)
+	fv.processPane.SetIsAutoScroll(!fv.processPane.isAutoScroll)
 }
 
 // toggleWordWrap toggles the ui state and updates the ProcessPanes.
 func (fv *FullscreenView) toggleWordWrap() {
-	fv.isWordWrap = !fv.isWordWrap
-	fv.processPane.SetIsWordWrap(fv.isWordWrap)
-}
-
-func (fv *FullscreenView) stop() {
-	fv.processPane.StopProcess()
-	fv.tApp.Stop()
+	fv.processPane.SetIsWordWrap(!fv.processPane.isWordWrap)
 }

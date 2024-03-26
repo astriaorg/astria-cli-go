@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/rivo/tview"
 )
@@ -15,23 +13,36 @@ type App struct {
 	// view is the current view
 	view View
 
-	// processRunners is a slice of processrunner.ProcessRunner
-	processRunners []processrunner.ProcessRunner
+	// NOTE - keeping track of process panes at global level made many things easier for now
+	processPanes []*ProcessPane
 }
 
 // NewApp creates a new tview.Application with the necessary components
 func NewApp(processrunners []processrunner.ProcessRunner) *App {
 	tviewApp := tview.NewApplication()
+
+	// create a ProcessPane for each process runner
+	var processPanes []*ProcessPane
+	for _, pr := range processrunners {
+		pp := NewProcessPane(tviewApp, pr)
+		processPanes = append(processPanes, pp)
+	}
+
 	return &App{
-		Application:    tviewApp,
-		processRunners: processrunners,
+		Application:  tviewApp,
+		processPanes: processPanes,
 	}
 }
 
 // Start starts the tview application.
 func (a *App) Start() {
-	// start with main view
+	// show "main" view initially
 	a.SetView("main", nil)
+
+	// start scanning the stdout of all the process panes
+	for _, pp := range a.processPanes {
+		pp.StartScan()
+	}
 
 	// run the tview application
 	if err := a.Application.Run(); err != nil {
@@ -41,17 +52,16 @@ func (a *App) Start() {
 
 // Exit stops all the process runners and stops the tview application.
 func (a *App) Exit() {
-	for _, pr := range a.processRunners {
-		pr.Stop()
+	for _, pp := range a.processPanes {
+		pp.StopProcess()
 	}
 	a.Application.Stop()
 }
 
 // SetView sets the view to the specified view.
 func (a *App) SetView(view string, selectedPane *ProcessPane) {
-	fmt.Println("setting view to", view)
 	if view == "main" {
-		a.view = NewMainView(a.Application, a.processRunners)
+		a.view = NewMainView(a.Application, a.processPanes)
 	}
 	if view == "fullscreen" {
 		a.view = NewFullscreenView(a.Application, selectedPane)
