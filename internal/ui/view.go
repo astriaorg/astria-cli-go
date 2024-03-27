@@ -12,11 +12,16 @@ const (
 	MainTitle            = "Astria Dev"
 )
 
+// Props is an empty interface for passing data to the view.
+type Props interface{}
+
 type View interface {
-	// Render returns the tview.Flex that represents the view
-	Render() *tview.Flex
+	// Render returns the tview.Flex that represents the view.
+	// The Props argument is used to pass data to the view.
+	Render(p Props) *tview.Flex
 	// GetKeyboard is a callback for defining keyboard shortcuts
-	GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.EventKey
+	// FIXME - is there a way to avoid the App reference here?
+	GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey
 }
 
 // MainView represents the initial view when the app is started.
@@ -48,7 +53,7 @@ func NewMainView(tApp *tview.Application, processrunners []processrunner.Process
 }
 
 // Render returns the tview.Flex that represents the MainView.
-func (mv *MainView) Render() *tview.Flex {
+func (mv *MainView) Render(_ Props) *tview.Flex {
 	innerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	for _, pp := range mv.processPanes {
 		innerFlex.AddItem(pp.GetTextView(), 0, 1, true)
@@ -66,7 +71,7 @@ func (mv *MainView) Render() *tview.Flex {
 }
 
 // GetKeyboard is a callback for defining keyboard shortcuts.
-func (mv *MainView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.EventKey {
+func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		switch evt.Key() {
 		case tcell.KeyCtrlC:
@@ -148,7 +153,8 @@ func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane) *Fulls
 }
 
 // Render returns the tview.Flex that represents the FullscreenView.
-func (fv *FullscreenView) Render() *tview.Flex {
+func (fv *FullscreenView) Render(p Props) *tview.Flex {
+	fv.processPane = p.(*ProcessPane)
 	// build tview text views and flex
 	help := tview.NewTextView().
 		SetDynamicColors(true).
@@ -163,7 +169,7 @@ func (fv *FullscreenView) Render() *tview.Flex {
 }
 
 // GetKeyboard is a callback for defining keyboard shortcuts.
-func (fv *FullscreenView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.EventKey {
+func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		switch evt.Key() {
 		case tcell.KeyCtrlC:
@@ -182,12 +188,6 @@ func (fv *FullscreenView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.Ev
 		}
 		return evt
 	}
-}
-
-// SetProcessPane sets the ProcessPane for the FullscreenView and starts the output scan.
-func (fv *FullscreenView) SetProcessPane(pp *ProcessPane) {
-	fv.processPane = pp
-	fv.processPane.StartScan()
 }
 
 // toggleAutoScroll toggles the ui state and updates the ProcessPanes.

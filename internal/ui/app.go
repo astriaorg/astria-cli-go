@@ -7,6 +7,16 @@ import (
 	"github.com/rivo/tview"
 )
 
+// AppController is an interface for the App to control the views and itself.
+type AppController interface {
+	// Start starts the app.
+	Start()
+	// Exit exits the app.
+	Exit()
+	// SetView sets the current view.
+	SetView(view string, p Props)
+}
+
 // App contains the tview.Application and other necessary fields to manage the ui
 type App struct {
 	// Application is the tview application
@@ -63,15 +73,9 @@ func (a *App) Exit() {
 }
 
 // SetView sets the view to the specified view.
-func (a *App) SetView(view string, selectedPane *ProcessPane) {
+func (a *App) SetView(view string, p Props) {
 	a.view = a.viewMap[view]
-
-	if view == "fullscreen" {
-		// FIXME - can probably be done better
-		a.view.(*FullscreenView).processPane = selectedPane
-	}
-
 	a.Application.SetInputCapture(nil)
-	a.Application.SetInputCapture(a.view.GetKeyboard(*a))
-	a.Application.SetRoot(a.view.Render(), true)
+	a.Application.SetInputCapture(a.view.GetKeyboard(a))
+	a.Application.SetRoot(a.view.Render(p), true)
 }
