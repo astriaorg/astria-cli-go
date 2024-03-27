@@ -41,8 +41,13 @@ func NewMainView(tApp *tview.Application, processrunners []processrunner.Process
 	for _, pr := range processrunners {
 		pp := NewProcessPane(tApp, pr)
 		// start scanning the stdout of the panes
-		pp.StartScan()
 		processPanes = append(processPanes, pp)
+		// start scanning the stdout of the panes
+		pp.StartScan()
+		// set the defaults
+		pp.SetIsWordWrap(false)
+		pp.SetIsAutoScroll(true)
+		pp.SetIsBorderless(false)
 	}
 
 	return &MainView{
@@ -79,11 +84,15 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 		case tcell.KeyRune:
 			switch evt.Rune() {
 			case 'a':
-				mv.toggleAutoScroll()
+				for _, pp := range mv.processPanes {
+					pp.SetIsAutoScroll(!pp.isAutoScroll)
+				}
 			case 'q':
 				a.Exit()
 			case 'w':
-				mv.toggleWordWrap()
+				for _, pp := range mv.processPanes {
+					pp.SetIsWordWrap(!pp.isWordWrap)
+				}
 			}
 		case tcell.KeyDown:
 			// we want the down key to increment the selected index,
@@ -95,20 +104,6 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 			a.SetView("fullscreen", mv.processPanes[mv.selectedPaneIdx])
 		}
 		return evt
-	}
-}
-
-// toggleAutoScroll toggles the ui state and updates the ProcessPanes.
-func (mv *MainView) toggleAutoScroll() {
-	for _, pp := range mv.processPanes {
-		pp.SetIsAutoScroll(!pp.isAutoScroll)
-	}
-}
-
-// toggleWordWrap toggles the ui state and updates the ProcessPanes.
-func (mv *MainView) toggleWordWrap() {
-	for _, pp := range mv.processPanes {
-		pp.SetIsWordWrap(!pp.isWordWrap)
 	}
 }
 
@@ -170,6 +165,11 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 
 // GetKeyboard is a callback for defining keyboard shortcuts.
 func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
+	backToMain := func() {
+		// reset borderless state before going back to main view
+		fv.processPane.SetIsBorderless(false)
+		a.SetView("main", nil)
+	}
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		switch evt.Key() {
 		case tcell.KeyCtrlC:
@@ -177,25 +177,17 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 		case tcell.KeyRune:
 			switch evt.Rune() {
 			case 'a':
-				fv.toggleAutoScroll()
+				fv.processPane.SetIsAutoScroll(!fv.processPane.isAutoScroll)
+			case 'b':
+				fv.processPane.SetIsBorderless(!fv.processPane.isBorderless)
 			case 'q':
-				a.SetView("main", nil)
+				backToMain()
 			case 'w':
-				fv.toggleWordWrap()
+				fv.processPane.SetIsWordWrap(!fv.processPane.isWordWrap)
 			}
 		case tcell.KeyEscape:
-			a.SetView("main", nil)
+			backToMain()
 		}
 		return evt
 	}
-}
-
-// toggleAutoScroll toggles the ui state and updates the ProcessPanes.
-func (fv *FullscreenView) toggleAutoScroll() {
-	fv.processPane.SetIsAutoScroll(!fv.processPane.isAutoScroll)
-}
-
-// toggleWordWrap toggles the ui state and updates the ProcessPanes.
-func (fv *FullscreenView) toggleWordWrap() {
-	fv.processPane.SetIsWordWrap(!fv.processPane.isWordWrap)
 }

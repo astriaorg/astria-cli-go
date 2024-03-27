@@ -18,8 +18,6 @@ type ProcessPane struct {
 
 	Title string
 
-	// local ui state. Right now, this state is kept in sync with
-	//  the top level ui state in App
 	isAutoScroll bool
 	isWordWrap   bool
 	isBorderless bool
@@ -56,7 +54,6 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 func (pp *ProcessPane) StartScan() {
 	// scan stdout and write using ansiWriter
 	go func() {
-		// new scanner to scan stdout
 		stdoutScanner := pp.pr.GetScanner()
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
@@ -78,11 +75,6 @@ func (pp *ProcessPane) StartScan() {
 			panic(err)
 		}
 	}()
-}
-
-// StopProcess stops the process associated with the ProcessPane.
-func (pp *ProcessPane) StopProcess() {
-	pp.pr.Stop()
 }
 
 // SetIsAutoScroll sets the auto scroll of the textView.
