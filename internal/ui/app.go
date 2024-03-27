@@ -15,6 +15,30 @@ type AppController interface {
 	Exit()
 	// SetView sets the current view.
 	SetView(view string, p Props)
+	// Refresh the view to call Render again
+	RefreshView(p Props)
+	// Autoscroll toggle
+	ToggleAutoscroll()
+	// WordWrap toggle
+	ToggleWordWrap()
+	// Borderless toggle
+	ToggleBorderless()
+	// reset the border to true
+	ResetBorderless()
+}
+
+type SharedState struct {
+	isAutoScroll bool
+	isWordWrap   bool
+	isBorderless bool
+}
+
+func defaultSharedState() *SharedState {
+	return &SharedState{
+		isAutoScroll: true,
+		isWordWrap:   false,
+		isBorderless: false,
+	}
 }
 
 // App contains the tview.Application and other necessary fields to manage the ui
@@ -30,6 +54,9 @@ type App struct {
 
 	// processRunners is a list of our running processes
 	processRunners []processrunner.ProcessRunner
+
+	// app level store for ui settings state
+	ss *SharedState
 }
 
 // NewApp creates a new tview.Application with the necessary components
@@ -43,9 +70,12 @@ func NewApp(processrunners []processrunner.ProcessRunner) *App {
 
 // Start starts the tview application.
 func (a *App) Start() {
+	// set the shared state defaults for the app
+	a.ss = defaultSharedState()
+
 	// create the views
-	mainView := NewMainView(a.Application, a.processRunners)
-	fullscreenView := NewFullscreenView(a.Application, nil)
+	mainView := NewMainView(a.Application, a.processRunners, a)
+	fullscreenView := NewFullscreenView(a.Application, nil, a)
 
 	// set the views
 	a.viewMap = map[string]View{
@@ -78,4 +108,28 @@ func (a *App) SetView(view string, p Props) {
 	a.Application.SetInputCapture(nil)
 	a.Application.SetInputCapture(a.view.GetKeyboard(a))
 	a.Application.SetRoot(a.view.Render(p), true)
+}
+
+func (a *App) RefreshView(p Props) {
+	a.Application.SetRoot(a.view.Render(p), true)
+}
+
+// SetAutoscroll sets the autoscroll state.
+func (a *App) ToggleAutoscroll() {
+	a.ss.isAutoScroll = !a.ss.isAutoScroll
+}
+
+// SetWordWrap sets the word wrap state.
+func (a *App) ToggleWordWrap() {
+	a.ss.isWordWrap = !a.ss.isWordWrap
+}
+
+// SetBorderless sets the borderless state.
+func (a *App) ToggleBorderless() {
+	a.ss.isBorderless = !a.ss.isBorderless
+}
+
+// SetBorderless sets the borderless state.
+func (a *App) ResetBorderless() {
+	a.ss.isBorderless = false
 }
