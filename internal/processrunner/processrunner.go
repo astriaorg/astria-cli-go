@@ -16,8 +16,6 @@ type ProcessRunner interface {
 	Wait() error
 	Stop()
 	GetDidStart() <-chan bool
-	GetStdout() io.ReadCloser
-	GetStderr() io.ReadCloser
 	GetTitle() string
 	GetScanner() *bufio.Scanner
 }
@@ -131,16 +129,6 @@ func (pr *processRunner) Stop() {
 // GetDidStart returns a channel that's closed when the process starts.
 func (pr *processRunner) GetDidStart() <-chan bool {
 	return pr.didStart
-}
-
-// GetStdout provides a reader for the process's stdout.
-func (pr *processRunner) GetStdout() io.ReadCloser {
-	return pr.stdout
-}
-
-// GetStderr provides a reader for the process's stderr.
-func (pr *processRunner) GetStderr() io.ReadCloser {
-	return pr.stderr
 }
 
 // GetTitle returns the title of the process.

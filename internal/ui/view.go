@@ -120,7 +120,7 @@ func (mv *MainView) decrementSelectedPaneIdx() {
 	mv.redraw()
 }
 
-// redraw ensures the correct visual state of the panes
+// redraw ensures the correct visual state of the panes.
 func (mv *MainView) redraw() {
 	// ui treatment for the selected pane
 	for idx, pp := range mv.processPanes {

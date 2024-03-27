@@ -73,10 +73,10 @@ func (pp *ProcessPane) StartScan() {
 			panic(err)
 		}
 		// FIXME - do i need to wait??
-		//if err := pp.pr.Wait(); err != nil {
-		//	fmt.Println("error waiting for process:", err)
-		//	panic(err)
-		//}
+		if err := pp.pr.Wait(); err != nil {
+			fmt.Println("error waiting for process:", err)
+			panic(err)
+		}
 	}()
 }
 
