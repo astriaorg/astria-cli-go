@@ -73,6 +73,7 @@ func (pr *processRunner) Start(depStarted <-chan bool) error {
 		// wait for the dependency to start
 		case <-depStarted:
 		case <-pr.ctx.Done():
+			fmt.Println("context cancelled before starting process", pr.title)
 			return
 		}
 

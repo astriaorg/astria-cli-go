@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -21,6 +22,7 @@ type View interface {
 // MainView represents the initial view when the app is started.
 // It shows all the process panes in a vertical layout.
 type MainView struct {
+	// FIXME - how can we avoid having to have a reference of the tview.Application here?
 	tApp         *tview.Application
 	processPanes []*ProcessPane
 
@@ -28,7 +30,16 @@ type MainView struct {
 }
 
 // NewMainView creates a new MainView with the given tview.Application and ProcessPanes.
-func NewMainView(tApp *tview.Application, processPanes []*ProcessPane) *MainView {
+func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner) *MainView {
+	// create process panes for the runners
+	var processPanes []*ProcessPane
+	for _, pr := range processrunners {
+		pp := NewProcessPane(tApp, pr)
+		// start scanning the stdout of the panes
+		pp.StartScan()
+		processPanes = append(processPanes, pp)
+	}
+
 	return &MainView{
 		tApp:            tApp,
 		processPanes:    processPanes,
@@ -40,7 +51,7 @@ func NewMainView(tApp *tview.Application, processPanes []*ProcessPane) *MainView
 func (mv *MainView) Render() *tview.Flex {
 	innerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	for _, pp := range mv.processPanes {
-		innerFlex.AddItem(pp.textView, 0, 1, true)
+		innerFlex.AddItem(pp.GetTextView(), 0, 1, true)
 	}
 
 	mainWindowHelpInfo := tview.NewTextView().SetText(MainLegendText)
@@ -130,7 +141,6 @@ type FullscreenView struct {
 
 // NewFullscreenView creates a new FullscreenView with the given tview.Application and ProcessPane.
 func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane) *FullscreenView {
-	processPane.StartScan()
 	return &FullscreenView{
 		tApp:        tApp,
 		processPane: processPane,
@@ -172,6 +182,12 @@ func (fv *FullscreenView) GetKeyboard(a App) func(evt *tcell.EventKey) *tcell.Ev
 		}
 		return evt
 	}
+}
+
+// SetProcessPane sets the ProcessPane for the FullscreenView and starts the output scan.
+func (fv *FullscreenView) SetProcessPane(pp *ProcessPane) {
+	fv.processPane = pp
+	fv.processPane.StartScan()
 }
 
 // toggleAutoScroll toggles the ui state and updates the ProcessPanes.

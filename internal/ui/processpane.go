@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/astria/astria-cli-go/internal/processrunner"
@@ -62,13 +63,20 @@ func (pp *ProcessPane) StartScan() {
 			pp.tApp.QueueUpdateDraw(func() {
 				_, err := pp.ansiWriter.Write([]byte(line + "\n"))
 				if err != nil {
+					fmt.Println("error writing to textView:", err)
 					panic(err)
 				}
 			})
 		}
 		if err := stdoutScanner.Err(); err != nil {
+			fmt.Println("error reading stdout:", err)
 			panic(err)
 		}
+		// FIXME - do i need to wait??
+		//if err := pp.pr.Wait(); err != nil {
+		//	fmt.Println("error waiting for process:", err)
+		//	panic(err)
+		//}
 	}()
 }
 
