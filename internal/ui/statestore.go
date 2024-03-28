@@ -34,6 +34,13 @@ func (s *StateStore) ToggleAutoscroll() {
 	s.state.isAutoScroll = !s.state.isAutoScroll
 }
 
+func (s *StateStore) DisableAutoscroll() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.state.isAutoScroll = false
+}
+
 // GetIsAutoscroll returns the autoscroll state
 func (s *StateStore) GetIsAutoscroll() bool {
 	s.mutex.Lock()
