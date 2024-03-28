@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getBalanceCmd represents the getBalance command
+// getBalanceCmd represents the get-balance command
 var getBalanceCmd = &cobra.Command{
 	Use:   "get-balance [address]",
 	Short: "Retrieves and prints the balance of an account.",

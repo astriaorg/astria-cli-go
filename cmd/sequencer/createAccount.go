@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createAccountCmd represents the createAccount command
+// createAccountCmd represents the create-account command
 var createAccountCmd = &cobra.Command{
 	Use:   "create-account",
 	Short: "Create a new account for the sequencer.",
