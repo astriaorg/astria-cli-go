@@ -7,6 +7,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/rivo/tview v0.0.0-20240307173318-e804876934a1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 )
