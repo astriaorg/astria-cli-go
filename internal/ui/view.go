@@ -7,9 +7,7 @@ import (
 )
 
 const (
-	MainLegendText       = " (q)uit | (a)utoscroll | (w)rap lines | (up/down) select pane | (enter) fullscreen selected pane"
-	FullscreenLegendText = " (q/esc) back | (a)utoscroll | (w)rap lines | (b)orderless"
-	MainTitle            = "Astria Dev"
+	MainTitle = "Astria Dev"
 )
 
 // Props is an empty interface for passing data to the view.
@@ -68,7 +66,7 @@ func appendStatus(text string, status bool) string {
 	}
 }
 
-// Build the help text legened at the bottom of the main screen with dynamically
+// Build the help text legend at the bottom of the main screen with dynamically
 // changing setting status
 func (mv *MainView) getHelpInfo() string {
 	output := " "
@@ -84,7 +82,7 @@ func (mv *MainView) getHelpInfo() string {
 func (mv *MainView) Render(_ Props) *tview.Flex {
 	innerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	for _, pp := range mv.processPanes {
-		// propigate the shared state to the process panes
+		// propagate the shared state to the process panes
 		pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
 		pp.SetIsBorderless(mv.s.GetIsBorderless())
 		pp.SetIsWordWrap(mv.s.GetIsWordWrap())
@@ -182,7 +180,7 @@ func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, s *Sta
 	}
 }
 
-// Build the help text legened at the bottom of the fullscreen view with dynamically
+// Build the help text legend at the bottom of the fullscreen view with dynamically
 // changing setting status
 func (fv *FullscreenView) getHelpInfo() string {
 	output := " "
