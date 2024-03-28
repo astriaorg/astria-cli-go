@@ -8,6 +8,7 @@ import (
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/astria/astria-cli-go/internal/ui"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -90,25 +91,25 @@ func runall() {
 	close(shouldStart)
 	err = seqRunner.Start(shouldStart)
 	if err != nil {
-		fmt.Println("Error running sequencer:", err)
+		log.WithError(err).Error("Error running sequencer")
 		cleanup()
 		panic(err)
 	}
 	err = cometRunner.Start(seqRunner.GetDidStart())
 	if err != nil {
-		fmt.Println("Error running composer:", err)
+		log.WithError(err).Error("Error running cometbft")
 		cleanup()
 		panic(err)
 	}
 	err = compRunner.Start(cometRunner.GetDidStart())
 	if err != nil {
-		fmt.Println("Error running composer:", err)
+		log.WithError(err).Error("Error running composer")
 		cleanup()
 		panic(err)
 	}
 	err = condRunner.Start(compRunner.GetDidStart())
 	if err != nil {
-		fmt.Println("Error running conductor:", err)
+		log.WithError(err).Error("Error running conductor")
 		cleanup()
 		panic(err)
 	}
