@@ -9,13 +9,10 @@ import (
 
 // getBalanceCmd represents the getBalance command
 var getBalanceCmd = &cobra.Command{
-	Use:   "get-balance",
+	Use:   "get-balance [address]",
 	Short: "Retrieves and prints the balance of an account.",
-	Long: `Use this command to retrieve and print the balance of an account.
-
-Usage: astria-cli-go sequencer get-balance <address> --url <url>`,
-	Args: cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	Run:  runGetBalance,
+	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	Run:   runGetBalance,
 }
 
 const DefaultSequencerURL = "http://127.0.0.1:26657"
