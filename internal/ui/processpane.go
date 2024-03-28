@@ -75,8 +75,8 @@ func (pp *ProcessPane) StartScan() {
 
 // SetIsAutoScroll sets the auto scroll of the textView.
 func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
-	pp.ss.isAutoScroll = isAutoScroll
-	if pp.ss.isAutoScroll {
+	// pp.ss.isAutoScroll = isAutoScroll
+	if isAutoScroll {
 		pp.textView.ScrollToEnd()
 	} else {
 		currentOffset, _ := pp.textView.GetScrollOffset()
@@ -86,15 +86,15 @@ func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
 
 // SetIsWordWrap sets the word wrap of the textView.
 func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
-	pp.ss.isWordWrap = isWordWrap
+	// pp.ss.isWordWrap = isWordWrap
 	// set the textview's word wrap
-	pp.textView.SetWrap(pp.ss.isWordWrap)
+	pp.textView.SetWrap(isWordWrap)
 }
 
 // SetIsBorderless sets the border of the textView.
 func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
-	pp.ss.isBorderless = isBorderless
-	pp.textView.SetBorder(!pp.ss.isBorderless)
+	// pp.ss.isBorderless = isBorderless
+	pp.textView.SetBorder(!isBorderless)
 }
 
 // GetTextView returns the textView associated with the ProcessPane.
