@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/astria/astria-cli-go/internal/sequencer"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -23,13 +24,12 @@ func init() {
 }
 
 func runGetBalance(cmd *cobra.Command, args []string) {
-	// TODO - arg validation?
 	address := args[0]
 	url := cmd.Flag("url").Value.String()
 
 	balance, err := sequencer.GetBalance(address, url)
 	if err != nil {
-		fmt.Println("Error getting balance:", err)
+		log.WithError(err).Error("Error getting balance")
 		return
 	}
 

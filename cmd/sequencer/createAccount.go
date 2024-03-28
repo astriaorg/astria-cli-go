@@ -31,7 +31,7 @@ func runCreateAccountCmd(cmd *cobra.Command, args []string) {
 
 	account, err := sequencer.CreateAccount()
 	if err != nil {
-		fmt.Println("Error creating account:", err)
+		log.WithError(err).Error("Error creating account")
 		os.Exit(1)
 	}
 
@@ -44,7 +44,7 @@ func runCreateAccountCmd(cmd *cobra.Command, args []string) {
 		}
 		j, err := json.MarshalIndent(obj, "", "  ")
 		if err != nil {
-			fmt.Println("Error marshalling account to JSON:", err)
+			log.WithError(err).Error("Error marshalling account to JSON")
 			os.Exit(1)
 		}
 		fmt.Println(string(j))
