@@ -132,6 +132,8 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 			mv.decrementSelectedPaneIdx()
 		case tcell.KeyEnter:
 			a.SetView("fullscreen", mv.processPanes[mv.selectedPaneIdx])
+		default:
+			// do nothing. intentionally left blank
 		}
 		return evt
 	}
@@ -248,6 +250,8 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 		case tcell.KeyEscape:
 			backToMain()
 			return nil
+		default:
+			// do nothing. intentionally left blank
 		}
 		return evt
 	}
