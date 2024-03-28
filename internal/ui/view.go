@@ -39,7 +39,6 @@ func NewMainView(tApp *tview.Application, processrunners []processrunner.Process
 	var processPanes []*ProcessPane
 	for _, pr := range processrunners {
 		pp := NewProcessPane(tApp, pr)
-		// start scanning the stdout of the panes
 		processPanes = append(processPanes, pp)
 		// start scanning the stdout of the panes
 		pp.StartScan()
