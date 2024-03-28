@@ -227,21 +227,30 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 		case tcell.KeyRune:
 			{
 				switch evt.Rune() {
+				// hotkey for autoscroll
 				case 'a':
 					fv.s.ToggleAutoscroll()
 					fv.processPane.SetIsAutoScroll(fv.s.GetIsAutoscroll())
-
+				// hotkey for borderless
 				case 'b':
 					fv.s.ToggleBorderless()
 					fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
-
+				// hotkey for quitting fullscreen
 				case 'q':
 					backToMain()
 					return nil
+				// hotkey for word wrap
 				case 'w':
 					fv.s.ToggleWordWrap()
 					fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
-
+				// hotkey for jumping to the top of the logs
+				case '0':
+					fv.s.DisableAutoscroll()
+					fv.processPane.textView.ScrollToBeginning()
+				// hotkey for jumping to the tail of the logs
+				case '1':
+					fv.s.DisableAutoscroll()
+					fv.processPane.textView.ScrollTo(fv.processPane.GetLineCount(), 0)
 				}
 				// needed to call the Render method again to refresh the help info
 				a.RefreshView(fv.processPane)
@@ -250,6 +259,19 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 		case tcell.KeyEscape:
 			backToMain()
 			return nil
+		// only listen to up and down keys if autoscroll is off
+		case tcell.KeyUp:
+			if !fv.s.GetIsAutoscroll() {
+				row, _ := fv.processPane.textView.GetScrollOffset()
+				fv.processPane.textView.ScrollTo(row-1, 0)
+				return nil
+			}
+		case tcell.KeyDown:
+			if !fv.s.GetIsAutoscroll() {
+				row, _ := fv.processPane.textView.GetScrollOffset()
+				fv.processPane.textView.ScrollTo(row+1, 0)
+				return nil
+			}
 		default:
 			// do nothing. intentionally left blank
 		}
