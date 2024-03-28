@@ -188,7 +188,9 @@ func (fv *FullscreenView) getHelpInfo() string {
 	output += "(q/esc) back | "
 	output += appendStatus("(a)utoscroll", fv.s.GetIsAutoscroll()) + " | "
 	output += appendStatus("(w)rap lines", fv.s.GetIsWordWrap()) + " | "
-	output += appendStatus("(b)orderless", fv.s.GetIsBorderless())
+	output += appendStatus("(b)orderless", fv.s.GetIsBorderless()) + " | "
+	output += "(0/1) jump to head/tail" + " | "
+	output += "(up/down or mousewheel) scroll if autoscroll is off"
 	return output
 }
 
