@@ -30,31 +30,31 @@ type MainView struct {
 	// FIXME - how can we avoid having to have a reference of the tview.Application here?
 	tApp         *tview.Application
 	processPanes []*ProcessPane
-	a            *App
+	s            *StateStore
 
 	selectedPaneIdx int
 }
 
 // NewMainView creates a new MainView with the given tview.Application and ProcessPanes.
-func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner, a *App) *MainView {
+func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner, s *StateStore) *MainView {
 	// create process panes for the runners
 	var processPanes []*ProcessPane
 	for _, pr := range processrunners {
-		pp := NewProcessPane(tApp, pr, a.ss)
+		pp := NewProcessPane(tApp, pr)
 		// start scanning the stdout of the panes
 		processPanes = append(processPanes, pp)
 		// start scanning the stdout of the panes
 		pp.StartScan()
 		// set the defaults
-		pp.SetIsWordWrap(a.ss.isWordWrap)
-		pp.SetIsAutoScroll(a.ss.isAutoScroll)
-		pp.SetIsBorderless(a.ss.isBorderless)
+		pp.SetIsWordWrap(s.GetIsWordWrap())
+		pp.SetIsAutoScroll(s.GetIsAutoscroll())
+		pp.SetIsBorderless(s.GetIsBorderless())
 	}
 
 	return &MainView{
 		tApp:            tApp,
 		processPanes:    processPanes,
-		a:               a,
+		s:               s,
 		selectedPaneIdx: 0,
 	}
 }
@@ -73,8 +73,8 @@ func appendStatus(text string, status bool) string {
 func (mv *MainView) getHelpInfo() string {
 	output := " "
 	output += "(q)uit | "
-	output += appendStatus("(a)utoscroll", mv.a.ss.isAutoScroll) + " | "
-	output += appendStatus("(w)rap lines", mv.a.ss.isWordWrap) + " | "
+	output += appendStatus("(a)utoscroll", mv.s.GetIsAutoscroll()) + " | "
+	output += appendStatus("(w)rap lines", mv.s.GetIsWordWrap()) + " | "
 	output += "(up/down) select pane | "
 	output += "(enter) fullscreen selected pane"
 	return output
@@ -85,9 +85,9 @@ func (mv *MainView) Render(_ Props) *tview.Flex {
 	innerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	for _, pp := range mv.processPanes {
 		// propigate the shared state to the process panes
-		pp.SetIsAutoScroll(mv.a.ss.isAutoScroll)
-		pp.SetIsBorderless(mv.a.ss.isBorderless)
-		pp.SetIsWordWrap(mv.a.ss.isWordWrap)
+		pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
+		pp.SetIsBorderless(mv.s.GetIsBorderless())
+		pp.SetIsWordWrap(mv.s.GetIsWordWrap())
 		innerFlex.AddItem(pp.GetTextView(), 0, 1, true)
 	}
 
@@ -112,17 +112,17 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 			{
 				switch evt.Rune() {
 				case 'a':
-					a.ToggleAutoscroll()
+					mv.s.ToggleAutoscroll()
 					for _, pp := range mv.processPanes {
-						pp.SetIsAutoScroll(mv.a.ss.isAutoScroll)
+						pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
 					}
 				case 'q':
 					a.Exit()
 					return nil
 				case 'w':
-					a.ToggleWordWrap()
+					mv.s.ToggleWordWrap()
 					for _, pp := range mv.processPanes {
-						pp.SetIsWordWrap(mv.a.ss.isWordWrap)
+						pp.SetIsWordWrap(mv.s.GetIsWordWrap())
 					}
 				}
 				a.RefreshView(nil)
@@ -170,15 +170,15 @@ func (mv *MainView) redraw() {
 type FullscreenView struct {
 	tApp        *tview.Application
 	processPane *ProcessPane
-	a           *App
+	s           *StateStore
 }
 
 // NewFullscreenView creates a new FullscreenView with the given tview.Application and ProcessPane.
-func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, a *App) *FullscreenView {
+func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, s *StateStore) *FullscreenView {
 	return &FullscreenView{
 		tApp:        tApp,
 		processPane: processPane,
-		a:           a,
+		s:           s,
 	}
 }
 
@@ -187,9 +187,9 @@ func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, a *App
 func (fv *FullscreenView) getHelpInfo() string {
 	output := " "
 	output += "(q/esc) back | "
-	output += appendStatus("(a)utoscroll", fv.a.ss.isAutoScroll) + " | "
-	output += appendStatus("(w)rap lines", fv.a.ss.isWordWrap) + " | "
-	output += appendStatus("(b)orderless", fv.a.ss.isBorderless)
+	output += appendStatus("(a)utoscroll", fv.s.GetIsAutoscroll()) + " | "
+	output += appendStatus("(w)rap lines", fv.s.GetIsWordWrap()) + " | "
+	output += appendStatus("(b)orderless", fv.s.GetIsBorderless())
 	return output
 }
 
@@ -213,8 +213,8 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
 	backToMain := func() {
 		// reset borderless state before going back to main view
-		a.ResetBorderless()
-		fv.processPane.SetIsBorderless(fv.a.ss.isBorderless)
+		fv.s.ResetBorderless()
+		fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
 		// rerender the process Pane to apply all settings
 		a.RefreshView(fv.processPane)
 		// change views
@@ -229,19 +229,19 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 			{
 				switch evt.Rune() {
 				case 'a':
-					a.ToggleAutoscroll()
-					fv.processPane.SetIsAutoScroll(fv.a.ss.isAutoScroll)
+					fv.s.ToggleAutoscroll()
+					fv.processPane.SetIsAutoScroll(fv.s.GetIsAutoscroll())
 
 				case 'b':
-					a.ToggleBorderless()
-					fv.processPane.SetIsBorderless(fv.a.ss.isBorderless)
+					fv.s.ToggleBorderless()
+					fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
 
 				case 'q':
 					backToMain()
 					return nil
 				case 'w':
-					a.ToggleWordWrap()
-					fv.processPane.SetIsWordWrap(fv.a.ss.isWordWrap)
+					fv.s.ToggleWordWrap()
+					fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
 
 				}
 				// needed to call the Render method again to refresh the help info
