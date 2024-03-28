@@ -7,9 +7,7 @@ import (
 )
 
 const (
-	MainLegendText       = " (q)uit | (a)utoscroll | (w)rap lines | (up/down) select pane | (enter) fullscreen selected pane"
-	FullscreenLegendText = " (q/esc) back | (a)utoscroll | (w)rap lines | (b)orderless"
-	MainTitle            = "Astria Dev"
+	MainTitle = "Astria Dev"
 )
 
 // Props is an empty interface for passing data to the view.
@@ -30,41 +28,67 @@ type MainView struct {
 	// FIXME - how can we avoid having to have a reference of the tview.Application here?
 	tApp         *tview.Application
 	processPanes []*ProcessPane
+	s            *StateStore
 
 	selectedPaneIdx int
 }
 
 // NewMainView creates a new MainView with the given tview.Application and ProcessPanes.
-func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner) *MainView {
+func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner, s *StateStore) *MainView {
 	// create process panes for the runners
 	var processPanes []*ProcessPane
 	for _, pr := range processrunners {
 		pp := NewProcessPane(tApp, pr)
-		// start scanning the stdout of the panes
 		processPanes = append(processPanes, pp)
 		// start scanning the stdout of the panes
 		pp.StartScan()
 		// set the defaults
-		pp.SetIsWordWrap(false)
-		pp.SetIsAutoScroll(true)
-		pp.SetIsBorderless(false)
+		pp.SetIsWordWrap(s.GetIsWordWrap())
+		pp.SetIsAutoScroll(s.GetIsAutoscroll())
+		pp.SetIsBorderless(s.GetIsBorderless())
 	}
 
 	return &MainView{
 		tApp:            tApp,
 		processPanes:    processPanes,
+		s:               s,
 		selectedPaneIdx: 0,
 	}
+}
+
+// Append the settings status to the end of the input string
+func appendStatus(text string, status bool) string {
+	if status {
+		return text + ": [black:white]ON [-:-]"
+	} else {
+		return text + ": [white:darkslategray]off[-:-]"
+	}
+}
+
+// Build the help text legend at the bottom of the main screen with dynamically
+// changing setting status
+func (mv *MainView) getHelpInfo() string {
+	output := " "
+	output += "(q)uit | "
+	output += appendStatus("(a)utoscroll", mv.s.GetIsAutoscroll()) + " | "
+	output += appendStatus("(w)rap lines", mv.s.GetIsWordWrap()) + " | "
+	output += "(up/down) select pane | "
+	output += "(enter) fullscreen selected pane"
+	return output
 }
 
 // Render returns the tview.Flex that represents the MainView.
 func (mv *MainView) Render(_ Props) *tview.Flex {
 	innerFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	for _, pp := range mv.processPanes {
+		// propagate the shared state to the process panes
+		pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
+		pp.SetIsBorderless(mv.s.GetIsBorderless())
+		pp.SetIsWordWrap(mv.s.GetIsWordWrap())
 		innerFlex.AddItem(pp.GetTextView(), 0, 1, true)
 	}
 
-	mainWindowHelpInfo := tview.NewTextView().SetText(MainLegendText)
+	mainWindowHelpInfo := tview.NewTextView().SetDynamicColors(true).SetText(mv.getHelpInfo())
 	flex := tview.NewFlex()
 	flex.AddItem(innerFlex, 0, 4, false).
 		SetDirection(tview.FlexRow).
@@ -82,17 +106,23 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 		case tcell.KeyCtrlC:
 			a.Exit()
 		case tcell.KeyRune:
-			switch evt.Rune() {
-			case 'a':
-				for _, pp := range mv.processPanes {
-					pp.SetIsAutoScroll(!pp.isAutoScroll)
+			{
+				switch evt.Rune() {
+				case 'a':
+					mv.s.ToggleAutoscroll()
+					for _, pp := range mv.processPanes {
+						pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
+					}
+				case 'q':
+					a.Exit()
+					return nil
+				case 'w':
+					mv.s.ToggleWordWrap()
+					for _, pp := range mv.processPanes {
+						pp.SetIsWordWrap(mv.s.GetIsWordWrap())
+					}
 				}
-			case 'q':
-				a.Exit()
-			case 'w':
-				for _, pp := range mv.processPanes {
-					pp.SetIsWordWrap(!pp.isWordWrap)
-				}
+				a.RefreshView(nil)
 			}
 		case tcell.KeyDown:
 			// we want the down key to increment the selected index,
@@ -137,14 +167,27 @@ func (mv *MainView) redraw() {
 type FullscreenView struct {
 	tApp        *tview.Application
 	processPane *ProcessPane
+	s           *StateStore
 }
 
 // NewFullscreenView creates a new FullscreenView with the given tview.Application and ProcessPane.
-func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane) *FullscreenView {
+func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, s *StateStore) *FullscreenView {
 	return &FullscreenView{
 		tApp:        tApp,
 		processPane: processPane,
+		s:           s,
 	}
+}
+
+// Build the help text legend at the bottom of the fullscreen view with dynamically
+// changing setting status
+func (fv *FullscreenView) getHelpInfo() string {
+	output := " "
+	output += "(q/esc) back | "
+	output += appendStatus("(a)utoscroll", fv.s.GetIsAutoscroll()) + " | "
+	output += appendStatus("(w)rap lines", fv.s.GetIsWordWrap()) + " | "
+	output += appendStatus("(b)orderless", fv.s.GetIsBorderless())
+	return output
 }
 
 // Render returns the tview.Flex that represents the FullscreenView.
@@ -153,7 +196,7 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 	// build tview text views and flex
 	help := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText(FullscreenLegendText).
+		SetText(fv.getHelpInfo()).
 		SetChangedFunc(func() {
 			fv.tApp.Draw()
 		})
@@ -167,26 +210,44 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
 	backToMain := func() {
 		// reset borderless state before going back to main view
-		fv.processPane.SetIsBorderless(false)
+		fv.s.ResetBorderless()
+		fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
+		// rerender the process Pane to apply all settings
+		a.RefreshView(fv.processPane)
+		// change views
 		a.SetView("main", nil)
 	}
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		switch evt.Key() {
 		case tcell.KeyCtrlC:
 			a.Exit()
+			return nil
 		case tcell.KeyRune:
-			switch evt.Rune() {
-			case 'a':
-				fv.processPane.SetIsAutoScroll(!fv.processPane.isAutoScroll)
-			case 'b':
-				fv.processPane.SetIsBorderless(!fv.processPane.isBorderless)
-			case 'q':
-				backToMain()
-			case 'w':
-				fv.processPane.SetIsWordWrap(!fv.processPane.isWordWrap)
+			{
+				switch evt.Rune() {
+				case 'a':
+					fv.s.ToggleAutoscroll()
+					fv.processPane.SetIsAutoScroll(fv.s.GetIsAutoscroll())
+
+				case 'b':
+					fv.s.ToggleBorderless()
+					fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
+
+				case 'q':
+					backToMain()
+					return nil
+				case 'w':
+					fv.s.ToggleWordWrap()
+					fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
+
+				}
+				// needed to call the Render method again to refresh the help info
+				a.RefreshView(fv.processPane)
+				return nil
 			}
 		case tcell.KeyEscape:
 			backToMain()
+			return nil
 		}
 		return evt
 	}

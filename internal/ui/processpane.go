@@ -17,10 +17,6 @@ type ProcessPane struct {
 	ansiWriter io.Writer
 
 	Title string
-
-	isAutoScroll bool
-	isWordWrap   bool
-	isBorderless bool
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -43,10 +39,6 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 		ansiWriter: ansiWriter,
 		pr:         pr,
 		Title:      pr.GetTitle(),
-
-		isAutoScroll: true,
-		isWordWrap:   false,
-		isBorderless: false,
 	}
 }
 
@@ -79,8 +71,7 @@ func (pp *ProcessPane) StartScan() {
 
 // SetIsAutoScroll sets the auto scroll of the textView.
 func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
-	pp.isAutoScroll = isAutoScroll
-	if pp.isAutoScroll {
+	if isAutoScroll {
 		pp.textView.ScrollToEnd()
 	} else {
 		currentOffset, _ := pp.textView.GetScrollOffset()
@@ -90,15 +81,13 @@ func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
 
 // SetIsWordWrap sets the word wrap of the textView.
 func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
-	pp.isWordWrap = isWordWrap
 	// set the textview's word wrap
-	pp.textView.SetWrap(pp.isWordWrap)
+	pp.textView.SetWrap(isWordWrap)
 }
 
 // SetIsBorderless sets the border of the textView.
 func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
-	pp.isBorderless = isBorderless
-	pp.textView.SetBorder(!pp.isBorderless)
+	pp.textView.SetBorder(!isBorderless)
 }
 
 // GetTextView returns the textView associated with the ProcessPane.
