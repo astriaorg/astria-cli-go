@@ -89,7 +89,7 @@ func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
 
 // SetIsBorderless sets the border of the textView.
 func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
-	// note: the verbage for isBorderless is opposite of SetBorder
+	// NOTE - the verbage for isBorderless is opposite of SetBorder
 	// therefore, when isBorderless is true, we want to set the border to false
 	// for the textView, and vice versa
 	pp.textView.SetBorder(!isBorderless)
