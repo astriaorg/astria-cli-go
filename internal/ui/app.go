@@ -15,7 +15,8 @@ type AppController interface {
 	Exit()
 	// SetView sets the current view.
 	SetView(view string, p Props)
-	// Refresh the view to call Render again
+	// RefreshView resets keyboard input and sets the root tview component,
+	// which effectively refreshes the view.
 	RefreshView(p Props)
 }
 
@@ -80,13 +81,13 @@ func (a *App) Exit() {
 // SetView sets the view to the specified view.
 func (a *App) SetView(view string, p Props) {
 	a.view = a.viewMap[view]
-	a.Application.SetInputCapture(nil)
-	a.Application.SetInputCapture(a.view.GetKeyboard(a))
-	a.Application.SetRoot(a.view.Render(p), true)
+	a.RefreshView(p)
 }
 
-// RefreshView refreshes the view by calling Render again and resettings the
+// RefreshView refreshes the view by calling Render again and resetting the
 // newly rendered view as the root.
 func (a *App) RefreshView(p Props) {
+	a.Application.SetInputCapture(nil)
+	a.Application.SetInputCapture(a.view.GetKeyboard(a))
 	a.Application.SetRoot(a.view.Render(p), true)
 }

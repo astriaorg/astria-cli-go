@@ -58,7 +58,7 @@ func (s *StateStore) GetIsWordWrap() bool {
 	return s.state.isWordWrap
 }
 
-// ToggleBorderless toggels the borderless state
+// ToggleBorderless toggles the borderless state
 func (s *StateStore) ToggleBorderless() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
