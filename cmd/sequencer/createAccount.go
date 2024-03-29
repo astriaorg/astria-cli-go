@@ -18,7 +18,7 @@ var createAccountCmd = &cobra.Command{
 	Short: "Create a new account for the sequencer.",
 	Long: `Create an account for the sequencer. The account will be used to sign
 transactions and blocks. The account will be created with a private key, public key, and address.`,
-	PreRun: cmd.ToggleDebug,
+	PreRun: cmd.SetLogLevel,
 	Run:    runCreateAccountCmd,
 }
 

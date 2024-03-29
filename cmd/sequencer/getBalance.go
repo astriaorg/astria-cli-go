@@ -14,7 +14,7 @@ var getBalanceCmd = &cobra.Command{
 	Use:    "get-balance [address]",
 	Short:  "Retrieves and prints the balance of an account.",
 	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	PreRun: cmd.ToggleDebug,
+	PreRun: cmd.SetLogLevel,
 	Run:    runGetBalance,
 }
 
