@@ -25,4 +25,5 @@ func Execute() {
 func init() {
 	// disabling the completion command for now
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
+	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug level logging")
 }

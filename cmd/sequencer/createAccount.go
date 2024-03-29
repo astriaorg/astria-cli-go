@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
@@ -17,7 +18,8 @@ var createAccountCmd = &cobra.Command{
 	Short: "Create a new account for the sequencer.",
 	Long: `Create an account for the sequencer. The account will be used to sign
 transactions and blocks. The account will be created with a private key, public key, and address.`,
-	Run: runCreateAccountCmd,
+	PreRun: cmd.ToggleDebug,
+	Run:    runCreateAccountCmd,
 }
 
 func init() {

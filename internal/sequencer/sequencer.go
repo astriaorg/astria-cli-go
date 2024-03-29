@@ -25,6 +25,8 @@ func CreateAccount() (*Account, error) {
 	}
 	address := signer.Address()
 	seed := signer.Seed()
+
+	log.Debug("Created account with address: ", hex.EncodeToString(address[:]))
 	return &Account{
 		Address:    hex.EncodeToString(address[:]),
 		PublicKey:  hex.EncodeToString(signer.PublicKey()),

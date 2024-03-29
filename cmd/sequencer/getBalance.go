@@ -3,6 +3,7 @@ package sequencer
 import (
 	"fmt"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -10,10 +11,11 @@ import (
 
 // getBalanceCmd represents the get-balance command
 var getBalanceCmd = &cobra.Command{
-	Use:   "get-balance [address]",
-	Short: "Retrieves and prints the balance of an account.",
-	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	Run:   runGetBalance,
+	Use:    "get-balance [address]",
+	Short:  "Retrieves and prints the balance of an account.",
+	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	PreRun: cmd.ToggleDebug,
+	Run:    runGetBalance,
 }
 
 const DefaultSequencerURL = "http://127.0.0.1:26657"
