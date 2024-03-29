@@ -1,25 +1,25 @@
-on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
-
-jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-          make_latest: true
+#on:
+#  push:
+#    tags:
+#      - "v[0-9]+.[0-9]+.[0-9]+"
+#      - "v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
+#      - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
+#      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+#
+#jobs:
+#  create-release:
+#    name: Create Release
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Create Release
+#        id: create_release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          tag_name: ${{ github.ref }}
+#          release_name: Release ${{ github.ref }}
+#          draft: false
+#          prerelease: false
+#          make_latest: true
