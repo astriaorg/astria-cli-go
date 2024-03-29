@@ -7,8 +7,8 @@ permissions:
     packages: write
 
 jobs:
-  releases-matrix:
-    name: Release Go Binary
+  build-for-release:
+    name: Build For Release
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,5 +24,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
+          ldflags: "-X cmd.Version=${{ github.ref }}"
           project_path: "./"
           binary_name: "astria-cli-go"
