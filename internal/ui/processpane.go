@@ -1,7 +1,8 @@
 package ui
 
 import (
-	"bufio"
+	"fmt"
+	"io"
 
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
@@ -10,16 +11,13 @@ import (
 
 // ProcessPane is a struct containing a tview.TextView and processrunner.ProcessRunner
 type ProcessPane struct {
-	tApp     *tview.Application
-	textView *tview.TextView
-	pr       processrunner.ProcessRunner
-	Title    string
+	tApp       *tview.Application
+	textView   *tview.TextView
+	pr         processrunner.ProcessRunner
+	ansiWriter io.Writer
 
-	// local ui state. Right now, this state is kept in sync with
-	//  the top level ui state in App
-	isAutoScroll bool
-	isWordWrap   bool
-	isBorderless bool
+	Title     string
+	lineCount int
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -34,15 +32,14 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 		SetBorderColor(tcell.ColorGray).
 		SetTitle(pr.GetTitle())
 
-	return &ProcessPane{
-		tApp:     tApp,
-		textView: tv,
-		pr:       pr,
-		Title:    pr.GetTitle(),
+	ansiWriter := tview.ANSIWriter(tv)
 
-		isAutoScroll: true,
-		isWordWrap:   false,
-		isBorderless: false,
+	return &ProcessPane{
+		tApp:       tApp,
+		textView:   tv,
+		ansiWriter: ansiWriter,
+		pr:         pr,
+		Title:      pr.GetTitle(),
 	}
 }
 
@@ -50,38 +47,33 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 func (pp *ProcessPane) StartScan() {
 	// scan stdout and write using ansiWriter
 	go func() {
-		// ansi writer
-		ansiWriter := tview.ANSIWriter(pp.textView)
-
-		// new scanner to scan stdout
-		stdoutScanner := bufio.NewScanner(pp.pr.GetStdout())
+		stdoutScanner := pp.pr.GetScanner()
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
 			pp.tApp.QueueUpdateDraw(func() {
-				_, err := ansiWriter.Write([]byte(line + "\n"))
+				_, err := pp.ansiWriter.Write([]byte(line + "\n"))
+				pp.lineCount++
 				if err != nil {
+					fmt.Println("error writing to textView:", err)
 					panic(err)
 				}
 			})
 		}
 		if err := stdoutScanner.Err(); err != nil {
+			fmt.Println("error reading stdout:", err)
 			panic(err)
 		}
+		// FIXME - do i need to wait??
 		if err := pp.pr.Wait(); err != nil {
+			fmt.Println("error waiting for process:", err)
 			panic(err)
 		}
 	}()
 }
 
-// StopProcess stops the process associated with the ProcessPane.
-func (pp *ProcessPane) StopProcess() {
-	pp.pr.Stop()
-}
-
 // SetIsAutoScroll sets the auto scroll of the textView.
 func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
-	pp.isAutoScroll = isAutoScroll
-	if pp.isAutoScroll {
+	if isAutoScroll {
 		pp.textView.ScrollToEnd()
 	} else {
 		currentOffset, _ := pp.textView.GetScrollOffset()
@@ -91,14 +83,16 @@ func (pp *ProcessPane) SetIsAutoScroll(isAutoScroll bool) {
 
 // SetIsWordWrap sets the word wrap of the textView.
 func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
-	pp.isWordWrap = isWordWrap
 	// set the textview's word wrap
-	pp.textView.SetWrap(pp.isWordWrap)
+	pp.textView.SetWrap(isWordWrap)
 }
 
+// SetIsBorderless sets the border of the textView.
 func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
-	pp.isBorderless = isBorderless
-	pp.textView.SetBorder(!pp.isBorderless)
+	// NOTE - the verbage for isBorderless is opposite of SetBorder
+	// therefore, when isBorderless is true, we want to set the border to false
+	// for the textView, and vice versa
+	pp.textView.SetBorder(!isBorderless)
 }
 
 // GetTextView returns the textView associated with the ProcessPane.
@@ -114,4 +108,8 @@ func (pp *ProcessPane) Highlight(highlight bool) {
 	} else {
 		pp.textView.SetBorderColor(tcell.ColorGray).SetTitle(pp.Title)
 	}
+}
+
+func (pp *ProcessPane) GetLineCount() int {
+	return pp.lineCount
 }

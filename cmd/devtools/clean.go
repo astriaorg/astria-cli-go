@@ -1,11 +1,11 @@
 package devtools
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -22,20 +22,21 @@ var cleanCmd = &cobra.Command{
 func runClean() {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("error getting home dir:", err)
-		return
+		log.WithError(err).Error("Error getting home dir")
+		panic(err)
 	}
 	defaultDataDir := filepath.Join(homePath, ".astria/data")
 
 	cleanCmd := exec.Command("rm", "-rf", defaultDataDir)
 	if err := cleanCmd.Run(); err != nil {
+		log.WithError(err).Error("Error running rm")
 		panic(err)
 	}
 
 	err = os.MkdirAll(defaultDataDir, 0755) // Read & execute by everyone, write by owner.
 	if err != nil {
-		fmt.Println("Error creating directory:", err)
-		return
+		log.WithError(err).Error("Error creating data directory")
+		panic(err)
 	}
 }
 
@@ -51,8 +52,8 @@ var allCmd = &cobra.Command{
 func runCleanAll() {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("error getting home dir:", err)
-		return
+		log.WithError(err).Error("Error getting home dir")
+		panic(err)
 	}
 
 	// TODO: allow for configuration of this directory
@@ -60,6 +61,7 @@ func runCleanAll() {
 
 	cleanCmd := exec.Command("rm", "-rf", defaultDataDir)
 	if err := cleanCmd.Run(); err != nil {
+		log.WithError(err).Error("Error running rm")
 		panic(err)
 	}
 }

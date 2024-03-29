@@ -1,7 +1,12 @@
 package sequencer
 
 import (
+	"context"
 	"encoding/hex"
+	"math/big"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/astriaorg/go-sequencer-client/client"
 )
@@ -20,9 +25,47 @@ func CreateAccount() (*Account, error) {
 	}
 	address := signer.Address()
 	seed := signer.Seed()
+
+	log.Debug("Created account with address: ", hex.EncodeToString(address[:]))
 	return &Account{
 		Address:    hex.EncodeToString(address[:]),
 		PublicKey:  hex.EncodeToString(signer.PublicKey()),
 		PrivateKey: hex.EncodeToString(seed[:]),
 	}, nil
+}
+
+// GetBalance returns the balance of an address.
+func GetBalance(address string, sequencerURL string) (*big.Int, error) {
+	address = strip0xPrefix(address)
+	sequencerURL = addPortToURL(sequencerURL)
+
+	log.Info("Getting balance for address: ", address)
+	log.Debug("Creating CometBFT client with url: ", sequencerURL)
+
+	c, err := client.NewClient(sequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return nil, err
+	}
+
+	a, err := hex.DecodeString(address)
+	if err != nil {
+		log.WithError(err).Error("Error decoding hex encoded address")
+		return nil, err
+	}
+
+	var address20 [20]byte
+	copy(address20[:], a)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	balance, err := c.GetBalance(ctx, address20)
+	if err != nil {
+		log.WithError(err).Error("Error getting balance")
+		return nil, err
+	}
+
+	log.Info("Balance: ", balance.String())
+	return balance, nil
 }

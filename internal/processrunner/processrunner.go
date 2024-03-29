@@ -1,6 +1,7 @@
 package processrunner
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -15,9 +16,8 @@ type ProcessRunner interface {
 	Wait() error
 	Stop()
 	GetDidStart() <-chan bool
-	GetStdout() io.ReadCloser
-	GetStderr() io.ReadCloser
 	GetTitle() string
+	GetScanner() *bufio.Scanner
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -32,6 +32,7 @@ type processRunner struct {
 	stderr   io.ReadCloser
 	ctx      context.Context
 	cancel   context.CancelFunc
+	scanner  *bufio.Scanner
 }
 
 type NewProcessRunnerOpts struct {
@@ -70,6 +71,7 @@ func (pr *processRunner) Start(depStarted <-chan bool) error {
 		// wait for the dependency to start
 		case <-depStarted:
 		case <-pr.ctx.Done():
+			fmt.Println("context cancelled before starting process", pr.title)
 			return
 		}
 
@@ -92,6 +94,8 @@ func (pr *processRunner) Start(depStarted <-chan bool) error {
 			fmt.Println("error starting process:", err)
 			return
 		}
+
+		pr.scanner = bufio.NewScanner(pr.stdout)
 
 		// signal that this process started
 		close(pr.didStart)
@@ -127,17 +131,12 @@ func (pr *processRunner) GetDidStart() <-chan bool {
 	return pr.didStart
 }
 
-// GetStdout provides a reader for the process's stdout.
-func (pr *processRunner) GetStdout() io.ReadCloser {
-	return pr.stdout
-}
-
-// GetStderr provides a reader for the process's stderr.
-func (pr *processRunner) GetStderr() io.ReadCloser {
-	return pr.stderr
-}
-
 // GetTitle returns the title of the process.
 func (pr *processRunner) GetTitle() string {
 	return pr.title
+}
+
+// GetScanner returns a scanner for the process's stdout.
+func (pr *processRunner) GetScanner() *bufio.Scanner {
+	return pr.scanner
 }

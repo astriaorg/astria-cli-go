@@ -1,7 +1,7 @@
 package testutils
 
 import (
-	"io"
+	"bufio"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -27,17 +27,12 @@ func (m *MockProcessRunner) GetDidStart() <-chan bool {
 	return args.Get(0).(<-chan bool)
 }
 
-func (m *MockProcessRunner) GetStdout() io.ReadCloser {
-	args := m.Called()
-	return args.Get(0).(io.ReadCloser)
-}
-
-func (m *MockProcessRunner) GetStderr() io.ReadCloser {
-	args := m.Called()
-	return args.Get(0).(io.ReadCloser)
-}
-
 func (m *MockProcessRunner) GetTitle() string {
 	args := m.Called()
 	return args.Get(0).(string)
+}
+
+func (m *MockProcessRunner) GetScanner() *bufio.Scanner {
+	args := m.Called()
+	return args.Get(0).(*bufio.Scanner)
 }
