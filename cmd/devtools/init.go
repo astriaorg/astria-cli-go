@@ -12,9 +12,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // initCmd represents the init command
@@ -28,6 +30,13 @@ var initCmd = &cobra.Command{
 }
 
 func runInitialization() {
+	// Get the instance name from the -i flag or use the default
+	instance, err := getInstanceName()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("error getting home dir:", err)
@@ -35,13 +44,16 @@ func runInitialization() {
 	}
 	// TODO: make the default home dir configurable
 	defaultDir := filepath.Join(homeDir, ".astria")
+	newInstanceDir := filepath.Join(defaultDir, instance)
+
+	fmt.Println("Creating new instance in:", newInstanceDir)
 
 	dataDir := "data"
-	dataPath := filepath.Join(defaultDir, dataDir)
+	dataPath := filepath.Join(newInstanceDir, dataDir)
 	createDir(dataPath)
 
 	downloadDir := "local-dev-astria"
-	fullPath := filepath.Join(defaultDir, downloadDir)
+	fullPath := filepath.Join(newInstanceDir, downloadDir)
 
 	fmt.Println("Local dev files placed in: ", fullPath)
 	createDir(fullPath)
@@ -52,8 +64,32 @@ func runInitialization() {
 		downloadAndUnpack(bin.Url, fullPath, bin.Name)
 	}
 
-	initCometbft(defaultDir)
+	initCometbft(newInstanceDir)
 
+}
+
+func isInstanceNameValid(s string) bool {
+	pattern := `^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`
+	matched, err := regexp.MatchString(pattern, s)
+	if err != nil {
+		fmt.Println("Error compiling regular expression:", err)
+		return false
+	}
+	return matched
+}
+
+func getInstanceName() (string, error) {
+	instance := viper.GetString("instance")
+	if instance == "" {
+		fmt.Println("No instance string provided. Using \"default\".")
+		instance = "default"
+	} else {
+		if !isInstanceNameValid(instance) {
+			return instance, fmt.Errorf("Invalid instance name: %s\nInstance names must be lowercase, alphanumeric, and may contain dashes. It can't begin or end with dash. No repeating dashes.\n", instance)
+		}
+		fmt.Println("Got valid instance string:", instance)
+	}
+	return instance, nil
 }
 
 //go:embed config/genesis.json
@@ -371,5 +407,6 @@ func init() {
 	// is called directly, e.g.:
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	// TODO: add a "path" flag to the init command
-	// initCmd.Flags().StringP("path", "p", "", "Choose where the local-dev-astria directory will be created. Defaults to the current working directory.")
+	initCmd.Flags().StringP("instance", "i", "", "Choose where the local-dev-astria directory will be created. Defaults to \"default\" if not provided.")
+	viper.BindPFlag("instance", initCmd.Flags().Lookup("instance"))
 }
