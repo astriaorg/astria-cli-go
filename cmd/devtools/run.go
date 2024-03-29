@@ -16,17 +16,23 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run all the Astria services locally.",
 	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		runall()
-	},
+	Run:   runall,
 }
 
 func init() {
 	devCmd.AddCommand(runCmd)
+	runCmd.Flags().StringP("instance", "i", DefaultInstance, "Choose which Astria instance will be run. Defaults to \"default\" if not provided.")
 }
 
-func runall() {
+func runall(c *cobra.Command, args []string) {
 	ctx := cmd.RootCmd.Context()
+
+	instance := c.Flag("instance").Value.String()
+	err := IsInstanceNameValid(instance)
+	if err != nil {
+		log.WithError(err).Error("Error getting --instance flag")
+		return
+	}
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -34,26 +40,27 @@ func runall() {
 		panic(err)
 	}
 	defaultDir := filepath.Join(homePath, ".astria")
+	instanceDir := filepath.Join(defaultDir, instance)
 
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
-	envPath := filepath.Join(defaultDir, "local-dev-astria/.env")
+	envPath := filepath.Join(instanceDir, "local-dev-astria/.env")
 	environment := loadAndGetEnvVariables(envPath)
 
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Sequencer",
-		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/astria-sequencer"),
+		BinPath: filepath.Join(instanceDir, "local-dev-astria/astria-sequencer"),
 		Env:     environment,
 		Args:    nil,
 	}
 	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 	// cometbft
-	cometDataPath := filepath.Join(homePath, ".astria/data/.cometbft")
+	cometDataPath := filepath.Join(instanceDir, "data/.cometbft")
 	cometOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Comet BFT",
-		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/cometbft"),
+		BinPath: filepath.Join(instanceDir, "local-dev-astria/cometbft"),
 		Env:     environment,
 		Args:    []string{"node", "--home", cometDataPath},
 	}
@@ -62,7 +69,7 @@ func runall() {
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Composer",
-		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/astria-composer"),
+		BinPath: filepath.Join(instanceDir, "local-dev-astria/astria-composer"),
 		Env:     environment,
 		Args:    nil,
 	}
@@ -71,7 +78,7 @@ func runall() {
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Conductor",
-		BinPath: filepath.Join(homePath, ".astria/local-dev-astria/astria-conductor"),
+		BinPath: filepath.Join(instanceDir, "local-dev-astria/astria-conductor"),
 		Env:     environment,
 		Args:    nil,
 	}

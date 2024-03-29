@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // initCmd represents the init command
@@ -24,16 +23,20 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initializes the local development environment.",
 	Long:  `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		runInitialization()
-	},
+	Run:   runInitialization,
 }
 
-func runInitialization() {
+func init() {
+	devCmd.AddCommand(initCmd)
+	initCmd.Flags().StringP("instance", "i", DefaultInstance, "Choose where the local-dev-astria directory will be created. Defaults to \"default\" if not provided.")
+}
+
+func runInitialization(c *cobra.Command, args []string) {
 	// Get the instance name from the -i flag or use the default
-	instance, err := getInstanceName()
+	instance := c.Flag("instance").Value.String()
+	err := IsInstanceNameValid(instance)
 	if err != nil {
-		fmt.Println(err)
+		log.WithError(err).Error("Error getting --instance flag")
 		return
 	}
 
@@ -44,52 +47,28 @@ func runInitialization() {
 	}
 	// TODO: make the default home dir configurable
 	defaultDir := filepath.Join(homeDir, ".astria")
-	newInstanceDir := filepath.Join(defaultDir, instance)
+	instanceDir := filepath.Join(defaultDir, instance)
 
-	fmt.Println("Creating new instance in:", newInstanceDir)
+	fmt.Println("Creating new instance in:", instanceDir)
 
 	dataDir := "data"
-	dataPath := filepath.Join(newInstanceDir, dataDir)
+	dataPath := filepath.Join(instanceDir, dataDir)
 	createDir(dataPath)
 
 	downloadDir := "local-dev-astria"
-	fullPath := filepath.Join(newInstanceDir, downloadDir)
-
+	fullPath := filepath.Join(instanceDir, downloadDir)
 	fmt.Println("Local dev files placed in: ", fullPath)
 	createDir(fullPath)
-	recreateEnvFile(fullPath)
+
+	recreateEnvFile(instanceDir, fullPath)
 	recreateCometbftAndSequencerGenesisData(fullPath)
 
 	for _, bin := range Binaries {
 		downloadAndUnpack(bin.Url, fullPath, bin.Name)
 	}
 
-	initCometbft(newInstanceDir)
+	initCometbft(instanceDir)
 
-}
-
-func isInstanceNameValid(s string) bool {
-	pattern := `^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`
-	matched, err := regexp.MatchString(pattern, s)
-	if err != nil {
-		fmt.Println("Error compiling regular expression:", err)
-		return false
-	}
-	return matched
-}
-
-func getInstanceName() (string, error) {
-	instance := viper.GetString("instance")
-	if instance == "" {
-		fmt.Println("No instance string provided. Using \"default\".")
-		instance = "default"
-	} else {
-		if !isInstanceNameValid(instance) {
-			return instance, fmt.Errorf("Invalid instance name: %s\nInstance names must be lowercase, alphanumeric, and may contain dashes. It can't begin or end with dash. No repeating dashes.\n", instance)
-		}
-		fmt.Println("Got valid instance string:", instance)
-	}
-	return instance, nil
 }
 
 //go:embed config/genesis.json
@@ -143,14 +122,7 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 var embeddedEnvironmentFile embed.FS
 
 // TODO: add error handling
-func recreateEnvFile(path string) {
-	// Determine the user's home directory
-	// TODO: replace homeDir with chose dir when custom home dir is implemented
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("failed to get user home directory: %v", err)
-	}
-
+func recreateEnvFile(instancDir string, path string) {
 	// Read the content from the embedded file
 	data, err := fs.ReadFile(embeddedEnvironmentFile, "config/local.env.example")
 	if err != nil {
@@ -158,7 +130,7 @@ func recreateEnvFile(path string) {
 	}
 
 	// Convert data to a string and replace "~" with the user's home directory
-	content := strings.ReplaceAll(string(data), "~", homeDir)
+	content := strings.ReplaceAll(string(data), "~", instancDir)
 
 	// Specify the path for the new file
 	newPath := filepath.Join(path, ".env")
@@ -392,21 +364,4 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	}
 
 	return nil
-}
-
-func init() {
-	devCmd.AddCommand(initCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	// TODO: add a "path" flag to the init command
-	initCmd.Flags().StringP("instance", "i", "", "Choose where the local-dev-astria directory will be created. Defaults to \"default\" if not provided.")
-	viper.BindPFlag("instance", initCmd.Flags().Lookup("instance"))
 }
