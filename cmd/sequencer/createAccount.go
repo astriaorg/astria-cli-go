@@ -54,7 +54,7 @@ func runCreateAccountCmd(cmd *cobra.Command, args []string) {
 		header := []string{"Address", "Public Key", "Private Key"}
 		row := []string{account.Address, account.PublicKey, account.PrivateKey}
 		data := pterm.TableData{header, row}
-		output, err := pterm.DefaultTable.WithHasHeader().WithData(data).Srender()
+		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
 			log.WithError(err).Error("Error rendering table")
 			os.Exit(1)
