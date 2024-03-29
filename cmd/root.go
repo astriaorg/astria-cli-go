@@ -10,7 +10,6 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "astria-cli",
 	Short: "A CLI to run Astria, interact with the Sequencer, deploy rollups, and more.",
-	Long:  `TODO: longer description`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

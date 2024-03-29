@@ -1,7 +1,6 @@
 package devtools
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -12,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// runallCmd represents the runall command
-var runallCmd = &cobra.Command{
+// runCmd represents the run command
+var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run all the Astria services locally.",
 	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
@@ -23,7 +22,7 @@ var runallCmd = &cobra.Command{
 }
 
 func init() {
-	devCmd.AddCommand(runallCmd)
+	devCmd.AddCommand(runCmd)
 }
 
 func runall() {
@@ -31,8 +30,8 @@ func runall() {
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("error getting home dir:", err)
-		return
+		log.WithError(err).Error("Error getting home dir")
+		panic(err)
 	}
 	defaultDir := filepath.Join(homePath, ".astria")
 
@@ -79,6 +78,7 @@ func runall() {
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
 	// cleanup function to stop processes if there is an error starting another process
+	// FIXME - this isn't good enough. need to use context to stop all processes.
 	cleanup := func() {
 		seqRunner.Stop()
 		cometRunner.Stop()

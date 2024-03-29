@@ -19,8 +19,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// runCmd represents the run command
-var runCmd = &cobra.Command{
+// runLegacyCmd represents the run-legacy command
+var runLegacyCmd = &cobra.Command{
 	Use:   "run-legacy",
 	Short: "TODO: short description",
 	Long:  `TODO: long description`,
@@ -925,15 +925,15 @@ func run() {
 }
 
 func init() {
-	devCmd.AddCommand(runCmd)
+	devCmd.AddCommand(runLegacyCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// runCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// runLegacyCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// runLegacyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
