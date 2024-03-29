@@ -10,7 +10,6 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "astria-cli",
 	Short: "A CLI to run Astria, interact with the Sequencer, deploy rollups, and more.",
-	Long:  `TODO: longer description`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -25,4 +24,6 @@ func Execute() {
 func init() {
 	// disabling the completion command for now
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
+
+	RootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "error", "log level (debug, info, warn, error, fatal, panic)")
 }
