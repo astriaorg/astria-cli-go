@@ -1,6 +1,6 @@
 # The Astria CLI
 
-The `astria-cli-go` cli is a tool designed to make local rollup development as
+The `astria-go` cli is a tool designed to make local rollup development as
 simple and dependency free as possible. It provides functionality to easily run
 the Astria stack and interact with the Sequencer.
 
@@ -13,14 +13,14 @@ binaries available for macOS and Linux, for both x86_64 and arm64 architectures.
 ```bash
 # download the binary for your platform, e.g. macOS silicon
 curl -L https://github.com/astriaorg/astria-cli-go/releases/download/v0.3.0/astria-cli-v0.3.0-darwin-arm64.tar.gz \
-  --output astria-cli-go.tar.gz
+  --output astria-go.tar.gz
 # extract the binary
-tar -xzvf astria-cli-go.tar.gz
+tar -xzvf astria-go.tar.gz
 # run the binary and check version
-./astria-cli-go version
+./astria-go version
 
 # you can move the binary to a location in your PATH if you'd like
-mv astria-cli-go /usr/local/bin/
+mv astria-go /usr/local/bin/
 ```
 
 ## Locally Build and Run the CLI

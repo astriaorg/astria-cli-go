@@ -26,4 +26,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           ldflags: "-X cmd.Version=${{ github.ref }}"
           project_path: "./"
-          binary_name: "astria-cli-go"
+          binary_name: "astria-go"

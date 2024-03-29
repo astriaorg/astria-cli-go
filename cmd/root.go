@@ -8,7 +8,7 @@ import (
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "astria-cli-go",
+	Use:   "astria-go",
 	Short: "A CLI to run Astria, interact with the Sequencer, deploy rollups, and more.",
 }
 
