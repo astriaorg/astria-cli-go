@@ -4,7 +4,7 @@ default:
 
 # build the binary for the cli
 build:
-    go build -o bin/astria-cli
+    go build -o bin/astria-go
 
 # test go code
 test:
