@@ -103,7 +103,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Sequencer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-sequencer"),
+		BinPath: filepath.Join(instanceDir, LocalBinariesDirName, "astria-sequencer"),
 		Env:     environment,
 		Args:    nil,
 	}
@@ -113,7 +113,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	cometDataPath := filepath.Join(instanceDir, DataDirName, ".cometbft")
 	cometOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Comet BFT",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "cometbft"),
+		BinPath: filepath.Join(instanceDir, LocalBinariesDirName, "cometbft"),
 		Env:     environment,
 		Args:    []string{"node", "--home", cometDataPath},
 	}
@@ -122,7 +122,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
+		BinPath: filepath.Join(instanceDir, LocalBinariesDirName, "astria-composer"),
 		Env:     environment,
 		Args:    nil,
 	}
@@ -131,7 +131,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
+		BinPath: filepath.Join(instanceDir, LocalBinariesDirName, "astria-conductor"),
 		Env:     environment,
 		Args:    nil,
 	}
@@ -187,7 +187,7 @@ func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessR
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
+		BinPath: filepath.Join(instanceDir, RemoteBinariesDirName, "astria-composer"),
 		Env:     environment,
 		Args:    nil,
 	}
@@ -196,7 +196,7 @@ func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessR
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
+		BinPath: filepath.Join(instanceDir, RemoteBinariesDirName, "astria-conductor"),
 		Env:     environment,
 		Args:    nil,
 	}
