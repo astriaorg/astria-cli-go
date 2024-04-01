@@ -169,9 +169,6 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
 
-	// Convert data to a string and replace "~" with the user's home directory
-	// content := strings.ReplaceAll(string(data), "~", instancDir)
-
 	// Specify the path for the new file
 	newPath := filepath.Join(path, ".env")
 
@@ -183,7 +180,6 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 	defer newFile.Close()
 
 	// Write the data to the new file
-	// _, err = newFile.WriteString(content)
 	_, err = newFile.WriteString(string(data))
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
