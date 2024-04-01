@@ -28,7 +28,8 @@ var initCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("instance", "i", DefaultInstance, "Choose where the local-dev-astria directory will be created. Defaults to \"default\" if not provided.")
+	instanceFlagUsage := fmt.Sprintf("Choose where the local-dev-astria directory will be created. Defaults to \"%s\" if not provided.", DefaultInstanceName)
+	initCmd.Flags().StringP("instance", "i", DefaultInstanceName, instanceFlagUsage)
 }
 
 func runInitialization(c *cobra.Command, args []string) {
@@ -51,23 +52,31 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	fmt.Println("Creating new instance in:", instanceDir)
 
-	// dataDir := "data"
-	dataPath := filepath.Join(instanceDir, DataDir)
-	createDir(dataPath)
+	// create the local config directories
+	localConfigPath := filepath.Join(instanceDir, LocalConfigDirName)
+	createDir(localConfigPath)
+	recreateLocalEnvFile(instanceDir, localConfigPath)
+	recreateCometbftAndSequencerGenesisData(localConfigPath)
 
-	// downloadDir := "local-dev-astria"
-	fullPath := filepath.Join(instanceDir, BinariesDir)
-	fmt.Println("Local dev files placed in: ", fullPath)
-	createDir(fullPath)
+	// create the remote config directories
+	remoteConfigPath := filepath.Join(instanceDir, RemoteConfigDirName)
+	createDir(remoteConfigPath)
+	recreateRemoteEnvFile(instanceDir, remoteConfigPath)
+	// recreateCometbftAndSequencerGenesisData(fullPath)
 
-	recreateEnvFile(instanceDir, fullPath)
-	recreateCometbftAndSequencerGenesisData(fullPath)
-
+	// create the bin directory for downloaded binaries
+	binPath := filepath.Join(instanceDir, BinariesDirName)
+	fmt.Println("Binary files placed in: ", binPath)
+	createDir(binPath)
 	for _, bin := range Binaries {
-		downloadAndUnpack(bin.Url, fullPath, bin.Name)
+		downloadAndUnpack(bin.Url, bin.Name, binPath)
 	}
 
-	initCometbft(instanceDir, DataDir, BinariesDir)
+	// create the data directory for cometbft and sequencer
+	dataPath := filepath.Join(instanceDir, DataDirName)
+	createDir(dataPath)
+
+	initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
 
 }
 
@@ -119,12 +128,12 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 }
 
 //go:embed config/local.env.example
-var embeddedEnvironmentFile embed.FS
+var embeddedLocalEnvironmentFile embed.FS
 
 // TODO: add error handling
-func recreateEnvFile(instancDir string, path string) {
+func recreateLocalEnvFile(instancDir string, path string) {
 	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedEnvironmentFile, "config/local.env.example")
+	data, err := fs.ReadFile(embeddedLocalEnvironmentFile, "config/local.env.example")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 	}
@@ -148,6 +157,38 @@ func recreateEnvFile(instancDir string, path string) {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
 	fmt.Println("Local .env file created successfully.")
+}
+
+//go:embed config/remote.env.example
+var embeddedRemoteEnvironmentFile embed.FS
+
+func recreateRemoteEnvFile(instancDir string, path string) {
+	// Read the content from the embedded file
+	data, err := fs.ReadFile(embeddedRemoteEnvironmentFile, "config/remote.env.example")
+	if err != nil {
+		log.Fatalf("failed to read embedded file: %v", err)
+	}
+
+	// Convert data to a string and replace "~" with the user's home directory
+	// content := strings.ReplaceAll(string(data), "~", instancDir)
+
+	// Specify the path for the new file
+	newPath := filepath.Join(path, ".env")
+
+	// Create a new file
+	newFile, err := os.Create(newPath)
+	if err != nil {
+		log.Fatalf("failed to create new file: %v", err)
+	}
+	defer newFile.Close()
+
+	// Write the data to the new file
+	// _, err = newFile.WriteString(content)
+	_, err = newFile.WriteString(string(data))
+	if err != nil {
+		log.Fatalf("failed to write data to new file: %v", err)
+	}
+	fmt.Println("Remote .env file created successfully.")
 }
 
 // TODO: add error handling
@@ -230,7 +271,7 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 }
 
 // TODO: add error handling
-func downloadAndUnpack(url string, placePath string, packageName string) {
+func downloadAndUnpack(url string, packageName string, placePath string) {
 	// Check if the file already exists
 	if _, err := os.Stat(filepath.Join(placePath, packageName)); err == nil {
 		fmt.Printf("%s already exists. Skipping download.\n", packageName)
@@ -264,19 +305,19 @@ func downloadAndUnpack(url string, placePath string, packageName string) {
 	fmt.Printf("%s downloaded and extracted successfully.\n", packageName)
 }
 
-func initCometbft(defaultDir string, dataDirName string, binDirName string) {
+func initCometbft(defaultDir string, dataDirName string, binDirName string, configDirName string) {
 	fmt.Println("Initializing CometBFT:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
 	// verify that cometbft was downloaded and extracted to the correct location
-	cometbftBin := filepath.Join(defaultDir, binDirName, "cometbft")
-	if !exists(cometbftBin) {
-		fmt.Println("Error: cometbft binary not found here", cometbftBin)
+	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
+	if !exists(cometbftCmdPath) {
+		fmt.Println("Error: cometbft binary not found here", cometbftCmdPath)
 		fmt.Println("\tCannot continue with initialization.")
 		return
 	}
 
-	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
+	// cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
 
 	initCmdArgs := []string{"init", "--home", cometbftDataPath}
 	initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
@@ -293,7 +334,7 @@ func initCometbft(defaultDir string, dataDirName string, binDirName string) {
 
 	// create the comand to replace the defualt genesis.json with the
 	// configured one
-	initGenesisJsonPath := filepath.Join(defaultDir, binDirName, "genesis.json")
+	initGenesisJsonPath := filepath.Join(defaultDir, configDirName, "genesis.json")
 	endGenesisJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/genesis.json")
 	copyArgs := []string{initGenesisJsonPath, endGenesisJsonPath}
 	copyCmd := exec.Command("cp", copyArgs...)
@@ -307,7 +348,7 @@ func initCometbft(defaultDir string, dataDirName string, binDirName string) {
 
 	// create the comand to replace the defualt priv_validator_key.json with the
 	// configured one
-	initPrivValidatorJsonPath := filepath.Join(defaultDir, binDirName, "priv_validator_key.json")
+	initPrivValidatorJsonPath := filepath.Join(defaultDir, configDirName, "priv_validator_key.json")
 	endPrivValidatorJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/priv_validator_key.json")
 	copyArgs = []string{initPrivValidatorJsonPath, endPrivValidatorJsonPath}
 	copyCmd = exec.Command("cp", copyArgs...)
