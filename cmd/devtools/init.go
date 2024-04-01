@@ -51,12 +51,12 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	fmt.Println("Creating new instance in:", instanceDir)
 
-	dataDir := "data"
-	dataPath := filepath.Join(instanceDir, dataDir)
+	// dataDir := "data"
+	dataPath := filepath.Join(instanceDir, DataDir)
 	createDir(dataPath)
 
-	downloadDir := "local-dev-astria"
-	fullPath := filepath.Join(instanceDir, downloadDir)
+	// downloadDir := "local-dev-astria"
+	fullPath := filepath.Join(instanceDir, BinariesDir)
 	fmt.Println("Local dev files placed in: ", fullPath)
 	createDir(fullPath)
 
@@ -67,7 +67,7 @@ func runInitialization(c *cobra.Command, args []string) {
 		downloadAndUnpack(bin.Url, fullPath, bin.Name)
 	}
 
-	initCometbft(instanceDir)
+	initCometbft(instanceDir, DataDir, BinariesDir)
 
 }
 
@@ -264,19 +264,19 @@ func downloadAndUnpack(url string, placePath string, packageName string) {
 	fmt.Printf("%s downloaded and extracted successfully.\n", packageName)
 }
 
-func initCometbft(defaultDir string) {
+func initCometbft(defaultDir string, dataDirName string, binDirName string) {
 	fmt.Println("Initializing CometBFT:")
-	cometbftDataPath := filepath.Join(defaultDir, "data/.cometbft")
+	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
 	// verify that cometbft was downloaded and extracted to the correct location
-	cometbftBin := filepath.Join(defaultDir, "local-dev-astria/cometbft")
+	cometbftBin := filepath.Join(defaultDir, binDirName, "cometbft")
 	if !exists(cometbftBin) {
 		fmt.Println("Error: cometbft binary not found here", cometbftBin)
 		fmt.Println("\tCannot continue with initialization.")
 		return
 	}
 
-	cometbftCmdPath := filepath.Join(defaultDir, "local-dev-astria/cometbft")
+	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
 
 	initCmdArgs := []string{"init", "--home", cometbftDataPath}
 	initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
@@ -293,8 +293,8 @@ func initCometbft(defaultDir string) {
 
 	// create the comand to replace the defualt genesis.json with the
 	// configured one
-	initGenesisJsonPath := filepath.Join(defaultDir, "local-dev-astria/genesis.json")
-	endGenesisJsonPath := filepath.Join(defaultDir, "data/.cometbft/config/genesis.json")
+	initGenesisJsonPath := filepath.Join(defaultDir, binDirName, "genesis.json")
+	endGenesisJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/genesis.json")
 	copyArgs := []string{initGenesisJsonPath, endGenesisJsonPath}
 	copyCmd := exec.Command("cp", copyArgs...)
 
@@ -307,8 +307,8 @@ func initCometbft(defaultDir string) {
 
 	// create the comand to replace the defualt priv_validator_key.json with the
 	// configured one
-	initPrivValidatorJsonPath := filepath.Join(defaultDir, "local-dev-astria/priv_validator_key.json")
-	endPrivValidatorJsonPath := filepath.Join(defaultDir, "data/.cometbft/config/priv_validator_key.json")
+	initPrivValidatorJsonPath := filepath.Join(defaultDir, binDirName, "priv_validator_key.json")
+	endPrivValidatorJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/priv_validator_key.json")
 	copyArgs = []string{initPrivValidatorJsonPath, endPrivValidatorJsonPath}
 	copyCmd = exec.Command("cp", copyArgs...)
 
@@ -320,7 +320,7 @@ func initCometbft(defaultDir string) {
 	fmt.Println("Copied priv_validator_key.json to", endPrivValidatorJsonPath)
 
 	// update the cometbft config.toml file to have the proper block time
-	cometbftConfigPath := filepath.Join(defaultDir, "data/.cometbft/config/config.toml")
+	cometbftConfigPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/config.toml")
 	oldValue := `timeout_commit = "1s"`
 	newValue := `timeout_commit = "2s"`
 

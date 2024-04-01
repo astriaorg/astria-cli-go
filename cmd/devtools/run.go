@@ -44,23 +44,23 @@ func runall(c *cobra.Command, args []string) {
 
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
-	envPath := filepath.Join(instanceDir, "local-dev-astria/.env")
+	envPath := filepath.Join(instanceDir, BinariesDir, ".env")
 	environment := loadAndGetEnvVariables(envPath)
 
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Sequencer",
-		BinPath: filepath.Join(instanceDir, "local-dev-astria/astria-sequencer"),
+		BinPath: filepath.Join(instanceDir, BinariesDir, "astria-sequencer"),
 		Env:     environment,
 		Args:    nil,
 	}
 	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 	// cometbft
-	cometDataPath := filepath.Join(instanceDir, "data/.cometbft")
+	cometDataPath := filepath.Join(instanceDir, DataDir, ".cometbft")
 	cometOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Comet BFT",
-		BinPath: filepath.Join(instanceDir, "local-dev-astria/cometbft"),
+		BinPath: filepath.Join(instanceDir, BinariesDir, "cometbft"),
 		Env:     environment,
 		Args:    []string{"node", "--home", cometDataPath},
 	}
@@ -69,7 +69,7 @@ func runall(c *cobra.Command, args []string) {
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, "local-dev-astria/astria-composer"),
+		BinPath: filepath.Join(instanceDir, BinariesDir, "astria-composer"),
 		Env:     environment,
 		Args:    nil,
 	}
@@ -78,7 +78,7 @@ func runall(c *cobra.Command, args []string) {
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, "local-dev-astria/astria-conductor"),
+		BinPath: filepath.Join(instanceDir, BinariesDir, "astria-conductor"),
 		Env:     environment,
 		Args:    nil,
 	}
