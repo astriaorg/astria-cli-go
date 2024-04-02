@@ -34,7 +34,7 @@ var runCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(runCmd)
-	instanceFlagUsage := fmt.Sprintf("Choose where the local-dev-astria directory will be created. Defaults to \"%s\" if not provided.", DefaultInstanceName)
+	instanceFlagUsage := fmt.Sprintf("Choose where the local-dev-astria directory will be created.", DefaultInstanceName)
 	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, instanceFlagUsage)
 	runCmd.Flags().BoolVarP(&IsRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
 	runCmd.Flags().BoolVarP(&IsRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")

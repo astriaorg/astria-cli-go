@@ -74,7 +74,7 @@ func runCleanAll() {
 func init() {
 	// top level command
 	devCmd.AddCommand(cleanCmd)
-	instanceFlagUsage := fmt.Sprintf("Choose the instance that will be cleaned. Defaults to \"%s\" if not provided.", DefaultInstanceName)
+	instanceFlagUsage := fmt.Sprintf("Choose the instance that will be cleaned.", DefaultInstanceName)
 	cleanCmd.Flags().StringP("instance", "i", DefaultInstanceName, instanceFlagUsage)
 
 	// subcommands
