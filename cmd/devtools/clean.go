@@ -31,8 +31,8 @@ func runClean(cmd *cobra.Command, args []string) {
 	instanceDir := filepath.Join(defaultDir, instance)
 	dataDir := filepath.Join(instanceDir, DataDirName)
 
-	cleanCmd := exec.Command("rm", "-rf", dataDir)
-	if err := cleanCmd.Run(); err != nil {
+	rmCmd := exec.Command("rm", "-rf", dataDir)
+	if err := rmCmd.Run(); err != nil {
 		log.WithError(err).Error("Error running rm")
 		panic(err)
 	}
@@ -59,8 +59,8 @@ func runCleanAll() {
 	// TODO: allow for configuration of this directory
 	defaultDataDir := filepath.Join(homePath, ".astria")
 
-	cleanCmd := exec.Command("rm", "-rf", defaultDataDir)
-	if err := cleanCmd.Run(); err != nil {
+	rmCmd := exec.Command("rm", "-rf", defaultDataDir)
+	if err := rmCmd.Run(); err != nil {
 		log.WithError(err).Error("Error running rm")
 		panic(err)
 	}
