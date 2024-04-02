@@ -320,8 +320,6 @@ func initCometbft(defaultDir string, dataDirName string, binDirName string, conf
 		return
 	}
 
-	// cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
-
 	initCmdArgs := []string{"init", "--home", cometbftDataPath}
 	initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
 
