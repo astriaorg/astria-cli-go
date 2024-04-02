@@ -2,6 +2,7 @@ package devtools
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 
 	log "github.com/sirupsen/logrus"
@@ -21,4 +22,16 @@ and may contain dashes. It can't begin or end with a dash. No repeating dashes.
 `, instance)
 		panic(err)
 	}
+}
+
+// CreateDir creates a directory with the given name with 0755 permissions.
+// If the directory can't be created, it will panic.
+func CreateDir(dirName string) {
+	// TODO - add error handling?
+	err := os.MkdirAll(dirName, 0755)
+	if err != nil {
+		log.WithError(err).Error("Error creating data directory")
+		panic(err)
+	}
+
 }

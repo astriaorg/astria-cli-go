@@ -38,11 +38,7 @@ func runClean(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	err = os.MkdirAll(dataDir, 0755) // Read & execute by everyone, write by owner.
-	if err != nil {
-		log.WithError(err).Error("Error creating data directory")
-		panic(err)
-	}
+	CreateDir(dataDir)
 }
 
 var allCmd = &cobra.Command{
