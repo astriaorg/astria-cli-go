@@ -6,19 +6,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "v0.2.0"
+// version is set at build time via ldflags in the build-for-release workflow
+var version string
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version.",
-	Long:  `Print the version of the CLI tool.`,
+	Short: "Print the version of the CLI.",
 	Run: func(cmd *cobra.Command, args []string) {
 		printVersion()
 	},
 }
 
 func printVersion() {
+	if version == "" {
+		version = "development"
+	}
 	fmt.Println(version)
 }
 

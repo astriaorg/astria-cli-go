@@ -1,6 +1,6 @@
 # list all available commands
 default:
-  @just --list
+    @just --list
 
 # build the binary for the cli
 build:
@@ -15,6 +15,26 @@ alias t := test
 # format all go files
 fmt:
     go fmt ./...
+
+default_lang := 'all'
+
+# Can lint 'go', 'md', or 'all'. Defaults to all.
+lint lang=default_lang:
+    @just _lint-{{lang}}
+
+alias l := lint
+
+@_lint-all:
+    @just _lint-go
+    @just _lint-md
+
+[no-exit-message]
+_lint-go:
+    golangci-lint run
+
+[no-exit-message]
+_lint-md:
+    markdownlint-cli2 "**/*.md" "#bin" "#.github"
 
 defaultargs := ''
 # run the cli. takes quoted cli command to run, e.g. `just run "dev init"`. logs cli output to tview_log.txt
