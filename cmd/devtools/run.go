@@ -29,7 +29,7 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run all the Astria services locally.",
 	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
-	Run:   runall,
+	Run:   runRun,
 }
 
 func init() {
@@ -40,7 +40,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&IsRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
 }
 
-func runall(c *cobra.Command, args []string) {
+func runRun(c *cobra.Command, args []string) {
 	ctx := cmd.RootCmd.Context()
 
 	instance := c.Flag("instance").Value.String()
