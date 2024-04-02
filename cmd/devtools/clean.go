@@ -13,8 +13,8 @@ import (
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Cleans the local development environment data.",
-	Long:  `Cleans the local development environment data. Does not remove the binaries or the config files.`,
+	Short: "Cleans the local development instance data.",
+	Long:  `Cleans the local development instance data. Does not remove the binaries or the config files.`,
 	Run:   runClean,
 }
 
@@ -47,7 +47,7 @@ func runClean(cmd *cobra.Command, args []string) {
 
 var allCmd = &cobra.Command{
 	Use:   "all",
-	Short: "Delete everything in the .astria directory.",
+	Short: "Delete everything in the ~/.astria directory.",
 	Long:  "Clean all local data including binaries and config files. `dev init` will need to be run again to get the binaries and config files back.",
 	Run: func(cmd *cobra.Command, args []string) {
 		runCleanAll()
