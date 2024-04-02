@@ -49,6 +49,7 @@ type NewProcessRunnerOpts struct {
 // NewProcessRunner creates a new ProcessRunner.
 // It creates a new exec.Cmd with the given binPath and args, and sets the environment.
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
+	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
 	return &processRunner{
@@ -64,9 +65,6 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 // It takes a channel that's closed when the dependency starts.
 // This allows us to control the order of process startup.
 func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) error {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	select {
 	case <-depStarted:
 	// continue if the dependency has started.
@@ -111,12 +109,10 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 			err = fmt.Errorf("process exited with error: %w", err)
 			log.Error(err)
 			pr.SetExitStatusString(err.Error())
-			cancel()
 		} else {
 			s := fmt.Sprintf("process exited cleanly")
 			log.Infof(s)
 			pr.SetExitStatusString(s)
-			cancel()
 		}
 	}()
 
