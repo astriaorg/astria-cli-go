@@ -1,23 +1,26 @@
 package processrunner
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os/exec"
 	"sync"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ProcessRunner is an interface that represents a process to be run.
 type ProcessRunner interface {
 	Start(depStarted <-chan bool) error
-	Wait() error
 	Stop()
 	GetDidStart() <-chan bool
 	GetTitle() string
-	GetScanner() *bufio.Scanner
+	GetOutput() string
+	SetExitStatusString(status string)
+	GetExitStatusString() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -27,12 +30,15 @@ type processRunner struct {
 	// Title is the title of the process
 	title string
 
-	didStart chan bool
-	stdout   io.ReadCloser
-	stderr   io.ReadCloser
-	ctx      context.Context
-	cancel   context.CancelFunc
-	scanner  *bufio.Scanner
+	exitStatusString     string
+	exitStatusStringLock *sync.Mutex
+
+	didStart  chan bool
+	stdout    io.ReadCloser
+	stderr    io.ReadCloser
+	ctx       context.Context
+	cancel    context.CancelFunc
+	outputBuf *bytes.Buffer
 }
 
 type NewProcessRunnerOpts struct {
@@ -47,14 +53,16 @@ type NewProcessRunnerOpts struct {
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
 	ctx, cancel := context.WithCancel(ctx)
 
-	cmd := exec.Command(opts.BinPath, opts.Args...)
+	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
 	return &processRunner{
-		cmd:      cmd,
-		title:    opts.Title,
-		didStart: make(chan bool),
-		ctx:      ctx,
-		cancel:   cancel,
+		cmd:                  cmd,
+		title:                opts.Title,
+		didStart:             make(chan bool),
+		outputBuf:            new(bytes.Buffer),
+		ctx:                  ctx,
+		cancel:               cancel,
+		exitStatusStringLock: &sync.Mutex{},
 	}
 }
 
@@ -62,68 +70,75 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 // It takes a channel that's closed when the dependency starts.
 // This allows us to control the order of process startup.
 func (pr *processRunner) Start(depStarted <-chan bool) error {
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		select {
-		// wait for the dependency to start
-		case <-depStarted:
-		case <-pr.ctx.Done():
-			fmt.Println("context cancelled before starting process", pr.title)
-			return
-		}
-
-		stdout, err := pr.cmd.StdoutPipe()
-		if err != nil {
-			fmt.Println("error obtaining stdout:", err)
-			return
-		}
-		pr.stdout = stdout
-
-		stderr, err := pr.cmd.StderrPipe()
-		if err != nil {
-			fmt.Println("error obtaining stderr:", err)
-			return
-		}
-		pr.stderr = stderr
-
-		err = pr.cmd.Start()
-		if err != nil {
-			fmt.Println("error starting process:", err)
-			return
-		}
-
-		pr.scanner = bufio.NewScanner(pr.stdout)
-
-		// signal that this process started
-		close(pr.didStart)
-	}()
-
-	wg.Wait()
-
-	if pr.ctx.Err() != nil {
-		// the context was cancelled, return the context's error
+	select {
+	case <-depStarted:
+	// continue if the dependency has started.
+	case <-pr.ctx.Done():
+		log.Info("Context cancelled before starting process", pr.title)
 		return pr.ctx.Err()
 	}
+
+	// get stdout and stderr
+	stdout, err := pr.cmd.StdoutPipe()
+	if err != nil {
+		log.WithError(err).Errorf("Error obtaining stdout for process %s", pr.title)
+		return err
+	}
+	pr.stdout = stdout
+
+	stderr, err := pr.cmd.StderrPipe()
+	if err != nil {
+		log.WithError(err).Errorf("Error obtaining stderr for process %s", pr.title)
+		return err
+	}
+	pr.stderr = stderr
+
+	// multiwriter to write both stdout and stderr to the same buffer
+	mw := io.MultiWriter(pr.outputBuf)
+	go io.Copy(mw, stdout)
+	go io.Copy(mw, stderr)
+
+	// actually start the process
+	if err := pr.cmd.Start(); err != nil {
+		log.WithError(err).Errorf("error starting process %s", pr.title)
+		return err
+	}
+
+	// signal that this process has started.
+	close(pr.didStart)
+
+	// asynchronously monitor process
+	go func() {
+		err = pr.cmd.Wait()
+		if err != nil {
+			err = fmt.Errorf("process exited with error: %w", err)
+			log.Error(err)
+			pr.SetExitStatusString(err.Error())
+		} else {
+			s := fmt.Sprintf("process exited cleanly")
+			log.Infof(s)
+			pr.SetExitStatusString(s)
+		}
+	}()
 
 	return nil
 }
 
-// Wait waits for the process to finish.
-func (pr *processRunner) Wait() error {
-	return pr.cmd.Wait()
+func (pr *processRunner) SetExitStatusString(status string) {
+	if status != "" {
+		pr.exitStatusStringLock.Lock()
+		defer pr.exitStatusStringLock.Unlock()
+		pr.exitStatusString = status
+	}
+	pr.cancel()
 }
 
 // Stop stops the process.
 func (pr *processRunner) Stop() {
 	// send SIGINT to the process
 	if err := pr.cmd.Process.Signal(syscall.SIGINT); err != nil {
-		fmt.Println("Error sending SIGINT:", err)
+		log.WithError(err).Errorf("Error sending SIGINT for process %s", pr.title)
 	}
-	// this will terminate the process if it's running
-	pr.cancel()
 }
 
 // GetDidStart returns a channel that's closed when the process starts.
@@ -136,7 +151,14 @@ func (pr *processRunner) GetTitle() string {
 	return pr.title
 }
 
-// GetScanner returns a scanner for the process's stdout.
-func (pr *processRunner) GetScanner() *bufio.Scanner {
-	return pr.scanner
+// GetExitStatusString returns the exit status string of the process.
+func (pr *processRunner) GetExitStatusString() string {
+	pr.exitStatusStringLock.Lock()
+	defer pr.exitStatusStringLock.Unlock()
+	return pr.exitStatusString
+}
+
+// GetOutput returns the combined stdout and stderr output of the process.
+func (pr *processRunner) GetOutput() string {
+	return pr.outputBuf.String()
 }

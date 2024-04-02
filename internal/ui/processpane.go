@@ -1,12 +1,13 @@
 package ui
 
 import (
-	"fmt"
 	"io"
+	"time"
 
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	log "github.com/sirupsen/logrus"
 )
 
 // ProcessPane is a struct containing a tview.TextView and processrunner.ProcessRunner
@@ -45,28 +46,38 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 
 // StartScan starts scanning the stdout of the process and writes to the textView
 func (pp *ProcessPane) StartScan() {
-	// scan stdout and write using ansiWriter
 	go func() {
-		stdoutScanner := pp.pr.GetScanner()
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
-			pp.tApp.QueueUpdateDraw(func() {
-				_, err := pp.ansiWriter.Write([]byte(line + "\n"))
-				pp.lineCount++
+		// initialize a ticker for periodic updates
+		ticker := time.NewTicker(250 * time.Millisecond) // adjust the duration as needed
+		defer ticker.Stop()
+
+		var lastOutputSize int // tracks the last processed output size
+
+		for range ticker.C {
+			currentOutput := pp.pr.GetOutput() // get the current full output
+			currentSize := len(currentOutput)
+
+			if currentSize > lastOutputSize {
+				// new, unprocessed data.
+				newOutput := currentOutput[lastOutputSize:] // extract new data since last check
+				pp.tApp.QueueUpdateDraw(func() {
+					_, err := pp.ansiWriter.Write([]byte(newOutput))
+					if err != nil {
+						log.WithError(err).Error("Error writing to textView")
+					}
+				})
+				lastOutputSize = currentSize
+			}
+
+			// check for exit status string and break out of infinite loop if found
+			if pp.pr.GetExitStatusString() != "" {
+				_, err := pp.ansiWriter.Write([]byte(pp.pr.GetExitStatusString() + "\n"))
 				if err != nil {
-					fmt.Println("error writing to textView:", err)
-					panic(err)
+					log.WithError(err).Error("Error writing status to textView")
 				}
-			})
-		}
-		if err := stdoutScanner.Err(); err != nil {
-			fmt.Println("error reading stdout:", err)
-			panic(err)
-		}
-		// FIXME - do i need to wait??
-		if err := pp.pr.Wait(); err != nil {
-			fmt.Println("error waiting for process:", err)
-			panic(err)
+				// break out of for loop when the exit status changes
+				break
+			}
 		}
 	}()
 }

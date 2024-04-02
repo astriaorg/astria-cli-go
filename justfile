@@ -41,6 +41,9 @@ defaultargs := ''
 run args=defaultargs:
     go run main.go {{args}} > tview_log.txt 2>&1
 
+run-race args=defaultargs:
+    go run -race main.go {{args}} > tview_log.txt 2>&1
+
 # show any running Astria processes
 [no-exit-message]
 @pscheck:

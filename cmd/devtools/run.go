@@ -1,10 +1,10 @@
 package devtools
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
-	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -16,17 +16,19 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run all the Astria services locally.",
 	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		runall()
-	},
+	Run:   runall,
 }
 
 func init() {
 	devCmd.AddCommand(runCmd)
 }
 
-func runall() {
-	ctx := cmd.RootCmd.Context()
+func runall(cmd *cobra.Command, args []string) {
+	ctx := cmd.Context()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	log.WithField("ctx", ctx).Info("Running all services")
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -77,41 +79,28 @@ func runall() {
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
-	// cleanup function to stop processes if there is an error starting another process
-	// FIXME - this isn't good enough. need to use context to stop all processes.
-	cleanup := func() {
-		seqRunner.Stop()
-		cometRunner.Stop()
-		compRunner.Stop()
-		condRunner.Stop()
-	}
-
 	// shouldStart acts as a control channel to start this first process
 	shouldStart := make(chan bool)
 	close(shouldStart)
 	err = seqRunner.Start(shouldStart)
 	if err != nil {
 		log.WithError(err).Error("Error running sequencer")
-		cleanup()
-		panic(err)
+		cancel()
 	}
 	err = cometRunner.Start(seqRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running cometbft")
-		cleanup()
-		panic(err)
+		cancel()
 	}
 	err = compRunner.Start(cometRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running composer")
-		cleanup()
-		panic(err)
+		cancel()
 	}
 	err = condRunner.Start(compRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running conductor")
-		cleanup()
-		panic(err)
+		cancel()
 	}
 
 	runners := []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
