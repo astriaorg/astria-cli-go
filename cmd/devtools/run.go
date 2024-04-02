@@ -28,8 +28,6 @@ func runall(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	log.WithField("ctx", ctx).Info("Running all services")
-
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.WithError(err).Error("Error getting home dir")
@@ -82,22 +80,22 @@ func runall(cmd *cobra.Command, args []string) {
 	// shouldStart acts as a control channel to start this first process
 	shouldStart := make(chan bool)
 	close(shouldStart)
-	err = seqRunner.Start(shouldStart)
+	err = seqRunner.Start(ctx, shouldStart)
 	if err != nil {
 		log.WithError(err).Error("Error running sequencer")
 		cancel()
 	}
-	err = cometRunner.Start(seqRunner.GetDidStart())
+	err = cometRunner.Start(ctx, seqRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running cometbft")
 		cancel()
 	}
-	err = compRunner.Start(cometRunner.GetDidStart())
+	err = compRunner.Start(ctx, cometRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running composer")
 		cancel()
 	}
-	err = condRunner.Start(compRunner.GetDidStart())
+	err = condRunner.Start(ctx, compRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running conductor")
 		cancel()

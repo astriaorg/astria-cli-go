@@ -14,7 +14,7 @@ import (
 
 // ProcessRunner is an interface that represents a process to be run.
 type ProcessRunner interface {
-	Start(depStarted <-chan bool) error
+	Start(ctx context.Context, depStarted <-chan bool) error
 	Stop()
 	GetDidStart() <-chan bool
 	GetTitle() string
@@ -36,8 +36,6 @@ type processRunner struct {
 	didStart  chan bool
 	stdout    io.ReadCloser
 	stderr    io.ReadCloser
-	ctx       context.Context
-	cancel    context.CancelFunc
 	outputBuf *bytes.Buffer
 }
 
@@ -51,8 +49,6 @@ type NewProcessRunnerOpts struct {
 // NewProcessRunner creates a new ProcessRunner.
 // It creates a new exec.Cmd with the given binPath and args, and sets the environment.
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
-	ctx, cancel := context.WithCancel(ctx)
-
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
 	return &processRunner{
@@ -60,8 +56,6 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		title:                opts.Title,
 		didStart:             make(chan bool),
 		outputBuf:            new(bytes.Buffer),
-		ctx:                  ctx,
-		cancel:               cancel,
 		exitStatusStringLock: &sync.Mutex{},
 	}
 }
@@ -69,13 +63,16 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 // Start starts the process and returns the ProcessRunner and an error.
 // It takes a channel that's closed when the dependency starts.
 // This allows us to control the order of process startup.
-func (pr *processRunner) Start(depStarted <-chan bool) error {
+func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	select {
 	case <-depStarted:
 	// continue if the dependency has started.
-	case <-pr.ctx.Done():
+	case <-ctx.Done():
 		log.Info("Context cancelled before starting process", pr.title)
-		return pr.ctx.Err()
+		return ctx.Err()
 	}
 
 	// get stdout and stderr
@@ -114,23 +111,25 @@ func (pr *processRunner) Start(depStarted <-chan bool) error {
 			err = fmt.Errorf("process exited with error: %w", err)
 			log.Error(err)
 			pr.SetExitStatusString(err.Error())
+			cancel()
 		} else {
 			s := fmt.Sprintf("process exited cleanly")
 			log.Infof(s)
 			pr.SetExitStatusString(s)
+			cancel()
 		}
 	}()
 
 	return nil
 }
 
+// SetExitStatusString sets the exit status string of the process.
 func (pr *processRunner) SetExitStatusString(status string) {
 	if status != "" {
 		pr.exitStatusStringLock.Lock()
 		defer pr.exitStatusStringLock.Unlock()
 		pr.exitStatusString = status
 	}
-	pr.cancel()
 }
 
 // Stop stops the process.

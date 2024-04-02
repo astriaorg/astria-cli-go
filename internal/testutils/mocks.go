@@ -1,6 +1,8 @@
 package testutils
 
 import (
+	"context"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -8,7 +10,7 @@ type MockProcessRunner struct {
 	mock.Mock
 }
 
-func (m *MockProcessRunner) Start(depStarted <-chan bool) error {
+func (m *MockProcessRunner) Start(ctx context.Context, depStarted <-chan bool) error {
 	args := m.Called(depStarted)
 	return args.Error(0)
 }
