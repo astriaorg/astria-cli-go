@@ -96,11 +96,13 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "config/genesis.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
+		panic(err)
 	}
 	// Read the content from the embedded file
 	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, "config/priv_validator_key.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
+		panic(err)
 	}
 
 	// Specify the path for the new file
@@ -111,11 +113,13 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	newGenesisFile, err := os.Create(newGenesisPath)
 	if err != nil {
 		log.Fatalf("failed to create new file: %v", err)
+		panic(err)
 	}
 	defer newGenesisFile.Close()
 	newValidatorFile, err := os.Create(newValidatorPath)
 	if err != nil {
 		log.Fatalf("failed to create new file: %v", err)
+		panic(err)
 	}
 	defer newValidatorFile.Close()
 
@@ -123,10 +127,12 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	_, err = newGenesisFile.Write(genesisData)
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
+		panic(err)
 	}
 	_, err = newValidatorFile.Write(validatorData)
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
+		panic(err)
 	}
 	log.Info("Cometbft genesis data created successfully.")
 	log.Info("Cometbft validator data created successfully.")
@@ -141,6 +147,7 @@ func recreateLocalEnvFile(instancDir string, path string) {
 	data, err := fs.ReadFile(embeddedLocalEnvironmentFile, "config/local.env.example")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
+		panic(err)
 	}
 
 	// Convert data to a string and replace "~" with the user's home directory
@@ -153,6 +160,7 @@ func recreateLocalEnvFile(instancDir string, path string) {
 	newFile, err := os.Create(newPath)
 	if err != nil {
 		log.Fatalf("failed to create new file: %v", err)
+		panic(err)
 	}
 	defer newFile.Close()
 
@@ -160,6 +168,7 @@ func recreateLocalEnvFile(instancDir string, path string) {
 	_, err = newFile.WriteString(content)
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
+		panic(err)
 	}
 	log.Info("Local .env file created successfully.")
 }
@@ -172,6 +181,7 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 	data, err := fs.ReadFile(embeddedRemoteEnvironmentFile, "config/remote.env.example")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
+		panic(err)
 	}
 
 	// Specify the path for the new file
@@ -181,6 +191,7 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 	newFile, err := os.Create(newPath)
 	if err != nil {
 		log.Fatalf("failed to create new file: %v", err)
+		panic(err)
 	}
 	defer newFile.Close()
 
@@ -188,6 +199,7 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 	_, err = newFile.WriteString(string(data))
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
+		panic(err)
 	}
 	log.Info("Remote .env file created successfully.")
 }
@@ -290,6 +302,7 @@ func downloadAndUnpack(url string, packageName string, placePath string) {
 	err = os.Remove(dest)
 	if err != nil {
 		log.Fatalf("Failed to delete downloaded %s.tar.gz file: %v", packageName, err)
+		panic(err)
 	}
 	log.Infof("%s downloaded and extracted successfully.\n", packageName)
 }
