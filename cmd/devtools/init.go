@@ -35,11 +35,7 @@ func init() {
 func runInitialization(c *cobra.Command, args []string) {
 	// Get the instance name from the -i flag or use the default
 	instance := c.Flag("instance").Value.String()
-	err := IsInstanceNameValid(instance)
-	if err != nil {
-		log.WithError(err).Error("Error getting --instance flag")
-		return
-	}
+	IsInstanceNameValidOrPanic(instance)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

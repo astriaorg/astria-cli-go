@@ -21,11 +21,7 @@ var cleanCmd = &cobra.Command{
 func runClean(cmd *cobra.Command, args []string) {
 	// Get the instance name from the -i flag or use the default
 	instance := cmd.Flag("instance").Value.String()
-	err := IsInstanceNameValid(instance)
-	if err != nil {
-		log.WithError(err).Error("Error getting --instance flag")
-		return
-	}
+	IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {

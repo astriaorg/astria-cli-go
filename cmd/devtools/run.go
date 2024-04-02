@@ -44,11 +44,7 @@ func runall(c *cobra.Command, args []string) {
 	ctx := cmd.RootCmd.Context()
 
 	instance := c.Flag("instance").Value.String()
-	err := IsInstanceNameValid(instance)
-	if err != nil {
-		log.WithError(err).Error("Error getting --instance flag")
-		return
-	}
+	IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
