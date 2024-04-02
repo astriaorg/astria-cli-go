@@ -278,7 +278,7 @@ func downloadAndUnpack(url string, packageName string, placePath string) {
 		fmt.Printf("%s already exists. Skipping download.\n", packageName)
 		return
 	}
-	log.Info("Downloading: (%s, %s)\n", packageName, url)
+	log.Infof("Downloading: (%s, %s)\n", packageName, url)
 
 	// Download the file
 	dest := filepath.Join(placePath, packageName+".tar.gz")
