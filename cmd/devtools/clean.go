@@ -1,7 +1,6 @@
 package devtools
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,8 +69,7 @@ func runCleanAll() {
 func init() {
 	// top level command
 	devCmd.AddCommand(cleanCmd)
-	instanceFlagUsage := fmt.Sprintf("Choose the instance that will be cleaned.", DefaultInstanceName)
-	cleanCmd.Flags().StringP("instance", "i", DefaultInstanceName, instanceFlagUsage)
+	cleanCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Choose the instance that will be cleaned.")
 
 	// subcommands
 	cleanCmd.AddCommand(allCmd)

@@ -28,8 +28,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(initCmd)
-	instanceFlagUsage := fmt.Sprintf("Choose where the local-dev-astria directory will be created.", DefaultInstanceName)
-	initCmd.Flags().StringP("instance", "i", DefaultInstanceName, instanceFlagUsage)
+	initCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Choose where the local-dev-astria directory will be created.")
 }
 
 func runInitialization(c *cobra.Command, args []string) {

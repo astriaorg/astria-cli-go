@@ -21,7 +21,7 @@ type RunConfiguration int
 const (
 	Local RunConfiguration = iota
 	Remote
-	Error
+	Unknown
 )
 
 // runCmd represents the run command
@@ -34,10 +34,10 @@ var runCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(runCmd)
-	instanceFlagUsage := fmt.Sprintf("Choose where the local-dev-astria directory will be created.", DefaultInstanceName)
-	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, instanceFlagUsage)
+	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Choose where the local-dev-astria directory will be created.")
 	runCmd.Flags().BoolVarP(&IsRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
 	runCmd.Flags().BoolVarP(&IsRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
+	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
 }
 
 func runRun(c *cobra.Command, args []string) {
@@ -55,15 +55,20 @@ func runRun(c *cobra.Command, args []string) {
 	instanceDir := filepath.Join(defaultDir, instance)
 
 	var runners []processrunner.ProcessRunner
-	runConfiguration := determineRunConfiguration()
+	runConfiguration, err := determineRunConfiguration()
+	if err != nil {
+		log.WithError(err).Error("Error determining run configuration")
+		panic(err)
+	}
 	switch runConfiguration {
 	case Local:
 		runners = runLocal(ctx, instanceDir)
 	case Remote:
 		runners = runRemote(ctx, instanceDir)
-	case Error:
-		log.Error("Error determining run configuration")
-		return
+	case Unknown:
+		// this should never happen
+		err := fmt.Errorf("Unknown run configuration encoutered.")
+		panic(err)
 	}
 
 	// create and start ui app
@@ -71,23 +76,21 @@ func runRun(c *cobra.Command, args []string) {
 	app.Start()
 }
 
-func determineRunConfiguration() RunConfiguration {
+func determineRunConfiguration() (RunConfiguration, error) {
 	switch {
-	case IsRunLocal && IsRunRemote:
-		fmt.Println("Can only run one of --local or --remote, not both. Exiting.")
-		return Error
 	case !IsRunLocal && !IsRunRemote:
-		fmt.Println("No --local or --remote flag provided. Defaulting to --local.")
+		log.Info("No --local or --remote flag provided. Defaulting to --local.")
 		IsRunLocal = true
-		return Local
+		return Local, nil
 	case IsRunLocal:
-		fmt.Println("--local flag provided. Running local sequencer.")
-		return Local
+		log.Info("--local flag provided. Running local sequencer.")
+		return Local, nil
 	case IsRunRemote:
-		fmt.Println("--remote flag provided. Connecting to remote sequencer.")
-		return Remote
+		log.Info("--remote flag provided. Connecting to remote sequencer.")
+		return Remote, nil
+	default:
+		return Unknown, fmt.Errorf("Error determining run configuration")
 	}
-	return Error
 }
 
 func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
