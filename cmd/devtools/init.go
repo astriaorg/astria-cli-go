@@ -66,7 +66,7 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, LocalBinariesDirName)
-	fmt.Println("\nBinary files for locally running a sequencer placed in: ", localBinPath)
+	fmt.Println("Binary files for locally running a sequencer placed in: ", localBinPath)
 	createDir(localBinPath)
 	for _, bin := range LocalBinaries {
 		downloadAndUnpack(bin.Url, bin.Name, localBinPath)
@@ -74,7 +74,7 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	// create the local bin directory for downloaded binaries
 	remoteBinPath := filepath.Join(instanceDir, RemoteBinariesDirName)
-	fmt.Println("\nBinary files for running against remote sequencer placed in: ", remoteBinPath)
+	fmt.Println("Binary files for running against remote sequencer placed in: ", remoteBinPath)
 	createDir(remoteBinPath)
 	for _, bin := range RemoteBinaries {
 		downloadAndUnpack(bin.Url, bin.Name, remoteBinPath)
@@ -86,7 +86,7 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	initCometbft(instanceDir, DataDirName, LocalBinariesDirName, LocalConfigDirName)
 
-	initComplete := fmt.Sprintf("\nInitialization of instance \"%s\" completed successfuly.", instance)
+	initComplete := fmt.Sprintf("Initialization of instance \"%s\" completed successfuly.", instance)
 	fmt.Println(initComplete)
 
 }
@@ -167,7 +167,7 @@ func recreateLocalEnvFile(instancDir string, path string) {
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
-	fmt.Println("\nLocal .env file created successfully.")
+	fmt.Println("Local .env file created successfully.")
 }
 
 //go:embed config/remote.env.example
@@ -195,7 +195,7 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 	if err != nil {
 		log.Fatalf("failed to write data to new file: %v", err)
 	}
-	fmt.Println("\nRemote .env file created successfully.")
+	fmt.Println("Remote .env file created successfully.")
 }
 
 // TODO: add error handling
@@ -313,7 +313,7 @@ func downloadAndUnpack(url string, packageName string, placePath string) {
 }
 
 func initCometbft(defaultDir string, dataDirName string, binDirName string, configDirName string) {
-	fmt.Println("\nInitializing CometBFT for running local sequencer:")
+	fmt.Println("Initializing CometBFT for running local sequencer:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
 	// verify that cometbft was downloaded and extracted to the correct location
