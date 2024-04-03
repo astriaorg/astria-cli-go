@@ -25,7 +25,7 @@ var runCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(runCmd)
-	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Choose where the local-dev-astria directory will be created.")
+	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
 	runCmd.Flags().BoolVarP(&IsRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
 	runCmd.Flags().BoolVarP(&IsRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
 	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
@@ -46,10 +46,6 @@ func runRun(c *cobra.Command, args []string) {
 	instanceDir := filepath.Join(defaultDir, instance)
 
 	var runners []processrunner.ProcessRunner
-	if err != nil {
-		log.WithError(err).Error("Error determining run configuration")
-		panic(err)
-	}
 	switch {
 	case !IsRunLocal && !IsRunRemote:
 		log.Info("No --local or --remote flag provided. Defaulting to --local.")

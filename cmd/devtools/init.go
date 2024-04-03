@@ -28,7 +28,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Choose where the local-dev-astria directory will be created.")
+	initCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
 }
 
 func runInitialization(c *cobra.Command, args []string) {
