@@ -15,25 +15,25 @@ var getBalanceCmd = &cobra.Command{
 	Short:  "Retrieves and prints the balance of an account.",
 	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	PreRun: cmd.SetLogLevel,
-	Run:    runGetBalance,
+	Run:    runGetBalances,
 }
-
-const DefaultSequencerURL = "http://127.0.0.1:26657"
 
 func init() {
 	sequencerCmd.AddCommand(getBalanceCmd)
 	getBalanceCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 }
 
-func runGetBalance(cmd *cobra.Command, args []string) {
+func runGetBalances(cmd *cobra.Command, args []string) {
 	address := args[0]
 	url := cmd.Flag("url").Value.String()
 
-	balance, err := sequencer.GetBalance(address, url)
+	balances, err := sequencer.GetBalances(address, url)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return
 	}
 
-	fmt.Println(balance)
+	for _, balance := range balances {
+		fmt.Printf("Denom: %s, Balance: %d\n", balance.Denom, balance.Balance)
+	}
 }

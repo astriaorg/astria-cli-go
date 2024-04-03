@@ -3,7 +3,6 @@ package sequencer
 import (
 	"context"
 	"encoding/hex"
-	"math/big"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -35,7 +34,7 @@ func CreateAccount() (*Account, error) {
 }
 
 // GetBalance returns the balance of an address.
-func GetBalance(address string, sequencerURL string) (*big.Int, error) {
+func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse, error) {
 	address = strip0xPrefix(address)
 	sequencerURL = addPortToURL(sequencerURL)
 
@@ -60,12 +59,38 @@ func GetBalance(address string, sequencerURL string) (*big.Int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	balance, err := c.GetBalance(ctx, address20)
+	balances, err := c.GetBalances(ctx, address20)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return nil, err
 	}
 
-	log.Info("Balance: ", balance.String())
-	return balance, nil
+	for _, b := range balances {
+		log.Info("Denom:", b.Denom, "Balance:", b.Balance.String())
+	}
+	return balances, nil
+}
+
+func GetBlockHeight(sequencerURL string) (int64, error) {
+	sequencerURL = addPortToURL(sequencerURL)
+
+	log.Debug("Creating CometBFT client with url: ", sequencerURL)
+
+	c, err := client.NewClient(sequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return 0, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	blockheight, err := c.GetBlockHeight(ctx)
+	if err != nil {
+		log.WithError(err).Error("Error getting blockheight")
+		return 0, err
+	}
+
+	log.Info("Blockheight: ", blockheight)
+	return blockheight, nil
 }
