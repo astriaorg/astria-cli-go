@@ -37,7 +37,7 @@ func runClean(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	CreateDir(dataDir)
+	CreateDirOrPanic(dataDir)
 }
 
 var allCmd = &cobra.Command{
