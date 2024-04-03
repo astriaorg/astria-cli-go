@@ -98,17 +98,14 @@ cobra-cli add <new-command>
 
 ### Instances
 
-The `dev init`, `dev run`, and `dev clean` commands above all have an optional
-`--instance [string]` flag. Using the instance flag will "name" the config data
-created in the `~/.astria` directory, allowing you to have multiple, local
-configurations. If you don't use the flag, a `default` instance is created.
+The `dev init`, `dev run`, and `dev clean` commands all have an optional `--instance` flag. The value of this flag will be used as the directory name where the rollup data will be stored. Now you can run many rollups while keeping their configs and state data separate. If no value is provided, `default` is used, i.e. `~/.astria/default`.
 
 For example, if you run:
 
 ```bash
 astria-go dev init
-astria-go dev init -i hello
-astria-go dev init -i world
+astria-go dev init --instance hello
+astria-go dev init --instance world
 ```
 
 You will see the following in the `~/.astria` directory:
@@ -120,7 +117,7 @@ You will see the following in the `~/.astria` directory:
     world/
 ```
 
-Each of these directories will contain independent configs and binary files for
+Each of these directories will contain configs and binaries for
 running the Astria stack. You can then update the `.env` files in the
-`.astria/<instance name>/config-local/` or `.astria/<instance
+`~/.astria/<instance name>/config-local/` or `~/.astria/<instance
 name>/config-remote/` directories to suit your needs.
