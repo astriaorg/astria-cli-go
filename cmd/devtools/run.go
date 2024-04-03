@@ -2,7 +2,6 @@ package devtools
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -15,14 +14,6 @@ import (
 
 var IsRunLocal bool
 var IsRunRemote bool
-
-type RunConfiguration int
-
-const (
-	Local RunConfiguration = iota
-	Remote
-	Unknown
-)
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
@@ -55,42 +46,26 @@ func runRun(c *cobra.Command, args []string) {
 	instanceDir := filepath.Join(defaultDir, instance)
 
 	var runners []processrunner.ProcessRunner
-	runConfiguration, err := determineRunConfiguration()
 	if err != nil {
 		log.WithError(err).Error("Error determining run configuration")
 		panic(err)
 	}
-	switch runConfiguration {
-	case Local:
+	switch {
+	case !IsRunLocal && !IsRunRemote:
+		log.Info("No --local or --remote flag provided. Defaulting to --local.")
+		IsRunLocal = true
 		runners = runLocal(ctx, instanceDir)
-	case Remote:
+	case IsRunLocal:
+		log.Info("--local flag provided. Running local sequencer.")
+		runners = runLocal(ctx, instanceDir)
+	case IsRunRemote:
+		log.Info("--remote flag provided. Connecting to remote sequencer.")
 		runners = runRemote(ctx, instanceDir)
-	case Unknown:
-		// this should never happen
-		err := fmt.Errorf("Unknown run configuration encoutered.")
-		panic(err)
 	}
 
 	// create and start ui app
 	app := ui.NewApp(runners)
 	app.Start()
-}
-
-func determineRunConfiguration() (RunConfiguration, error) {
-	switch {
-	case !IsRunLocal && !IsRunRemote:
-		log.Info("No --local or --remote flag provided. Defaulting to --local.")
-		IsRunLocal = true
-		return Local, nil
-	case IsRunLocal:
-		log.Info("--local flag provided. Running local sequencer.")
-		return Local, nil
-	case IsRunRemote:
-		log.Info("--remote flag provided. Connecting to remote sequencer.")
-		return Remote, nil
-	default:
-		return Unknown, fmt.Errorf("Error determining run configuration")
-	}
 }
 
 func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
