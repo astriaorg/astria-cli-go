@@ -12,10 +12,11 @@ import (
 
 // ProcessPane is a struct containing a tview.TextView and processrunner.ProcessRunner
 type ProcessPane struct {
-	tApp       *tview.Application
-	textView   *tview.TextView
-	pr         processrunner.ProcessRunner
-	ansiWriter io.Writer
+	tApp           *tview.Application
+	textView       *tview.TextView
+	pr             processrunner.ProcessRunner
+	ansiWriter     io.Writer
+	TickerInterval time.Duration
 
 	Title     string
 	lineCount int
@@ -36,11 +37,12 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 	ansiWriter := tview.ANSIWriter(tv)
 
 	return &ProcessPane{
-		tApp:       tApp,
-		textView:   tv,
-		ansiWriter: ansiWriter,
-		pr:         pr,
-		Title:      pr.GetTitle(),
+		tApp:           tApp,
+		textView:       tv,
+		ansiWriter:     ansiWriter,
+		pr:             pr,
+		Title:          pr.GetTitle(),
+		TickerInterval: 250,
 	}
 }
 
@@ -48,7 +50,7 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 func (pp *ProcessPane) StartScan() {
 	go func() {
 		// initialize a ticker for periodic updates
-		ticker := time.NewTicker(250 * time.Millisecond) // adjust the duration as needed
+		ticker := time.NewTicker(pp.TickerInterval * time.Millisecond) // adjust the duration as needed
 		defer ticker.Stop()
 
 		var lastOutputSize int // tracks the last processed output size
@@ -62,6 +64,7 @@ func (pp *ProcessPane) StartScan() {
 				newOutput := currentOutput[lastOutputSize:] // extract new data since last check
 				pp.tApp.QueueUpdateDraw(func() {
 					_, err := pp.ansiWriter.Write([]byte(newOutput))
+					pp.lineCount++
 					if err != nil {
 						log.WithError(err).Error("Error writing to textView")
 					}
