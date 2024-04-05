@@ -114,6 +114,7 @@ func (pp *ProcessPane) Highlight(highlight bool) {
 	}
 }
 
+// GetLineCount returns the line count of the ProcessPane's textView.
 func (pp *ProcessPane) GetLineCount() int {
 	return pp.lineCount
 }

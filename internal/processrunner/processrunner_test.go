@@ -35,7 +35,7 @@ func TestProcessRunner(t *testing.T) {
 	}
 
 	// give some time for the process to complete and write its output
-	time.Sleep(1 * time.Second)
+	time.Sleep(10 * time.Millisecond)
 
 	pr.Stop()
 	output := pr.GetOutput()
@@ -78,7 +78,7 @@ func TestProcessRunner_ImmediateExitWithError(t *testing.T) {
 	err := pr.Start(ctx, depStarted)
 	assert.Nil(t, err, "Process should start without error even if it exits with an error")
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 
 	output := pr.GetOutput()
 	assert.Contains(t, output, "process exited with error", "Output should contain the error exit status")
@@ -92,7 +92,7 @@ func TestProcessRunner_LongRunningProcess(t *testing.T) {
 	opts := NewProcessRunnerOpts{
 		Title:   "Sleep Command",
 		BinPath: "sleep",
-		Args:    []string{"1"}, // sleep for a second
+		Args:    []string{"0.1"}, // sleep for a second
 	}
 
 	pr := NewProcessRunner(ctx, opts)
@@ -103,7 +103,7 @@ func TestProcessRunner_LongRunningProcess(t *testing.T) {
 	assert.Nil(t, err, "Process should start without error")
 
 	// wait longer than the sleep command duration
-	<-time.After(2 * time.Second)
+	<-time.After(200 * time.Millisecond)
 
 	output := pr.GetOutput()
 	assert.Equal(t, "process exited cleanly", output, "Expected clean exit after sleep")

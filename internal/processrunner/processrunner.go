@@ -1,13 +1,14 @@
 package processrunner
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os/exec"
+	"sync"
 	"syscall"
 
+	"github.com/astria/astria-cli-go/internal/safebuffer"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,7 +31,9 @@ type processRunner struct {
 	didStart  chan bool
 	stdout    io.ReadCloser
 	stderr    io.ReadCloser
-	outputBuf *bytes.Buffer
+	outputBuf *safebuffer.SafeBuffer
+
+	mu sync.Mutex
 }
 
 type NewProcessRunnerOpts struct {
@@ -50,7 +53,8 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		cmd:       cmd,
 		title:     opts.Title,
 		didStart:  make(chan bool),
-		outputBuf: new(bytes.Buffer),
+		outputBuf: &safebuffer.SafeBuffer{},
+		//outputBuf: new(bytes.Buffer),
 	}
 }
 
@@ -82,9 +86,8 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 	pr.stderr = stderr
 
 	// multiwriter to write both stdout and stderr to the same buffer
-	mw := io.MultiWriter(pr.outputBuf)
-	go io.Copy(mw, stdout)
-	go io.Copy(mw, stderr)
+	go io.Copy(pr.outputBuf, stdout)
+	go io.Copy(pr.outputBuf, stderr)
 
 	// actually start the process
 	if err := pr.cmd.Start(); err != nil {
@@ -132,5 +135,5 @@ func (pr *processRunner) GetTitle() string {
 
 // GetOutput returns the combined stdout and stderr output of the process.
 func (pr *processRunner) GetOutput() string {
-	return pr.outputBuf.String()
+	return pr.outputBuf.String() // Safely access the buffer's content
 }
