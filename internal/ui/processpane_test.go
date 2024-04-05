@@ -94,5 +94,5 @@ func TestProcessPane_Highlight(t *testing.T) {
 		t.Errorf("Expected border color to be blue when highlighted, got %v", borderColor)
 	}
 
-	app.Stop()
+	defer app.Stop()
 }
