@@ -23,7 +23,6 @@ func Execute() {
 	err := RootCmd.ExecuteContext(ctx)
 	if err != nil {
 		log.WithError(err).Error("Error executing root command")
-		cancel()
 		os.Exit(1)
 	}
 }

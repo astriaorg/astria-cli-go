@@ -35,8 +35,6 @@ func init() {
 func runRun(c *cobra.Command, args []string) {
 	ctx := c.Context()
 
-	log.Debug("runRun")
-
 	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
 
@@ -68,14 +66,9 @@ func runRun(c *cobra.Command, args []string) {
 }
 
 func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, LocalConfigDirName, ".env")
-
-	log.WithFields(log.Fields{"envPath": envPath}).Debug("runLocal")
 
 	environment := loadAndGetEnvVariables(envPath)
 
@@ -141,11 +134,6 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 }
 
 func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	log.WithFields(log.Fields{"instanceDir": instanceDir}).Debug("runRemote")
-
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, RemoteConfigDirName, ".env")
