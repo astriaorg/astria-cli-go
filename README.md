@@ -66,7 +66,7 @@ your IDE, but for VS Code you can open your settings and add:
 ```json
 {
   "gopls": {
-      "buildFlags": ["-tags=darwin arm64 amd64 linux"]
+    "buildFlags": ["-tags=darwin arm64 amd64 linux"]
   }
 }
 ```
@@ -85,7 +85,7 @@ cobra-cli add <new-command>
 ### Available Commands
 
 | Command                    | Description                                                                         |
-|----------------------------|-------------------------------------------------------------------------------------|
+| -------------------------- | ----------------------------------------------------------------------------------- |
 | `version`                  | Prints the cli version.                                                             |
 | `help`                     | Show help.                                                                          |
 | `dev`                      | Root command for cli development functionality.                                     |
@@ -95,3 +95,29 @@ cobra-cli add <new-command>
 | `dev clean all`            | Deletes the local data, downloaded binaries, and config files for the Astria stack. |
 | `sequencer create-account` | Generate an account for the Sequencer.                                              |
 | `sequencer get-balance`    | Get the balance of an account on the Sequencer.                                     |
+
+### Instances
+
+The `dev init`, `dev run`, and `dev clean` commands all have an optional `--instance` flag. The value of this flag will be used as the directory name where the rollup data will be stored. Now you can run many rollups while keeping their configs and state data separate. If no value is provided, `default` is used, i.e. `~/.astria/default`.
+
+For example, if you run:
+
+```bash
+astria-go dev init
+astria-go dev init --instance hello
+astria-go dev init --instance world
+```
+
+You will see the following in the `~/.astria` directory:
+
+```bash
+.astria/
+    default/
+    hello/
+    world/
+```
+
+Each of these directories will contain configs and binaries for
+running the Astria stack. You can then update the `.env` files in the
+`~/.astria/<instance name>/config-local/` or `~/.astria/<instance
+name>/config-remote/` directories to suit your needs.
