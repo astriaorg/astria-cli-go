@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -16,10 +17,11 @@ var IsRunRemote bool
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Run all the Astria services locally.",
-	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
-	Run:   runRun,
+	Use:    "run",
+	Short:  "Run all the Astria services locally.",
+	Long:   `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
+	PreRun: cmd.SetLogLevel,
+	Run:    runRun,
 }
 
 func init() {
@@ -32,8 +34,8 @@ func init() {
 
 func runRun(c *cobra.Command, args []string) {
 	ctx := c.Context()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+
+	log.Debug("runRun")
 
 	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
@@ -72,6 +74,9 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, LocalConfigDirName, ".env")
+
+	log.WithFields(log.Fields{"envPath": envPath}).Debug("runLocal")
+
 	environment := loadAndGetEnvVariables(envPath)
 
 	// sequencer
@@ -117,22 +122,18 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	err := seqRunner.Start(ctx, shouldStart)
 	if err != nil {
 		log.WithError(err).Error("Error running sequencer")
-		cancel()
 	}
 	err = cometRunner.Start(ctx, seqRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running cometbft")
-		cancel()
 	}
 	err = compRunner.Start(ctx, cometRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running composer")
-		cancel()
 	}
 	err = condRunner.Start(ctx, compRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running conductor")
-		cancel()
 	}
 
 	runners := []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
@@ -142,6 +143,8 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	log.WithFields(log.Fields{"instanceDir": instanceDir}).Debug("runRemote")
 
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
@@ -166,27 +169,16 @@ func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessR
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
-	// cleanup function to stop processes if there is an error starting another process
-	// FIXME - this isn't good enough. need to use context to stop all processes.
-	cleanup := func() {
-		compRunner.Stop()
-		condRunner.Stop()
-	}
-
 	// shouldStart acts as a control channel to start this first process
 	shouldStart := make(chan bool)
 	close(shouldStart)
 	err := compRunner.Start(ctx, shouldStart)
 	if err != nil {
 		log.WithError(err).Error("Error running composer")
-		cleanup()
-		panic(err)
 	}
 	err = condRunner.Start(ctx, compRunner.GetDidStart())
 	if err != nil {
 		log.WithError(err).Error("Error running conductor")
-		cleanup()
-		panic(err)
 	}
 
 	runners := []processrunner.ProcessRunner{compRunner, condRunner}
