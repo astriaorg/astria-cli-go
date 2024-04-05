@@ -68,16 +68,6 @@ func (pp *ProcessPane) StartScan() {
 				})
 				lastOutputSize = currentSize
 			}
-
-			// check for exit status string and break out of infinite loop if found
-			if pp.pr.GetExitStatusString() != "" {
-				_, err := pp.ansiWriter.Write([]byte(pp.pr.GetExitStatusString() + "\n"))
-				if err != nil {
-					log.WithError(err).Error("Error writing status to textView")
-				}
-				// break out of for loop when the exit status changes
-				break
-			}
 		}
 	}()
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"sync"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -19,8 +18,6 @@ type ProcessRunner interface {
 	GetDidStart() <-chan bool
 	GetTitle() string
 	GetOutput() string
-	SetExitStatusString(status string)
-	GetExitStatusString() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -29,9 +26,6 @@ type processRunner struct {
 	cmd *exec.Cmd
 	// Title is the title of the process
 	title string
-
-	exitStatusString     string
-	exitStatusStringLock *sync.Mutex
 
 	didStart  chan bool
 	stdout    io.ReadCloser
@@ -53,11 +47,10 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
 	return &processRunner{
-		cmd:                  cmd,
-		title:                opts.Title,
-		didStart:             make(chan bool),
-		outputBuf:            new(bytes.Buffer),
-		exitStatusStringLock: &sync.Mutex{},
+		cmd:       cmd,
+		title:     opts.Title,
+		didStart:  make(chan bool),
+		outputBuf: new(bytes.Buffer),
 	}
 }
 
@@ -108,24 +101,15 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 		if err != nil {
 			err = fmt.Errorf("process exited with error: %w", err)
 			log.Error(err)
-			pr.SetExitStatusString(err.Error())
+			pr.outputBuf.WriteString(err.Error())
 		} else {
-			s := fmt.Sprintf("process exited cleanly")
+			s := fmt.Sprint("process exited cleanly")
 			log.Infof(s)
-			pr.SetExitStatusString(s)
+			pr.outputBuf.WriteString(s)
 		}
 	}()
 
 	return nil
-}
-
-// SetExitStatusString sets the exit status string of the process.
-func (pr *processRunner) SetExitStatusString(status string) {
-	if status != "" {
-		pr.exitStatusStringLock.Lock()
-		defer pr.exitStatusStringLock.Unlock()
-		pr.exitStatusString = status
-	}
 }
 
 // Stop stops the process.
@@ -144,13 +128,6 @@ func (pr *processRunner) GetDidStart() <-chan bool {
 // GetTitle returns the title of the process.
 func (pr *processRunner) GetTitle() string {
 	return pr.title
-}
-
-// GetExitStatusString returns the exit status string of the process.
-func (pr *processRunner) GetExitStatusString() string {
-	pr.exitStatusStringLock.Lock()
-	defer pr.exitStatusStringLock.Unlock()
-	return pr.exitStatusString
 }
 
 // GetOutput returns the combined stdout and stderr output of the process.

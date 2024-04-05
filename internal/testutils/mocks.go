@@ -18,20 +18,12 @@ func (m *MockProcessRunner) Start(ctx context.Context, depStarted <-chan bool) e
 func (m *MockProcessRunner) Stop() {
 }
 
-func (m *MockProcessRunner) SetExitStatusString(status string) {
-}
-
 func (m *MockProcessRunner) GetDidStart() <-chan bool {
 	args := m.Called()
 	return args.Get(0).(<-chan bool)
 }
 
 func (m *MockProcessRunner) GetTitle() string {
-	args := m.Called()
-	return args.Get(0).(string)
-}
-
-func (m *MockProcessRunner) GetExitStatusString() string {
 	args := m.Called()
 	return args.Get(0).(string)
 }
