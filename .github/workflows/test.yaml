@@ -17,4 +17,7 @@ jobs:
           go-version: 1.21.3
           cache-dependency-path: ./go.sum
       - name: Test
+        # GitHub Actions run without a TTY device. This is a workaround to get one,
+        # based on https://github.com/actions/runner/issues/241#issuecomment-842566950.
+        shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
         run: go test ./...

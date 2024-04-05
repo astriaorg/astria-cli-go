@@ -48,11 +48,6 @@ func TestProcessPane_DisplayOutput(t *testing.T) {
 	})
 }
 
-//func TestProcessPane_AutoScroll(t *testing.T) {
-//	// This test would verify the auto-scroll behavior. You'll need to simulate conditions where auto-scroll is
-//	// relevant and verify the textView's scroll position before and after new output is added.
-//}
-
 func TestProcessPane_Highlight(t *testing.T) {
 	mockPR := new(testutils.MockProcessRunner)
 
