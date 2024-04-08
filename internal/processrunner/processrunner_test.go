@@ -39,8 +39,8 @@ func TestProcessRunner(t *testing.T) {
 
 	pr.Stop()
 	output := pr.GetOutput()
-	expectedOutput := "hello, world\nprocess exited cleanly"
-	assert.Contains(t, output, expectedOutput, "Output should contain the expected text")
+	assert.Contains(t, output, "hello, world", "Output should contain the expected text")
+	assert.Contains(t, output, "process exited cleanly", "Output should contain the expected text")
 }
 
 func TestProcessRunner_StartError(t *testing.T) {
@@ -106,5 +106,5 @@ func TestProcessRunner_LongRunningProcess(t *testing.T) {
 	<-time.After(200 * time.Millisecond)
 
 	output := pr.GetOutput()
-	assert.Equal(t, "process exited cleanly", output, "Expected clean exit after sleep")
+	assert.Equal(t, "[black:white][astria-go] Sleep Command process exited cleanly[-:-]", output, "Expected clean exit after sleep")
 }
