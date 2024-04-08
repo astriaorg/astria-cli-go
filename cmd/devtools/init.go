@@ -60,26 +60,26 @@ func runInitialization(c *cobra.Command, args []string) {
 	// recreateCometbftAndSequencerGenesisData(fullPath)
 
 	// create the local bin directory for downloaded binaries
-	localBinPath := filepath.Join(instanceDir, LocalBinariesDirName)
+	localBinPath := filepath.Join(instanceDir, BinariesDirName)
 	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
 	CreateDirOrPanic(localBinPath)
-	for _, bin := range LocalBinaries {
+	for _, bin := range Binaries {
 		downloadAndUnpack(bin.Url, bin.Name, localBinPath)
 	}
 
-	// create the local bin directory for downloaded binaries
-	remoteBinPath := filepath.Join(instanceDir, RemoteBinariesDirName)
-	log.Info("Binary files for running against remote sequencer placed in: ", remoteBinPath)
-	CreateDirOrPanic(remoteBinPath)
-	for _, bin := range RemoteBinaries {
-		downloadAndUnpack(bin.Url, bin.Name, remoteBinPath)
-	}
+	// // create the local bin directory for downloaded binaries
+	// remoteBinPath := filepath.Join(instanceDir, RemoteBinariesDirName)
+	// log.Info("Binary files for running against remote sequencer placed in: ", remoteBinPath)
+	// CreateDirOrPanic(remoteBinPath)
+	// for _, bin := range RemoteBinaries {
+	// 	downloadAndUnpack(bin.Url, bin.Name, remoteBinPath)
+	// }
 
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, DataDirName)
 	CreateDirOrPanic(dataPath)
 
-	initCometbft(instanceDir, DataDirName, LocalBinariesDirName, LocalConfigDirName)
+	initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
 
 	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
 
