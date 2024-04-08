@@ -31,7 +31,7 @@ type processRunner struct {
 	didStart  chan bool
 	stdout    io.ReadCloser
 	stderr    io.ReadCloser
-	outputBuf *safebuffer.SafeBuffer
+	outputBuf *safebuffer.SafeBuffer // FIXME - implement ring buffer?
 
 	mu sync.Mutex
 }
@@ -102,11 +102,11 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 	go func() {
 		err = pr.cmd.Wait()
 		if err != nil {
-			err = fmt.Errorf("process exited with error: %w", err)
+			err = fmt.Errorf("[white:red][astria-go] %s process exited with error: %w[-:-]", pr.title, err)
 			log.Error(err)
 			pr.outputBuf.WriteString(err.Error())
 		} else {
-			s := fmt.Sprint("process exited cleanly")
+			s := fmt.Sprintf("[black:white][astria-go] %s process exited cleanly[-:-]", pr.title)
 			log.Infof(s)
 			pr.outputBuf.WriteString(s)
 		}
