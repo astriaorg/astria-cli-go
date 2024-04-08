@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"sync"
 	"syscall"
 
 	"github.com/astria/astria-cli-go/internal/safebuffer"
@@ -32,8 +31,6 @@ type processRunner struct {
 	stdout    io.ReadCloser
 	stderr    io.ReadCloser
 	outputBuf *safebuffer.SafeBuffer // FIXME - implement ring buffer?
-
-	mu sync.Mutex
 }
 
 type NewProcessRunnerOpts struct {
@@ -104,11 +101,17 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 		if err != nil {
 			err = fmt.Errorf("[white:red][astria-go] %s process exited with error: %w[-:-]", pr.title, err)
 			log.Error(err)
-			pr.outputBuf.WriteString(err.Error())
+			_, err := pr.outputBuf.WriteString(err.Error())
+			if err != nil {
+				return
+			}
 		} else {
 			s := fmt.Sprintf("[black:white][astria-go] %s process exited cleanly[-:-]", pr.title)
 			log.Infof(s)
-			pr.outputBuf.WriteString(s)
+			_, err := pr.outputBuf.WriteString(s)
+			if err != nil {
+				return
+			}
 		}
 	}()
 

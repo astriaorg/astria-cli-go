@@ -30,7 +30,8 @@ func TestProcessPane_DisplayOutput(t *testing.T) {
 
 	go func() {
 		if err := app.Run(); err != nil {
-			t.Fatal("Failed to run application:", err)
+			t.Error("Failed to run application:", err)
+			return
 		}
 	}()
 
@@ -59,7 +60,8 @@ func TestProcessPane_Highlight(t *testing.T) {
 
 	go func() {
 		if err := app.Run(); err != nil {
-			t.Fatal("Failed to run application:", err)
+			t.Error("Failed to run application:", err)
+			return
 		}
 	}()
 

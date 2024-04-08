@@ -391,7 +391,10 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	// Rename the temporary file to the original file name.
 	if err := os.Rename(tmpFilename, filename); err != nil {
 		// Attempt to restore the original file if renaming fails.
-		os.Rename(backupFilename, filename)
+		err := os.Rename(backupFilename, filename)
+		if err != nil {
+			return err
+		}
 		return fmt.Errorf("failed to rename temporary file to original: %w", err)
 	}
 
