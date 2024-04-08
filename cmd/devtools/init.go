@@ -57,7 +57,6 @@ func runInitialization(c *cobra.Command, args []string) {
 	remoteConfigPath := filepath.Join(instanceDir, RemoteConfigDirName)
 	CreateDirOrPanic(remoteConfigPath)
 	recreateRemoteEnvFile(instanceDir, remoteConfigPath)
-	// recreateCometbftAndSequencerGenesisData(fullPath)
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, BinariesDirName)
@@ -66,14 +65,6 @@ func runInitialization(c *cobra.Command, args []string) {
 	for _, bin := range Binaries {
 		downloadAndUnpack(bin.Url, bin.Name, localBinPath)
 	}
-
-	// // create the local bin directory for downloaded binaries
-	// remoteBinPath := filepath.Join(instanceDir, RemoteBinariesDirName)
-	// log.Info("Binary files for running against remote sequencer placed in: ", remoteBinPath)
-	// CreateDirOrPanic(remoteBinPath)
-	// for _, bin := range RemoteBinaries {
-	// 	downloadAndUnpack(bin.Url, bin.Name, remoteBinPath)
-	// }
 
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, DataDirName)
