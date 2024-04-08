@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getBalanceCmd represents the get-balance command
-var getBalanceCmd = &cobra.Command{
+// getBalancesCmd represents the get-balance command
+var getBalancesCmd = &cobra.Command{
 	Use:    "get-balance [address]",
 	Short:  "Retrieves and prints the balance of an account.",
 	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
@@ -19,8 +19,8 @@ var getBalanceCmd = &cobra.Command{
 }
 
 func init() {
-	sequencerCmd.AddCommand(getBalanceCmd)
-	getBalanceCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	sequencerCmd.AddCommand(getBalancesCmd)
+	getBalancesCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 }
 
 func runGetBalances(cmd *cobra.Command, args []string) {

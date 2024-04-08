@@ -33,7 +33,7 @@ func CreateAccount() (*Account, error) {
 	}, nil
 }
 
-// GetBalance returns the balance of an address.
+// GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse, error) {
 	address = strip0xPrefix(address)
 	sequencerURL = addPortToURL(sequencerURL)
