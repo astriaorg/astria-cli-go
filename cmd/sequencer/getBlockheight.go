@@ -27,7 +27,7 @@ func runGetBlockHeight(cmd *cobra.Command, args []string) {
 
 	blockheight, err := sequencer.GetBlockHeight(url)
 	if err != nil {
-		log.WithError(err).Error("Error getting block height")
+		log.WithError(err)
 		return
 	}
 
