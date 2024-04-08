@@ -71,7 +71,7 @@ func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse
 	return balances, nil
 }
 
-func GetBlockHeight(sequencerURL string) (int64, error) {
+func GetBlockheight(sequencerURL string) (int64, error) {
 	sequencerURL = addPortToURL(sequencerURL)
 
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)

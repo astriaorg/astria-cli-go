@@ -9,23 +9,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getBlockHeightCmd represents the get-blockheight command
-var getBlockHeightCmd = &cobra.Command{
+// getBlockheightCmd represents the get-blockheight command
+var getBlockheightCmd = &cobra.Command{
 	Use:    "get-blockheight",
 	Short:  "Retrieves the latest blockheight from the sequencer.",
 	PreRun: cmd.SetLogLevel,
-	Run:    runGetBlockHeight,
+	Run:    runGetBlockheight,
 }
 
 func init() {
-	sequencerCmd.AddCommand(getBlockHeightCmd)
-	getBlockHeightCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	sequencerCmd.AddCommand(getBlockheightCmd)
+	getBlockheightCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 }
 
-func runGetBlockHeight(cmd *cobra.Command, args []string) {
+func runGetBlockheight(cmd *cobra.Command, args []string) {
 	url := cmd.Flag("url").Value.String()
 
-	blockheight, err := sequencer.GetBlockHeight(url)
+	blockheight, err := sequencer.GetBlockheight(url)
 	if err != nil {
 		log.WithError(err)
 		return
