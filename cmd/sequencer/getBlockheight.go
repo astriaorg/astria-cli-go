@@ -24,8 +24,7 @@ var getBlockheightCmd = &cobra.Command{
 func init() {
 	sequencerCmd.AddCommand(getBlockheightCmd)
 	getBlockheightCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
-	getBlockheightCmd.Flags().Bool("json", false, "Output the account information in JSON format.")
-
+	getBlockheightCmd.Flags().Bool("json", false, "Output the sequencer blockheight in JSON format.")
 }
 
 func runGetBlockheight(cmd *cobra.Command, args []string) {

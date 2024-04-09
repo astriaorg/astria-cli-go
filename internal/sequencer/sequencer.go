@@ -38,7 +38,7 @@ func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse
 	address = strip0xPrefix(address)
 	sequencerURL = addPortToURL(sequencerURL)
 
-	log.Info("Getting balance for address: ", address)
+	log.Debug("Getting balance for address: ", address)
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
 
 	c, err := client.NewClient(sequencerURL)
@@ -66,7 +66,7 @@ func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse
 	}
 
 	for _, b := range balances {
-		log.Info("Denom:", b.Denom, "Balance:", b.Balance.String())
+		log.Debug("Denom:", b.Denom, "Balance:", b.Balance.String())
 	}
 	return balances, nil
 }
