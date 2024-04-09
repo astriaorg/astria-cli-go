@@ -245,7 +245,7 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 				case 'w':
 					fv.s.ToggleWordWrap()
 					fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
-				// hotkey for jumping to the top of the logs
+				// hotkey for jumping to the head of the logs
 				case '0':
 					fv.s.DisableAutoscroll()
 					fv.processPane.textView.ScrollToBeginning()

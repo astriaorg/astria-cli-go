@@ -1,23 +1,24 @@
 package ui
 
 import (
-	"fmt"
 	"io"
+	"time"
 
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	log "github.com/sirupsen/logrus"
 )
 
 // ProcessPane is a struct containing a tview.TextView and processrunner.ProcessRunner
 type ProcessPane struct {
-	tApp       *tview.Application
-	textView   *tview.TextView
-	pr         processrunner.ProcessRunner
-	ansiWriter io.Writer
+	tApp           *tview.Application
+	textView       *tview.TextView
+	pr             processrunner.ProcessRunner
+	ansiWriter     io.Writer
+	TickerInterval time.Duration
 
-	Title     string
-	lineCount int
+	Title string
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -35,38 +36,39 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 	ansiWriter := tview.ANSIWriter(tv)
 
 	return &ProcessPane{
-		tApp:       tApp,
-		textView:   tv,
-		ansiWriter: ansiWriter,
-		pr:         pr,
-		Title:      pr.GetTitle(),
+		tApp:           tApp,
+		textView:       tv,
+		ansiWriter:     ansiWriter,
+		pr:             pr,
+		Title:          pr.GetTitle(),
+		TickerInterval: 250,
 	}
 }
 
 // StartScan starts scanning the stdout of the process and writes to the textView
 func (pp *ProcessPane) StartScan() {
-	// scan stdout and write using ansiWriter
 	go func() {
-		stdoutScanner := pp.pr.GetScanner()
-		for stdoutScanner.Scan() {
-			line := stdoutScanner.Text()
-			pp.tApp.QueueUpdateDraw(func() {
-				_, err := pp.ansiWriter.Write([]byte(line + "\n"))
-				pp.lineCount++
-				if err != nil {
-					fmt.Println("error writing to textView:", err)
-					panic(err)
-				}
-			})
-		}
-		if err := stdoutScanner.Err(); err != nil {
-			fmt.Println("error reading stdout:", err)
-			panic(err)
-		}
-		// FIXME - do i need to wait??
-		if err := pp.pr.Wait(); err != nil {
-			fmt.Println("error waiting for process:", err)
-			panic(err)
+		// initialize a ticker for periodic updates
+		ticker := time.NewTicker(pp.TickerInterval * time.Millisecond) // adjust the duration as needed
+		defer ticker.Stop()
+
+		var lastOutputSize int // tracks the last processed output size
+
+		for range ticker.C {
+			currentOutput := pp.pr.GetOutput() // get the current full output
+			currentSize := len(currentOutput)
+
+			if currentSize > lastOutputSize {
+				// new, unprocessed data.
+				newOutput := currentOutput[lastOutputSize:] // extract new data since last check
+				pp.tApp.QueueUpdateDraw(func() {
+					_, err := pp.ansiWriter.Write([]byte(newOutput))
+					if err != nil {
+						log.WithError(err).Error("Error writing to textView")
+					}
+				})
+				lastOutputSize = currentSize
+			}
 		}
 	}()
 }
@@ -89,7 +91,7 @@ func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
 
 // SetIsBorderless sets the border of the textView.
 func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
-	// NOTE - the verbage for isBorderless is opposite of SetBorder
+	// NOTE - the verbiage for isBorderless is opposite of SetBorder
 	// therefore, when isBorderless is true, we want to set the border to false
 	// for the textView, and vice versa
 	pp.textView.SetBorder(!isBorderless)
@@ -110,6 +112,7 @@ func (pp *ProcessPane) Highlight(highlight bool) {
 	}
 }
 
+// GetLineCount returns the line count of the ProcessPane's textView.
 func (pp *ProcessPane) GetLineCount() int {
-	return pp.lineCount
+	return pp.pr.GetLineCount()
 }

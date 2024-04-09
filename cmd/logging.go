@@ -9,9 +9,11 @@ import (
 
 var logLevel string
 
+const DefaultLogLevel = log.InfoLevel
+
 func init() {
 	// default log level
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(DefaultLogLevel)
 }
 
 // SetLogLevel sets the log level based on the flag passed in
@@ -31,6 +33,6 @@ func SetLogLevel(cmd *cobra.Command, args []string) {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	default:
-		log.SetLevel(log.ErrorLevel)
+		log.SetLevel(DefaultLogLevel)
 	}
 }
