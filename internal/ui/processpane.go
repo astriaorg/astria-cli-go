@@ -18,8 +18,7 @@ type ProcessPane struct {
 	ansiWriter     io.Writer
 	TickerInterval time.Duration
 
-	Title     string
-	lineCount int
+	Title string
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -64,7 +63,6 @@ func (pp *ProcessPane) StartScan() {
 				newOutput := currentOutput[lastOutputSize:] // extract new data since last check
 				pp.tApp.QueueUpdateDraw(func() {
 					_, err := pp.ansiWriter.Write([]byte(newOutput))
-					pp.lineCount++
 					if err != nil {
 						log.WithError(err).Error("Error writing to textView")
 					}
@@ -93,7 +91,7 @@ func (pp *ProcessPane) SetIsWordWrap(isWordWrap bool) {
 
 // SetIsBorderless sets the border of the textView.
 func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
-	// NOTE - the verbage for isBorderless is opposite of SetBorder
+	// NOTE - the verbiage for isBorderless is opposite of SetBorder
 	// therefore, when isBorderless is true, we want to set the border to false
 	// for the textView, and vice versa
 	pp.textView.SetBorder(!isBorderless)
@@ -116,5 +114,5 @@ func (pp *ProcessPane) Highlight(highlight bool) {
 
 // GetLineCount returns the line count of the ProcessPane's textView.
 func (pp *ProcessPane) GetLineCount() int {
-	return pp.lineCount
+	return pp.pr.GetLineCount()
 }

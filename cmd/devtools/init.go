@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/astria/astria-cli-go/cmd"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -20,10 +21,11 @@ import (
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initializes the local development environment.",
-	Long:  `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
-	Run:   runInitialization,
+	Use:    "init",
+	Short:  "Initializes the local development environment.",
+	Long:   `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
+	PreRun: cmd.SetLogLevel,
+	Run:    runInitialization,
 }
 
 func init() {
@@ -266,7 +268,7 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 func downloadAndUnpack(url string, packageName string, placePath string) {
 	// Check if the file already exists
 	if _, err := os.Stat(filepath.Join(placePath, packageName)); err == nil {
-		fmt.Printf("%s already exists. Skipping download.\n", packageName)
+		log.Infof("%s already exists. Skipping download.\n", packageName)
 		return
 	}
 	log.Infof("Downloading: (%s, %s)\n", packageName, url)

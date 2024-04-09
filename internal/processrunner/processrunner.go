@@ -18,6 +18,7 @@ type ProcessRunner interface {
 	GetDidStart() <-chan bool
 	GetTitle() string
 	GetOutput() string
+	GetLineCount() int
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -28,8 +29,6 @@ type processRunner struct {
 	title string
 
 	didStart  chan bool
-	stdout    io.ReadCloser
-	stderr    io.ReadCloser
 	outputBuf *safebuffer.SafeBuffer // FIXME - implement ring buffer?
 }
 
@@ -72,14 +71,11 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 		log.WithError(err).Errorf("Error obtaining stdout for process %s", pr.title)
 		return err
 	}
-	pr.stdout = stdout
-
 	stderr, err := pr.cmd.StderrPipe()
 	if err != nil {
 		log.WithError(err).Errorf("Error obtaining stderr for process %s", pr.title)
 		return err
 	}
-	pr.stderr = stderr
 
 	// multiwriter to write both stdout and stderr to the same buffer
 	go io.Copy(pr.outputBuf, stdout)
@@ -138,4 +134,9 @@ func (pr *processRunner) GetTitle() string {
 // GetOutput returns the combined stdout and stderr output of the process.
 func (pr *processRunner) GetOutput() string {
 	return pr.outputBuf.String() // Safely access the buffer's content
+}
+
+// GetLineCount returns the number of lines in the output buffer.
+func (pr *processRunner) GetLineCount() int {
+	return int(pr.outputBuf.GetLineCount())
 }

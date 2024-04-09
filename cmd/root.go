@@ -31,5 +31,5 @@ func init() {
 	// disabling the completion command for now
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 
-	RootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "error", "log level (debug, info, warn, error, fatal, panic)")
+	RootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (debug, info, warn, error, fatal, panic)")
 }

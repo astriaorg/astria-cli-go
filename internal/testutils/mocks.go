@@ -34,3 +34,8 @@ func (m *MockProcessRunner) GetOutput() string {
 	args := m.Called()
 	return args.String(0)
 }
+
+func (m *MockProcessRunner) GetLineCount() int {
+	args := m.Called()
+	return args.Int(0)
+}

@@ -5,23 +5,23 @@ default:
 # build the binary for the cli
 build:
     go build -o bin/astria-go
+alias b := build
 
 # test go code
 test:
     go test ./...
-
 alias t := test
 
 # format all go files
 fmt:
     go fmt ./...
+alias f := fmt
 
 default_lang := 'all'
 
 # Can lint 'go', 'md', or 'all'. Defaults to all.
 lint lang=default_lang:
     @just _lint-{{lang}}
-
 alias l := lint
 
 @_lint-all:
@@ -40,6 +40,7 @@ defaultargs := ''
 # run the cli. takes quoted cli command to run, e.g. `just run "dev init"`. logs cli output to tview_log.txt
 run args=defaultargs:
     go run main.go {{args}} > tview_log.txt 2>&1
+alias r := run
 
 run-race args=defaultargs:
     go run -race main.go {{args}} > tview_log.txt 2>&1
