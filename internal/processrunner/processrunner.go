@@ -51,7 +51,6 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		title:     opts.Title,
 		didStart:  make(chan bool),
 		outputBuf: &safebuffer.SafeBuffer{},
-		//outputBuf: new(bytes.Buffer),
 	}
 }
 
