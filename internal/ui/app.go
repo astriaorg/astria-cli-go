@@ -65,7 +65,7 @@ func (a *App) Start() {
 	// run the tview application
 	if err := a.Application.Run(); err != nil {
 		fmt.Println("error running tview application:", err)
-		panic(err)
+		a.Exit()
 	}
 }
 
