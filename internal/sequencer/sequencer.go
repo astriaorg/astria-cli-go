@@ -91,6 +91,6 @@ func GetBlockheight(sequencerURL string) (int64, error) {
 		return 0, err
 	}
 
-	log.Info("Blockheight: ", blockheight)
+	log.Debug("Blockheight: ", blockheight)
 	return blockheight, nil
 }
