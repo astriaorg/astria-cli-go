@@ -71,6 +71,7 @@ func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse
 	return balances, nil
 }
 
+// GetBlockheight returns the current blockheight of the sequencer.
 func GetBlockheight(sequencerURL string) (int64, error) {
 	sequencerURL = addPortToURL(sequencerURL)
 
