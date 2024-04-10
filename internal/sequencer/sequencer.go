@@ -2,6 +2,7 @@ package sequencer
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -104,41 +105,21 @@ type TransferOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey []byte
+	FromKey string
 	// ToAddress is the address of the receiver
-	ToAddress []byte
+	ToAddress string
 	// Amount is the amount to be transferred
 	Amount int
 }
 
 // Transfer transfers an amount from one address to another.
 func Transfer(opts TransferOpts) error {
+	log.Debug("Transfer options: ", opts)
+
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	// transaction
-	// FIXME - support bigger numbers
-	amount := &primitivev1.Uint128{
-		Lo: uint64(opts.Amount),
-		Hi: 0,
-	}
-	tx := &sqproto.UnsignedTransaction{
-		Nonce: 1, // FIXME - do i need to get the nonce first? where from?
-		Actions: []*sqproto.Action{
-			{
-				Value: &sqproto.Action_TransferAction{
-					TransferAction: &sqproto.TransferAction{
-						To:         opts.ToAddress,
-						Amount:     amount,
-						AssetId:    []byte("nria"), // FIXME - is this right? put in constant
-						FeeAssetId: []byte("nria"), // FIXME - is this right? put in constant
-					},
-				},
-			},
-		},
-	}
 
 	// client
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
@@ -148,8 +129,46 @@ func Transfer(opts TransferOpts) error {
 		return err
 	}
 
+	// transaction
+	// FIXME - support bigger numbers
+	amount := &primitivev1.Uint128{
+		Lo: uint64(opts.Amount),
+		Hi: 0,
+	}
+	to, err := hex.DecodeString(strip0xPrefix(opts.ToAddress))
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
+		return err
+	}
+	nonce, err := c.GetNonce(ctx, [20]byte(to))
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return err
+	}
+	tx := &sqproto.UnsignedTransaction{
+		Nonce: nonce,
+		Actions: []*sqproto.Action{
+			{
+				Value: &sqproto.Action_TransferAction{
+					TransferAction: &sqproto.TransferAction{
+						To:         to,
+						Amount:     amount,
+						AssetId:    AssetIdFromDenom("nria"),
+						FeeAssetId: AssetIdFromDenom("nria"),
+					},
+				},
+			},
+		},
+	}
+
 	// signer
-	signer := client.NewSigner(opts.FromKey)
+	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return err
+	}
+	from := ed25519.NewKeyFromSeed(privateKeyBytes)
+	signer := client.NewSigner(from)
 	signed, err := signer.SignTransaction(tx)
 	if err != nil {
 		log.WithError(err).Error("Error signing transaction")
@@ -158,6 +177,7 @@ func Transfer(opts TransferOpts) error {
 
 	// broadcast tx
 	resp, err := c.BroadcastTxSync(ctx, signed)
+	log.Debugf("Broadcast response: %v", resp)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return err

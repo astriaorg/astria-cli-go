@@ -35,9 +35,9 @@ func runTransfer(cmd *cobra.Command, args []string) {
 
 	opts := sequencer.TransferOpts{
 		SequencerURL: url,
-		FromKey:      []byte(from),
-		ToAddress:    []byte(to),
-		Amount:       int(amount),
+		FromKey:      from,
+		ToAddress:    to,
+		Amount:       amount,
 	}
 	err = sequencer.Transfer(opts)
 	if err != nil {
