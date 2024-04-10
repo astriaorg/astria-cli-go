@@ -76,6 +76,8 @@ func runClean(cmd *cobra.Command, args []string) {
 		}
 		log.Debugf("Recreating data dir for instance '%s'", instance)
 		CreateDirOrPanic(dataDir)
+		// Reinitialize the cometbft instance after deleting the data to allow
+		// user to start fresh without needing to run initialization again
 		initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
 	}
 }

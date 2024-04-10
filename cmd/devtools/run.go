@@ -112,8 +112,6 @@ func runLocal(ctx context.Context, instanceDir string, runTime string) []process
 	environment := loadAndGetEnvVariables(envPath)
 
 	logsDir := filepath.Join(instanceDir, LogsDirName)
-	// currentTime := time.Now()
-	// formattedTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
@@ -189,9 +187,8 @@ func runRemote(ctx context.Context, instanceDir string, runTime string) []proces
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, RemoteConfigDirName, ".env")
 	environment := loadAndGetEnvVariables(envPath)
+
 	logsDir := filepath.Join(instanceDir, LogsDirName)
-	// currentTime := time.Now()
-	// formattedTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
