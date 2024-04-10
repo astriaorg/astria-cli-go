@@ -39,11 +39,11 @@ _lint-md:
 defaultargs := ''
 # run the cli. takes quoted cli command to run, e.g. `just run "dev init"`. logs cli output to tview_log.txt
 run args=defaultargs:
-    go run main.go {{args}} > tview_log.txt 2>&1
+    go run main.go {{args}}
 alias r := run
 
 run-race args=defaultargs:
-    go run -race main.go {{args}} > tview_log.txt 2>&1
+    go run -race main.go {{args}}
 
 # show any running Astria processes
 [no-exit-message]

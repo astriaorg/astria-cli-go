@@ -36,10 +36,10 @@ func init() {
 }
 
 func runRun(c *cobra.Command, args []string) {
-	ctx := c.Context()
+	currentTime := time.Now()
+	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
-	instance := c.Flag("instance").Value.String()
-	IsInstanceNameValidOrPanic(instance)
+	ctx := c.Context()
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -47,36 +47,73 @@ func runRun(c *cobra.Command, args []string) {
 		panic(err)
 	}
 	defaultDir := filepath.Join(homePath, ".astria")
+
+	instance := c.Flag("instance").Value.String()
+	IsInstanceNameValidOrPanic(instance)
 	instanceDir := filepath.Join(defaultDir, instance)
+
+	logsDir := filepath.Join(instanceDir, LogsDirName)
+
+	// conditionally create a log file for the app
+	var appLogFile *os.File
+	if ExportLogs {
+		logPath := filepath.Join(logsDir, appStartTime+"-app.log")
+		appLogFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		log.Info("New log file created successfully:", logPath)
+		log.SetOutput(appLogFile)
+		log.SetFormatter(&log.TextFormatter{
+			DisableColors: true, // Disable ANSI color codes
+			FullTimestamp: true,
+		})
+
+	} else {
+		log.SetOutput(os.Stdout)
+		log.SetFormatter(&log.TextFormatter{
+			DisableColors: false,
+			FullTimestamp: true,
+		})
+		appLogFile = nil
+	}
 
 	var runners []processrunner.ProcessRunner
 	switch {
 	case !IsRunLocal && !IsRunRemote:
-		log.Info("No --local or --remote flag provided. Defaulting to --local.")
+		log.Debug("No --local or --remote flag provided. Defaulting to --local.")
 		IsRunLocal = true
-		runners = runLocal(ctx, instanceDir)
+		runners = runLocal(ctx, instanceDir, appStartTime)
 	case IsRunLocal:
-		log.Info("--local flag provided. Running local sequencer.")
-		runners = runLocal(ctx, instanceDir)
+		log.Debug("--local flag provided. Running local sequencer.")
+		runners = runLocal(ctx, instanceDir, appStartTime)
 	case IsRunRemote:
-		log.Info("--remote flag provided. Connecting to remote sequencer.")
-		runners = runRemote(ctx, instanceDir)
+		log.Debug("--remote flag provided. Connecting to remote sequencer.")
+		runners = runRemote(ctx, instanceDir, appStartTime)
 	}
 
 	// create and start ui app
 	app := ui.NewApp(runners)
 	app.Start()
+
+	// close the log file
+	if appLogFile != nil {
+		err := appLogFile.Close()
+		if err != nil {
+			log.WithError(err).Error("Error closing app log file")
+		}
+	}
 }
 
-func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
+func runLocal(ctx context.Context, instanceDir string, runTime string) []processrunner.ProcessRunner {
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, LocalConfigDirName, ".env")
 	environment := loadAndGetEnvVariables(envPath)
 
 	logsDir := filepath.Join(instanceDir, LogsDirName)
-	currentTime := time.Now()
-	formattedTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
+	// currentTime := time.Now()
+	// formattedTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
@@ -84,7 +121,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-sequencer"),
 		Env:        environment,
 		Args:       nil,
-		LogPath:    filepath.Join(logsDir, formattedTime+"astria-sequencer.log"),
+		LogPath:    filepath.Join(logsDir, runTime+"-astria-sequencer.log"),
 		ExportLogs: ExportLogs,
 	}
 	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
@@ -96,7 +133,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "cometbft"),
 		Env:        environment,
 		Args:       []string{"node", "--home", cometDataPath},
-		LogPath:    filepath.Join(logsDir, formattedTime+"cometbft.log"),
+		LogPath:    filepath.Join(logsDir, runTime+"-cometbft.log"),
 		ExportLogs: ExportLogs,
 	}
 	cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
@@ -107,7 +144,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
 		Env:        environment,
 		Args:       nil,
-		LogPath:    filepath.Join(logsDir, formattedTime+"astria-composer.log"),
+		LogPath:    filepath.Join(logsDir, runTime+"-astria-composer.log"),
 		ExportLogs: ExportLogs,
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
@@ -118,7 +155,7 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
 		Env:        environment,
 		Args:       nil,
-		LogPath:    filepath.Join(logsDir, formattedTime+"astria-conductor.log"),
+		LogPath:    filepath.Join(logsDir, runTime+"-astria-conductor.log"),
 		ExportLogs: ExportLogs,
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
@@ -147,14 +184,14 @@ func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRu
 	return runners
 }
 
-func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
+func runRemote(ctx context.Context, instanceDir string, runTime string) []processrunner.ProcessRunner {
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, RemoteConfigDirName, ".env")
 	environment := loadAndGetEnvVariables(envPath)
 	logsDir := filepath.Join(instanceDir, LogsDirName)
-	currentTime := time.Now()
-	formattedTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
+	// currentTime := time.Now()
+	// formattedTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
@@ -162,7 +199,7 @@ func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessR
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
 		Env:        environment,
 		Args:       nil,
-		LogPath:    filepath.Join(logsDir, formattedTime+"astria-composer.log"),
+		LogPath:    filepath.Join(logsDir, runTime+"-astria-composer.log"),
 		ExportLogs: ExportLogs,
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
@@ -173,7 +210,7 @@ func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessR
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
 		Env:        environment,
 		Args:       nil,
-		LogPath:    filepath.Join(logsDir, formattedTime+"astria-conductor.log"),
+		LogPath:    filepath.Join(logsDir, runTime+"-astria-conductor.log"),
 		ExportLogs: ExportLogs,
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)

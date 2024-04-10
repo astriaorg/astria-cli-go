@@ -41,8 +41,7 @@ func (m *MockProcessRunner) GetLineCount() int {
 }
 
 func (m *MockProcessRunner) CanWriteToLog() bool {
-	args := m.Called()
-	return args.Bool(0)
+	return false
 }
 
 func (m *MockProcessRunner) WriteToLog(data string) error {

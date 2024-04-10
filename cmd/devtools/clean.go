@@ -17,7 +17,7 @@ var DeleteData bool
 var cleanCmd = &cobra.Command{
 	Use:    "clean",
 	Short:  "Delete the local development instance data and logs, excluding binaries and config.",
-	Long:   `Delete the local development instance data and logs. Does not delete the binaries or the config files. If no flags are provided, everything will be deleted. If flags are provided, only the selected items will be deleted.`,
+	Long:   `Delete the local development instance data and logs. Does not delete the binaries or the config files. If no flags are provided, the data and logs will be deleted. If flags are provided, only the selected items will be deleted.`,
 	PreRun: cmd.SetLogLevel,
 	Run:    runClean,
 }
@@ -74,7 +74,7 @@ func runClean(cmd *cobra.Command, args []string) {
 			log.WithError(err).Error("Error running rm")
 			panic(err)
 		}
-		log.Infof("Recreating data dir for instance '%s'", instance)
+		log.Debugf("Recreating data dir for instance '%s'", instance)
 		CreateDirOrPanic(dataDir)
 		initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
 	}
