@@ -5,9 +5,10 @@ go 1.21
 toolchain go1.22.0
 
 require (
-	github.com/astriaorg/go-sequencer-client v0.1.0
+	github.com/astriaorg/go-sequencer-client v0.2.0-alpha.2.0.20240403175831-6b8b007e2093
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/joho/godotenv v1.5.1
+	github.com/pterm/pterm v0.12.79
 	github.com/pterm/pterm v0.12.79
 	github.com/rivo/tview v0.0.0-20240307173318-e804876934a1
 	github.com/sirupsen/logrus v1.9.0
@@ -19,12 +20,7 @@ require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.9 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
-	buf.build/gen/go/astria/astria/protocolbuffers/go v1.31.0-20231130012811-2fd7e6d46ebd.2 // indirect
-	buf.build/gen/go/cosmos/cosmos-proto/protocolbuffers/go v1.31.0-20211202220400-1935555c206d.2 // indirect
-	buf.build/gen/go/cosmos/cosmos-sdk/protocolbuffers/go v1.31.0-20230719110346-aa25660f4ff7.2 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.31.0-20230509103710-5e5b9fdd0180.2 // indirect
-	buf.build/gen/go/cosmos/ibc/protocolbuffers/go v1.31.0-20230913112312-7ab44ae956a0.2 // indirect
-	buf.build/gen/go/penumbra-zone/penumbra/protocolbuffers/go v1.31.0-20231120132728-bc443669626d.2 // indirect
+	buf.build/gen/go/astria/astria/protocolbuffers/go v1.32.0-20240314225002-310b29d1ef86.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -69,6 +65,6 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 	google.golang.org/grpc v1.52.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

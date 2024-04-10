@@ -84,17 +84,18 @@ cobra-cli add <new-command>
 
 ### Available Commands
 
-| Command                    | Description                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------------- |
-| `version`                  | Prints the cli version.                                                             |
-| `help`                     | Show help.                                                                          |
-| `dev`                      | Root command for cli development functionality.                                     |
-| `dev init`                 | Downloads binaries and initializes the local environment.                           |
-| `dev run`                  | Runs a minimal, local Astria stack.                                                 |
-| `dev clean`                | Deletes the local data for the Astria stack.                                        |
-| `dev clean all`            | Deletes the local data, downloaded binaries, and config files for the Astria stack. |
-| `sequencer create-account` | Generate an account for the Sequencer.                                              |
-| `sequencer get-balance`    | Get the balance of an account on the Sequencer.                                     |
+| Command                     | Description                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| `version`                   | Prints the cli version.                                                             |
+| `help`                      | Show help.                                                                          |
+| `dev`                       | Root command for cli development functionality.                                     |
+| `dev init`                  | Downloads binaries and initializes the local environment.                           |
+| `dev run`                   | Runs a minimal, local Astria stack.                                                 |
+| `dev clean`                 | Deletes the local data for the Astria stack.                                        |
+| `dev clean all`             | Deletes the local data, downloaded binaries, and config files for the Astria stack. |
+| `sequencer create-account`  | Generate an account for the Sequencer.                                              |
+| `sequencer get-balance`     | Get the balance of an account on the Sequencer.                                     |
+| `sequencer get-blockheight` | Get the current block height of the Sequencer.                                      |
 
 ### Instances
 

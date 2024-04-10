@@ -24,7 +24,6 @@ transactions and blocks. The account will be created with a private key, public 
 
 func init() {
 	sequencerCmd.AddCommand(createAccountCmd)
-
 	createAccountCmd.Flags().Bool("json", false, "Output the account information in JSON format.")
 }
 
