@@ -49,6 +49,10 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	log.Info("Creating new instance in:", instanceDir)
 
+	// create a directory for all log files
+	localLogsDir := filepath.Join(instanceDir, LogsDirName)
+	CreateDirOrPanic(localLogsDir)
+
 	// create the local config directories
 	localConfigPath := filepath.Join(instanceDir, LocalConfigDirName)
 	CreateDirOrPanic(localConfigPath)

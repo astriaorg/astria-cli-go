@@ -33,6 +33,9 @@ type App struct {
 
 	// processRunners is a list of our running processes
 	processRunners []processrunner.ProcessRunner
+
+	// file descriptor for the log file
+	// TODO - implement log file writing
 }
 
 // NewApp creates a new tview.Application with the necessary components

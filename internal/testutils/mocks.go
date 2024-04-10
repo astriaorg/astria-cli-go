@@ -39,3 +39,13 @@ func (m *MockProcessRunner) GetLineCount() int {
 	args := m.Called()
 	return args.Int(0)
 }
+
+func (m *MockProcessRunner) CanWriteToLog() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+func (m *MockProcessRunner) WriteToLog(data string) error {
+	args := m.Called(data)
+	return args.Error(0)
+}
