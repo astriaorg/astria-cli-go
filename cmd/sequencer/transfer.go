@@ -48,11 +48,12 @@ func runTransfer(cmd *cobra.Command, args []string) {
 		ToAddress:    to,
 		Amount:       amount,
 	}
-	err = sequencer.Transfer(opts)
+	hash, err := sequencer.Transfer(opts)
 	if err != nil {
 		log.WithError(err).Error("Error transferring tokens")
 		panic(err)
 	}
 
 	pterm.Printfln("Transferred %d tokens to %s", amount, to)
+	pterm.Printfln("Transaction hash: %s", hash)
 }
