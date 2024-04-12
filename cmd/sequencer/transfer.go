@@ -61,7 +61,7 @@ func runTransfer(cmd *cobra.Command, args []string) {
 	if printJSON {
 		j, err := json.MarshalIndent(res, "", "  ")
 		if err != nil {
-			log.WithError(err).Error("Error marshalling transfer to JSON")
+			log.WithError(err).Error("Error marshalling to JSON")
 			panic(err)
 		}
 		pterm.Println(string(j))
