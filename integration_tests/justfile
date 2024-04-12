@@ -18,7 +18,7 @@ get-all-balances:
     echo "balances for 3ac486d3cd14cdc69633afe2dd170bdb093cd81a"
     go run main.go sequencer get-balances 3ac486d3cd14cdc69633afe2dd170bdb093cd81a
 
-# make transfer
+# make transfer with privkey for account 1c0c490f1b5528d8173c5de46d131160e4b2c0c3
 tx:
     #!/bin/sh
     # used shebang to run the script in a subshell to only require single `cd ..`

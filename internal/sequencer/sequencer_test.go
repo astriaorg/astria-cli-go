@@ -16,8 +16,3 @@ func TestCreateAccount(t *testing.T) {
 	assert.NotEmpty(t, account.PublicKey, "Public Key should not be empty")
 	assert.NotEmpty(t, account.PrivateKey, "Private Key should not be empty")
 }
-
-func TestTransfer(t *testing.T) {
-	// TODO
-	assert.Equal(t, 1, 1)
-}
