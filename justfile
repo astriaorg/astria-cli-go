@@ -16,7 +16,7 @@ alias t := test
 test-all: test test-integration
 alias ta := test-all
 
-# run integrations tests
+# run integrations tests. requires running geth + cometbft + astria core.
 test-integration:
     # TODO - move this setup and teardown to the go test file
     go build -o ./bin/astria-go-testy
