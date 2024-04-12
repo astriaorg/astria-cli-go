@@ -39,6 +39,7 @@ tx:
         --privkey=2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90 \
         --log-level=debug
 
+# to test huge transaction that sends 2^64 tokens
 tx-huge:
     #!/bin/sh
     # used shebang to run the script in a subshell to only require single `cd ..`
