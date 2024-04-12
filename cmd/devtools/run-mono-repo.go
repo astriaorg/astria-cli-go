@@ -3,6 +3,7 @@ package devtools
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
@@ -11,40 +12,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-<<<<<<< HEAD
-var IsRunLocal bool
-var IsRunRemote bool
-
-=======
->>>>>>> f04e4d3 (add run-mono-repo command)
 // runCmd represents the run command
-var runCmd = &cobra.Command{
-	Use:    "run",
-	Short:  "Run all the Astria services locally.",
-	Long:   `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
+var runMonoRepoCmd = &cobra.Command{
+	Use:    "run-locally-built [mono-repo-path]",
+	Short:  "Run all the Astria services locally using locally built binaries.",
+	Long:   `Run all the Astria services locally using the binaries built in the Astria mono-repo. This will start the sequencer, composer, and conductor from the mono-repo, but still use cometbft binary downloaded by the cli.`,
+	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	PreRun: cmd.SetLogLevel,
-	Run:    runRun,
+	Run:    runMonoRepoRun,
 }
 
 func init() {
-	devCmd.AddCommand(runCmd)
-	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
-<<<<<<< HEAD
-	runCmd.Flags().BoolVarP(&IsRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
-	runCmd.Flags().BoolVarP(&IsRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
-=======
-	runCmd.Flags().BoolVarP(&isRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
-	runCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
-	runCmd.Flags().BoolVar(&exportLogs, "export-logs", false, "Export logs to files.")
->>>>>>> f04e4d3 (add run-mono-repo command)
-	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
+	devCmd.AddCommand(runMonoRepoCmd)
+	runMonoRepoCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
+	runMonoRepoCmd.Flags().BoolVarP(&isRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
+	runMonoRepoCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
+	runMonoRepoCmd.Flags().BoolVar(&exportLogs, "export-logs", false, "Export logs to files.")
+	runMonoRepoCmd.MarkFlagsMutuallyExclusive("local", "remote")
 }
 
-func runRun(c *cobra.Command, args []string) {
-	ctx := c.Context()
+func runMonoRepoRun(c *cobra.Command, args []string) {
+	monoRepoPath := args[0]
 
-	instance := c.Flag("instance").Value.String()
-	IsInstanceNameValidOrPanic(instance)
+	currentTime := time.Now()
+	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
+
+	ctx := c.Context()
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -52,22 +45,11 @@ func runRun(c *cobra.Command, args []string) {
 		panic(err)
 	}
 	defaultDir := filepath.Join(homePath, ".astria")
+
+	instance := c.Flag("instance").Value.String()
+	IsInstanceNameValidOrPanic(instance)
 	instanceDir := filepath.Join(defaultDir, instance)
 
-<<<<<<< HEAD
-	var runners []processrunner.ProcessRunner
-	switch {
-	case !IsRunLocal && !IsRunRemote:
-		log.Info("No --local or --remote flag provided. Defaulting to --local.")
-		IsRunLocal = true
-		runners = runLocal(ctx, instanceDir)
-	case IsRunLocal:
-		log.Info("--local flag provided. Running local sequencer.")
-		runners = runLocal(ctx, instanceDir)
-	case IsRunRemote:
-		log.Info("--remote flag provided. Connecting to remote sequencer.")
-		runners = runRemote(ctx, instanceDir)
-=======
 	logsDir := filepath.Join(instanceDir, LogsDirName)
 
 	// conditionally create a log file for the app
@@ -98,6 +80,8 @@ func runRun(c *cobra.Command, args []string) {
 		ctx:          ctx,
 		instanceDir:  instanceDir,
 		appStartTime: appStartTime,
+		// TODO - add validation for the mono-repo path
+		monoRepoPath: monoRepoPath,
 	}
 
 	var runners []processrunner.ProcessRunner
@@ -105,111 +89,102 @@ func runRun(c *cobra.Command, args []string) {
 	case !isRunLocal && !isRunRemote:
 		log.Debug("No --local or --remote flag provided. Defaulting to --local.")
 		isRunLocal = true
-		runners = runLocal(runOpts)
+		runners = runLocalUsingMonoRepo(runOpts)
 	case isRunLocal:
 		log.Debug("--local flag provided. Running local sequencer.")
-		runners = runLocal(runOpts)
+		runners = runLocalUsingMonoRepo(runOpts)
 	case isRunRemote:
 		log.Debug("--remote flag provided. Connecting to remote sequencer.")
-		runners = runRemote(runOpts)
->>>>>>> f04e4d3 (add run-mono-repo command)
+		runners = runRemoteUsingMonoRepo(runOpts)
 	}
 
 	// create and start ui app
 	app := ui.NewApp(runners)
 	app.Start()
+
+	// close the log file
+	if appLogFile != nil {
+		err := appLogFile.Close()
+		if err != nil {
+			log.WithError(err).Error("Error closing app log file")
+		}
+	}
 }
 
-<<<<<<< HEAD
-func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
-	// load the .env file and get the environment variables
-	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
-	envPath := filepath.Join(instanceDir, LocalConfigDirName, ".env")
-
-	environment := loadAndGetEnvVariables(envPath)
-
-	// sequencer
-	seqOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Sequencer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-sequencer"),
-		Env:     environment,
-		Args:    nil,
-=======
-func runLocal(opts *runOpts) []processrunner.ProcessRunner {
+func runLocalUsingMonoRepo(opts *runOpts) []processrunner.ProcessRunner {
 	instanceDir := opts.instanceDir
 	runTime := opts.appStartTime
 	ctx := opts.ctx
+	monoRepoPath := opts.monoRepoPath
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
-	envPath := filepath.Join(opts.instanceDir, LocalConfigDirName, ".env")
-	environment := loadAndGetEnvVariables(envPath)
+	defaultEnvPath := filepath.Join(opts.instanceDir, LocalConfigDirName, ".env")
+	log.Debug("defaultEnvPath:", defaultEnvPath)
+	defaultEnvironment := loadAndGetEnvVariables(defaultEnvPath)
 
 	logsDir := filepath.Join(opts.instanceDir, LogsDirName)
+
+	// load the .env file from the mono-repo
+	sequencerEnvPath := filepath.Join(monoRepoPath, "crates", "astria-sequencer", "local.env.example")
+	log.Debug("sequencerEnvPath:", sequencerEnvPath)
+	sequencerEnvironment := loadAndGetEnvVariables(sequencerEnvPath, defaultEnvPath)
+	// TODO - set the db path for sequencer to use the instance data dir
+	conductorEnvPath := filepath.Join(monoRepoPath, "crates", "astria-conductor", "local.env.example")
+	log.Debug("conductorEnvPath:", conductorEnvPath)
+	conductorEnvironment := loadAndGetEnvVariables(conductorEnvPath, defaultEnvPath)
+	composerEnvPath := filepath.Join(monoRepoPath, "crates", "astria-composer", "local.env.example")
+	log.Debug("composerEnvPath:", composerEnvPath)
+	composerEnvironment := loadAndGetEnvVariables(composerEnvPath, defaultEnvPath)
+
+	// create the binaries paths for the services within the mono-repo
+	sequencerBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-sequencer")
+	// composerBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-composer")
+	composerBinPath := filepath.Join(instanceDir, BinariesDirName, "astria-composer")
+	// conductorBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-conductor")
+	conductorBinPath := filepath.Join(instanceDir, BinariesDirName, "astria-conductor")
 
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
 		Title:      "Sequencer",
-		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-sequencer"),
-		Env:        environment,
+		BinPath:    sequencerBinPath,
+		Env:        sequencerEnvironment,
 		Args:       nil,
 		LogPath:    filepath.Join(logsDir, runTime+"-astria-sequencer.log"),
 		ExportLogs: exportLogs,
->>>>>>> f04e4d3 (add run-mono-repo command)
 	}
 	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 	// cometbft
 	cometDataPath := filepath.Join(instanceDir, DataDirName, ".cometbft")
 	cometOpts := processrunner.NewProcessRunnerOpts{
-<<<<<<< HEAD
-		Title:   "Comet BFT",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "cometbft"),
-		Env:     environment,
-		Args:    []string{"node", "--home", cometDataPath},
-=======
 		Title:      "Comet BFT",
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "cometbft"),
-		Env:        environment,
+		Env:        defaultEnvironment,
 		Args:       []string{"node", "--home", cometDataPath},
 		LogPath:    filepath.Join(logsDir, runTime+"-cometbft.log"),
 		ExportLogs: exportLogs,
->>>>>>> f04e4d3 (add run-mono-repo command)
 	}
 	cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
-<<<<<<< HEAD
-		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
-		Env:     environment,
-		Args:    nil,
-=======
 		Title:      "Composer",
-		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
-		Env:        environment,
+		BinPath:    composerBinPath,
+		Env:        composerEnvironment,
 		Args:       nil,
 		LogPath:    filepath.Join(logsDir, runTime+"-astria-composer.log"),
 		ExportLogs: exportLogs,
->>>>>>> f04e4d3 (add run-mono-repo command)
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
-<<<<<<< HEAD
-		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
-		Env:     environment,
-		Args:    nil,
-=======
 		Title:      "Conductor",
-		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
-		Env:        environment,
+		BinPath:    conductorBinPath,
+		Env:        conductorEnvironment,
 		Args:       nil,
 		LogPath:    filepath.Join(logsDir, runTime+"-astria-conductor.log"),
 		ExportLogs: exportLogs,
->>>>>>> f04e4d3 (add run-mono-repo command)
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -237,52 +212,36 @@ func runLocal(opts *runOpts) []processrunner.ProcessRunner {
 	return runners
 }
 
-<<<<<<< HEAD
-func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
-=======
-func runRemote(opts *runOpts) []processrunner.ProcessRunner {
+func runRemoteUsingMonoRepo(opts *runOpts) []processrunner.ProcessRunner {
 	ctx := opts.ctx
 	instanceDir := opts.instanceDir
 	runTime := opts.appStartTime
->>>>>>> f04e4d3 (add run-mono-repo command)
 	// load the .env file and get the environment variables
 	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
 	envPath := filepath.Join(instanceDir, RemoteConfigDirName, ".env")
 	environment := loadAndGetEnvVariables(envPath)
 
+	logsDir := filepath.Join(instanceDir, LogsDirName)
+
 	// composer
 	composerOpts := processrunner.NewProcessRunnerOpts{
-<<<<<<< HEAD
-		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
-		Env:     environment,
-		Args:    nil,
-=======
 		Title:      "Composer",
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
 		Env:        environment,
 		Args:       nil,
 		LogPath:    filepath.Join(logsDir, runTime+"-astria-composer.log"),
 		ExportLogs: exportLogs,
->>>>>>> f04e4d3 (add run-mono-repo command)
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 	// conductor
 	conductorOpts := processrunner.NewProcessRunnerOpts{
-<<<<<<< HEAD
-		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
-		Env:     environment,
-		Args:    nil,
-=======
 		Title:      "Conductor",
 		BinPath:    filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
 		Env:        environment,
 		Args:       nil,
 		LogPath:    filepath.Join(logsDir, runTime+"-astria-conductor.log"),
 		ExportLogs: exportLogs,
->>>>>>> f04e4d3 (add run-mono-repo command)
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 

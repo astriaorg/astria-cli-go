@@ -4,17 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"syscall"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/joho/godotenv"
 	"github.com/rivo/tview"
 	"github.com/spf13/cobra"
 )
@@ -27,32 +24,6 @@ var runLegacyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		run()
 	},
-}
-
-// loadEnvVariables loads the environment variables from the src file
-func loadEnvVariables(src string) {
-	err := godotenv.Load(src)
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-}
-
-// getEnvList returns a list of environment variables in the form key=value
-func getEnvList() []string {
-	var envList []string
-	for _, env := range os.Environ() {
-		// Each string is in the form key=value
-		pair := strings.SplitN(env, "=", 2)
-		key := pair[0]
-		envList = append(envList, key+"="+os.Getenv(key))
-	}
-	return envList
-}
-
-// loadAndGetEnvVariables loads the environment variables from the src file and returns a list of environment variables in the form key=value
-func loadAndGetEnvVariables(filePath string) []string {
-	loadEnvVariables(filePath)
-	return getEnvList()
 }
 
 func checkPortInUse(port int) bool {

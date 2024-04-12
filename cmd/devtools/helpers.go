@@ -1,12 +1,48 @@
 package devtools
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
+	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
+
+type runOpts struct {
+	ctx          context.Context
+	instanceDir  string
+	appStartTime string
+	monoRepoPath string
+}
+
+// loadEnvVariables loads the environment variables from the src file
+func loadEnvVariables(src ...string) {
+	err := godotenv.Load(src...)
+	if err != nil {
+		log.Fatalf("Error loading environment file: %v", err)
+	}
+}
+
+// getEnvList returns a list of environment variables in the form key=value
+func getEnvList() []string {
+	var envList []string
+	for _, env := range os.Environ() {
+		// Each string is in the form key=value
+		pair := strings.SplitN(env, "=", 2)
+		key := pair[0]
+		envList = append(envList, key+"="+os.Getenv(key))
+	}
+	return envList
+}
+
+// loadAndGetEnvVariables loads the environment variables from the src file and returns a list of environment variables in the form key=value
+func loadAndGetEnvVariables(filePath ...string) []string {
+	loadEnvVariables(filePath...)
+	return getEnvList()
+}
 
 func IsInstanceNameValidOrPanic(instance string) {
 	re, err := regexp.Compile(`^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`)
