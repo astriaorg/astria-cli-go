@@ -6,10 +6,13 @@ package integration_tests
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os/exec"
 	"testing"
 	"time"
 
+	"github.com/astria/astria-cli-go/internal/sequencer"
+	"github.com/astriaorg/go-sequencer-client/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,15 +21,24 @@ const TestFromAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
 const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
 const TransferAmount = 535353
 
-type balanceResponse struct {
-	Denom   string `json:"denom"`
-	Balance int    `json:"balance"`
-}
-type balances []balanceResponse
+type balances []client.BalanceResponse
 
-func TestTransfer(t *testing.T) {
+func TestTransferAndGetNonce(t *testing.T) {
 	//setUp()
 	//defer tearDown()
+
+	// get initial nonce
+	getNonceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "get-nonce", TestFromAddress, "--json")
+	nonceOutput, err := getNonceCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
+	}
+	var nonce sequencer.NonceResponse
+	err = json.Unmarshal(nonceOutput, &nonce)
+	if err != nil {
+		t.Fatalf("Failed to marshal nonce json output: %v", err)
+	}
+	initialNonce := nonce.Nonce
 
 	// get initial balance
 	getBalanceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "get-balances", TestTo, "--json")
@@ -54,6 +66,21 @@ func TestTransfer(t *testing.T) {
 	// FIXME - this could be flaky. can we check for the tx?
 	time.Sleep(2 * time.Second)
 
+	// get nonce after transfer
+	getNonceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "get-nonce", TestFromAddress, "--json")
+	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
+	}
+	var nonceAfter sequencer.NonceResponse
+	err = json.Unmarshal(nonceAfterOutput, &nonceAfter)
+	if err != nil {
+		t.Fatalf("Failed to marshal nonce json output: %v", err)
+	}
+	finalNonce := nonceAfter.Nonce
+	expectedFinalNonce := initialNonce + 1
+	assert.Equal(t, expectedFinalNonce, finalNonce)
+
 	// get balance after transfer
 	getBalanceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "get-balances", TestTo, "--json")
 	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
@@ -65,9 +92,9 @@ func TestTransfer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to marshal balance json output: %v", err)
 	}
-	expectedFinalBalance := initialBalance + TransferAmount
+	expectedFinalBalance := big.NewInt(0).Add(initialBalance, big.NewInt(TransferAmount))
 	finalBalance := toBalancesAfter[0].Balance
-	assert.Equal(t, expectedFinalBalance, finalBalance)
+	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
 }
 
 // TODO - move setup and teardown here and out of the justfile.

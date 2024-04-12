@@ -99,6 +99,50 @@ func GetBlockheight(sequencerURL string) (int64, error) {
 	return blockheight, nil
 }
 
+type NonceResponse struct {
+	Address string `json:"address"`
+	Nonce   uint32 `json:"nonce"`
+}
+
+// GetNonce returns the nonce of an address.
+func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
+	address = strip0xPrefix(address)
+	sequencerURL = addPortToURL(sequencerURL)
+
+	log.Debug("Getting nonce for address: ", address)
+	log.Debug("Creating CometBFT client with url: ", sequencerURL)
+
+	c, err := client.NewClient(sequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &NonceResponse{}, err
+	}
+
+	a, err := hex.DecodeString(address)
+	if err != nil {
+		log.WithError(err).Error("Error decoding hex encoded address")
+		return &NonceResponse{}, err
+	}
+
+	var address20 [20]byte
+	copy(address20[:], a)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	nonce, err := c.GetNonce(ctx, address20)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &NonceResponse{}, err
+	}
+
+	log.Debug("Nonce: ", nonce)
+	return &NonceResponse{
+		Address: address,
+		Nonce:   nonce,
+	}, nil
+}
+
 // TransferOpts are the options for the Transfer function.
 type TransferOpts struct {
 	// SequencerURL is the URL of the sequencer

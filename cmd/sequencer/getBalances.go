@@ -3,7 +3,6 @@ package sequencer
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
@@ -43,7 +42,7 @@ func runGetBalances(cmd *cobra.Command, args []string) {
 		j, err := json.MarshalIndent(balances, "", "  ")
 		if err != nil {
 			log.WithError(err).Error("Error marshalling account to JSON")
-			os.Exit(1)
+			panic(err)
 		}
 		fmt.Println(string(j))
 	} else {
@@ -56,7 +55,7 @@ func runGetBalances(cmd *cobra.Command, args []string) {
 		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
 			log.WithError(err).Error("Error rendering table")
-			os.Exit(1)
+			panic(err)
 		}
 		pterm.Println(output)
 	}

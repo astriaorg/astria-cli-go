@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -23,7 +22,7 @@ func Execute() {
 	err := RootCmd.ExecuteContext(ctx)
 	if err != nil {
 		log.WithError(err).Error("Error executing root command")
-		os.Exit(1)
+		panic(err)
 	}
 }
 

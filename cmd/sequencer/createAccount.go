@@ -3,7 +3,6 @@ package sequencer
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
@@ -33,7 +32,7 @@ func runCreateAccountCmd(cmd *cobra.Command, args []string) {
 	account, err := sequencer.CreateAccount()
 	if err != nil {
 		log.WithError(err).Error("Error creating account")
-		os.Exit(1)
+		panic(err)
 	}
 
 	// TODO - abstract table and json printing logic to helper functions
@@ -46,7 +45,7 @@ func runCreateAccountCmd(cmd *cobra.Command, args []string) {
 		j, err := json.MarshalIndent(obj, "", "  ")
 		if err != nil {
 			log.WithError(err).Error("Error marshalling account to JSON")
-			os.Exit(1)
+			panic(err)
 		}
 		fmt.Println(string(j))
 	} else {
@@ -56,7 +55,7 @@ func runCreateAccountCmd(cmd *cobra.Command, args []string) {
 		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
 			log.WithError(err).Error("Error rendering table")
-			os.Exit(1)
+			panic(err)
 		}
 		pterm.Println(output)
 	}
