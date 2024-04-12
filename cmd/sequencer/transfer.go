@@ -1,6 +1,7 @@
 package sequencer
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/astria/astria-cli-go/cmd"
@@ -23,6 +24,7 @@ func init() {
 
 	transferCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens.")
 	transferCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
+	transferCmd.Flags().Bool("json", false, "Output in JSON format.")
 
 	err := transferCmd.MarkFlagRequired("privkey")
 	if err != nil {
@@ -32,6 +34,8 @@ func init() {
 }
 
 func runTransfer(cmd *cobra.Command, args []string) {
+	printJSON := cmd.Flag("json").Value.String() == "true"
+
 	amount, err := strconv.Atoi(args[0])
 	if err != nil {
 		log.WithError(err).Error("Error converting amount to integer")
@@ -48,12 +52,30 @@ func runTransfer(cmd *cobra.Command, args []string) {
 		ToAddress:    to,
 		Amount:       amount,
 	}
-	hash, err := sequencer.Transfer(opts)
+	res, err := sequencer.Transfer(opts)
 	if err != nil {
 		log.WithError(err).Error("Error transferring tokens")
 		panic(err)
 	}
 
-	pterm.Printfln("Transferred %d tokens to %s", amount, to)
-	pterm.Printfln("Transaction hash: %s", hash)
+	if printJSON {
+		j, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			log.WithError(err).Error("Error marshalling transfer to JSON")
+			panic(err)
+		}
+		pterm.Println(string(j))
+		return
+	} else {
+		header := []string{"From", "To", "Nonce", "Amount", "TxHash"}
+		var rows [][]string
+		rows = append(rows, []string{res.From, res.To, strconv.Itoa(int(res.Nonce)), strconv.Itoa(res.Amount), res.TxHash})
+		data := append([][]string{header}, rows...)
+		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
+		if err != nil {
+			log.WithError(err).Error("Error rendering table")
+			panic(err)
+		}
+		pterm.Println(output)
+	}
 }

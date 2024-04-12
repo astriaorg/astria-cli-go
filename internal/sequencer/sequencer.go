@@ -111,9 +111,18 @@ type TransferOpts struct {
 	Amount int
 }
 
+// TransferResponse is the response of the Transfer function.
+type TransferResponse struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Nonce  uint32 `json:"nonce"`
+	Amount int    `json:"amount"`
+	TxHash string `json:"txHash"`
+}
+
 // Transfer transfers an amount from one address to another.
 // It returns the hash of the transaction.
-func Transfer(opts TransferOpts) (string, error) {
+func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -123,14 +132,14 @@ func Transfer(opts TransferOpts) (string, error) {
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error creating sequencer client")
-		return "", err
+		return &TransferResponse{}, err
 	}
 
 	// create signer
 	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return "", err
+		return &TransferResponse{}, err
 	}
 	from := ed25519.NewKeyFromSeed(privateKeyBytes)
 	signer := client.NewSigner(from)
@@ -145,13 +154,14 @@ func Transfer(opts TransferOpts) (string, error) {
 	to, err := hex.DecodeString(opts.ToAddress)
 	if err != nil {
 		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
-		return "", err
+		return &TransferResponse{}, err
 	}
 	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
-	nonce, err := c.GetNonce(ctx, signer.Address())
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return "", err
+		return &TransferResponse{}, err
 	}
 	log.Debugf("Nonce: %v", nonce)
 	tx := &sqproto.UnsignedTransaction{
@@ -174,17 +184,27 @@ func Transfer(opts TransferOpts) (string, error) {
 	signed, err := signer.SignTransaction(tx)
 	if err != nil {
 		log.WithError(err).Error("Error signing transaction")
-		return "", err
+		return &TransferResponse{}, err
 	}
 
 	// broadcast tx
 	resp, err := c.BroadcastTxSync(ctx, signed)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
-		return "", err
+		return &TransferResponse{}, err
 	}
 	log.Debugf("Broadcast response: %v", resp)
 
+	// response
 	hash := hex.EncodeToString(resp.Hash)
-	return hash, nil
+	tr := &TransferResponse{
+		From:   hex.EncodeToString(fromAddr[:]),
+		To:     opts.ToAddress,
+		Nonce:  nonce,
+		Amount: opts.Amount,
+		TxHash: hash,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
 }
