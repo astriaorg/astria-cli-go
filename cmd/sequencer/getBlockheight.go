@@ -3,7 +3,6 @@ package sequencer
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/astria/astria-cli-go/cmd"
@@ -45,7 +44,7 @@ func runGetBlockheight(cmd *cobra.Command, args []string) {
 		j, err := json.MarshalIndent(obj, "", "  ")
 		if err != nil {
 			log.WithError(err).Error("Error marshalling account to JSON")
-			os.Exit(1)
+			panic(err)
 		}
 		fmt.Println(string(j))
 	} else {
@@ -56,7 +55,7 @@ func runGetBlockheight(cmd *cobra.Command, args []string) {
 		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
 			log.WithError(err).Error("Error rendering table")
-			os.Exit(1)
+			panic(err)
 		}
 		pterm.Println(output)
 	}
