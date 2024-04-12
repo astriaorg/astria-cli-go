@@ -12,6 +12,11 @@ test:
     go test ./...
 alias t := test
 
+# unit tests with coverage report that opens in browser
+test-cov:
+    go test ./... -coverprofile=coverage.out
+    go tool cover -html=coverage.out
+
 # run unit and integration tests, and tests that require tty.
 test-all: test test-integration
 alias ta := test-all
