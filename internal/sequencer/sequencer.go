@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	primitivev1 "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/primitive/v1"
@@ -114,14 +113,11 @@ type TransferOpts struct {
 
 // Transfer transfers an amount from one address to another.
 func Transfer(opts TransferOpts) error {
-	log.Debug("Transfer options: ", opts)
-
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -129,22 +125,34 @@ func Transfer(opts TransferOpts) error {
 		return err
 	}
 
-	// transaction
+	// create signer
+	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return err
+	}
+	from := ed25519.NewKeyFromSeed(privateKeyBytes)
+	signer := client.NewSigner(from)
+
+	// create transaction
 	// FIXME - support bigger numbers
 	amount := &primitivev1.Uint128{
 		Lo: uint64(opts.Amount),
 		Hi: 0,
 	}
-	to, err := hex.DecodeString(strip0xPrefix(opts.ToAddress))
+	opts.ToAddress = strip0xPrefix(opts.ToAddress)
+	to, err := hex.DecodeString(opts.ToAddress)
 	if err != nil {
 		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
 		return err
 	}
-	nonce, err := c.GetNonce(ctx, [20]byte(to))
+	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
+	nonce, err := c.GetNonce(ctx, signer.Address())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return err
 	}
+	log.Debugf("Nonce: %v", nonce)
 	tx := &sqproto.UnsignedTransaction{
 		Nonce: nonce,
 		Actions: []*sqproto.Action{
@@ -161,14 +169,7 @@ func Transfer(opts TransferOpts) error {
 		},
 	}
 
-	// signer
-	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return err
-	}
-	from := ed25519.NewKeyFromSeed(privateKeyBytes)
-	signer := client.NewSigner(from)
+	// sign transaction
 	signed, err := signer.SignTransaction(tx)
 	if err != nil {
 		log.WithError(err).Error("Error signing transaction")
@@ -177,13 +178,11 @@ func Transfer(opts TransferOpts) error {
 
 	// broadcast tx
 	resp, err := c.BroadcastTxSync(ctx, signed)
-	log.Debugf("Broadcast response: %v", resp)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return err
 	}
+	log.Debugf("Broadcast response: %v", resp)
 
-	// FIXME - return something else here and handle output in the cmd's code
-	fmt.Println(resp)
 	return nil
 }
