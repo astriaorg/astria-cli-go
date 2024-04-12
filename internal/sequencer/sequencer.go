@@ -2,11 +2,14 @@ package sequencer
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/hex"
 	"time"
 
+	primitivev1 "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/primitive/v1"
 	log "github.com/sirupsen/logrus"
 
+	sqproto "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/sequencer/v1"
 	"github.com/astriaorg/go-sequencer-client/client"
 )
 
@@ -94,4 +97,114 @@ func GetBlockheight(sequencerURL string) (int64, error) {
 
 	log.Debug("Blockheight: ", blockheight)
 	return blockheight, nil
+}
+
+// TransferOpts are the options for the Transfer function.
+type TransferOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// ToAddress is the address of the receiver
+	ToAddress string
+	// Amount is the amount to be transferred
+	Amount int
+}
+
+// TransferResponse is the response of the Transfer function.
+type TransferResponse struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Nonce  uint32 `json:"nonce"`
+	Amount int    `json:"amount"`
+	TxHash string `json:"txHash"`
+}
+
+// Transfer transfers an amount from one address to another.
+// It returns the hash of the transaction.
+func Transfer(opts TransferOpts) (*TransferResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &TransferResponse{}, err
+	}
+
+	// create signer
+	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &TransferResponse{}, err
+	}
+	from := ed25519.NewKeyFromSeed(privateKeyBytes)
+	signer := client.NewSigner(from)
+
+	// create transaction
+	// FIXME - support bigger numbers
+	amount := &primitivev1.Uint128{
+		Lo: uint64(opts.Amount),
+		Hi: 0,
+	}
+	opts.ToAddress = strip0xPrefix(opts.ToAddress)
+	to, err := hex.DecodeString(opts.ToAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
+		return &TransferResponse{}, err
+	}
+	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &TransferResponse{}, err
+	}
+	log.Debugf("Nonce: %v", nonce)
+	tx := &sqproto.UnsignedTransaction{
+		Nonce: nonce,
+		Actions: []*sqproto.Action{
+			{
+				Value: &sqproto.Action_TransferAction{
+					TransferAction: &sqproto.TransferAction{
+						To:         to,
+						Amount:     amount,
+						AssetId:    AssetIdFromDenom("nria"),
+						FeeAssetId: AssetIdFromDenom("nria"),
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &TransferResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &TransferResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &TransferResponse{
+		From:   hex.EncodeToString(fromAddr[:]),
+		To:     opts.ToAddress,
+		Nonce:  nonce,
+		Amount: opts.Amount,
+		TxHash: hash,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
 }

@@ -7,10 +7,25 @@ build:
     go build -o bin/astria-go
 alias b := build
 
-# test go code
+# test go code, minus integration tests
 test:
     go test ./...
 alias t := test
+
+# run unit and integration tests, and tests that require tty.
+test-all: test test-integration
+alias ta := test-all
+
+# run integrations tests. requires running geth + cometbft + astria core.
+test-integration:
+    # TODO - move this setup and teardown to the go test file
+    go build -o ./bin/astria-go-testy
+    go test ./integration_tests -tags=integration_tests
+    rm ./bin/astria-go-testy
+alias ti := test-integration
+
+cleanup-integration-tests:
+    rm -f ./bin/astria-go-testy
 
 # format all go files
 fmt:
