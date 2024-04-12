@@ -36,11 +36,7 @@ func init() {
 func runTransfer(cmd *cobra.Command, args []string) {
 	printJSON := cmd.Flag("json").Value.String() == "true"
 
-	amount, err := strconv.Atoi(args[0])
-	if err != nil {
-		log.WithError(err).Error("Error converting amount to integer")
-		panic(err)
-	}
+	amount := args[0]
 	to := args[1]
 
 	url := cmd.Flag("url").Value.String()
@@ -69,7 +65,7 @@ func runTransfer(cmd *cobra.Command, args []string) {
 	} else {
 		header := []string{"From", "To", "Nonce", "Amount", "TxHash"}
 		var rows [][]string
-		rows = append(rows, []string{res.From, res.To, strconv.Itoa(int(res.Nonce)), strconv.Itoa(res.Amount), res.TxHash})
+		rows = append(rows, []string{res.From, res.To, strconv.Itoa(int(res.Nonce)), res.Amount, res.TxHash})
 		data := append([][]string{header}, rows...)
 		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
