@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	primitivev1 "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/primitive/v1"
 	log "github.com/sirupsen/logrus"
 
 	sqproto "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/sequencer/v1"
@@ -152,7 +151,7 @@ type TransferOpts struct {
 	// ToAddress is the address of the receiver
 	ToAddress string
 	// Amount is the amount to be transferred
-	Amount int
+	Amount string
 }
 
 // TransferResponse is the response of the Transfer function.
@@ -160,7 +159,7 @@ type TransferResponse struct {
 	From   string `json:"from"`
 	To     string `json:"to"`
 	Nonce  uint32 `json:"nonce"`
-	Amount int    `json:"amount"`
+	Amount string `json:"amount"` // NOTE - string so we can support huge numbers
 	TxHash string `json:"txHash"`
 }
 
@@ -189,10 +188,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	signer := client.NewSigner(from)
 
 	// create transaction
-	// FIXME - support bigger numbers
-	amount := &primitivev1.Uint128{
-		Lo: uint64(opts.Amount),
-		Hi: 0,
+	amount, err := convertToUint128(opts.Amount)
+	if err != nil {
+		log.WithError(err).Error("Error converting amount to Uint128 proto")
+		return &TransferResponse{}, err
 	}
 	opts.ToAddress = strip0xPrefix(opts.ToAddress)
 	to, err := hex.DecodeString(opts.ToAddress)

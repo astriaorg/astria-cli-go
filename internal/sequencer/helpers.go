@@ -2,11 +2,44 @@ package sequencer
 
 import (
 	"crypto/sha256"
+	"fmt"
+	"math/big"
 	"regexp"
 	"strings"
 
+	primitivev1 "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/primitive/v1"
 	log "github.com/sirupsen/logrus"
 )
+
+// convertToUint128 converts a string to a Uint128 protobuf
+func convertToUint128(numStr string) (*primitivev1.Uint128, error) {
+	bigInt := new(big.Int)
+
+	// convert the string to a big.Int
+	_, ok := bigInt.SetString(numStr, 10)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert string to big.Int")
+	}
+
+	// check if the number is negative or overflows Uint128
+	if bigInt.Sign() < 0 {
+		return nil, fmt.Errorf("negative number not allowed")
+	} else if bigInt.BitLen() > 128 {
+		return nil, fmt.Errorf("value overflows Uint128")
+	}
+
+	// split the big.Int into two uint64s
+	// convert the big.Int to uint64, which will drop the higher 64 bits
+	lo := bigInt.Uint64()
+	// shift the big.Int to the right by 64 bits and convert to uint64
+	hi := bigInt.Rsh(bigInt, 64).Uint64()
+	uint128 := &primitivev1.Uint128{
+		Lo: lo,
+		Hi: hi,
+	}
+
+	return uint128, nil
+}
 
 // strip0xPrefix removes the 0x prefix from a string if present.
 func strip0xPrefix(s string) string {
