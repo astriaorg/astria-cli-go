@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"encoding/json"
-	"os"
 	"strconv"
 
 	"github.com/astria/astria-cli-go/cmd"
@@ -42,7 +41,7 @@ func runGetNonce(cmd *cobra.Command, args []string) {
 		j, err := json.MarshalIndent(nonce, "", "  ")
 		if err != nil {
 			log.WithError(err).Error("Error marshalling nonce to JSON")
-			os.Exit(1)
+			panic(err)
 		}
 		pterm.Println(string(j))
 	} else {
@@ -51,7 +50,7 @@ func runGetNonce(cmd *cobra.Command, args []string) {
 		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
 			log.WithError(err).Error("Error rendering table")
-			os.Exit(1)
+			panic(err)
 		}
 		pterm.Println(output)
 	}
