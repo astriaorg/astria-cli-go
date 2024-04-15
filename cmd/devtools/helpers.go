@@ -14,7 +14,6 @@ import (
 type runOpts struct {
 	ctx          context.Context
 	instanceDir  string
-	appStartTime string
 	monoRepoPath string
 }
 
