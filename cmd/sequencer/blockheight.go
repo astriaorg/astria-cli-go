@@ -45,8 +45,6 @@ func blockheightCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Println(string(j))
 	} else {
 		header := []string{"Blockheight"}
-		//strBH := strconv.FormatInt(blockheight, 10)
-		//row := []string{strBH}
 		data := pterm.TableData{header, []string{fmt.Sprintf("%d", blockheight.Blockheight)}}
 		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
 		if err != nil {
