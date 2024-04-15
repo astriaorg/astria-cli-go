@@ -11,22 +11,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createAccountCmd represents the create-account command
-var createAccountCmd = &cobra.Command{
-	Use:   "create-account",
+// createaccountCmd represents the createaccount command
+var createaccountCmd = &cobra.Command{
+	Use:   "createaccount",
 	Short: "Create a new account for the sequencer.",
 	Long: `Create an account for the sequencer. The account will be used to sign
 transactions and blocks. The account will be created with a private key, public key, and address.`,
 	PreRun: cmd.SetLogLevel,
-	Run:    runCreateAccountCmd,
+	Run:    createaccountCmdHandler,
 }
 
 func init() {
-	sequencerCmd.AddCommand(createAccountCmd)
-	createAccountCmd.Flags().Bool("json", false, "Output the account information in JSON format.")
+	sequencerCmd.AddCommand(createaccountCmd)
+	createaccountCmd.Flags().Bool("json", false, "Output the account information in JSON format.")
 }
 
-func runCreateAccountCmd(cmd *cobra.Command, args []string) {
+func createaccountCmdHandler(cmd *cobra.Command, args []string) {
 	printJSON := cmd.Flag("json").Value.String() == "true"
 
 	account, err := sequencer.CreateAccount()

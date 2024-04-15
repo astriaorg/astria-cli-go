@@ -9,24 +9,27 @@ import (
 	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// getBalancesCmd represents the get-balance command
-var getBalancesCmd = &cobra.Command{
-	Use:    "get-balances [address]",
+// balancesCmd represents the balances command
+var balancesCmd = &cobra.Command{
+	Use:    "balances [address]",
 	Short:  "Retrieves and prints the balances of an account.",
 	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	PreRun: cmd.SetLogLevel,
-	Run:    runGetBalances,
+	Run:    balancesCmdHandler,
 }
 
 func init() {
-	sequencerCmd.AddCommand(getBalancesCmd)
-	getBalancesCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
-	getBalancesCmd.Flags().Bool("json", false, "Output an account's balances in JSON format.")
+	sequencerCmd.AddCommand(balancesCmd)
+	balancesCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	balancesCmd.Flags().Bool("json", false, "Output an account's balances in JSON format.")
+
+	viper.RegisterAlias("balance", "balances")
 }
 
-func runGetBalances(cmd *cobra.Command, args []string) {
+func balancesCmdHandler(cmd *cobra.Command, args []string) {
 	address := args[0]
 	url := cmd.Flag("url").Value.String()
 	printJSON := cmd.Flag("json").Value.String() == "true"

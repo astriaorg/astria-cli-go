@@ -16,7 +16,7 @@ var transferCmd = &cobra.Command{
 	Short:  "Transfer tokens from one account to another.",
 	Args:   cobra.ExactArgs(2),
 	PreRun: cmd.SetLogLevel,
-	Run:    runTransfer,
+	Run:    transferCmdHandler,
 }
 
 func init() {
@@ -33,7 +33,7 @@ func init() {
 	}
 }
 
-func runTransfer(cmd *cobra.Command, args []string) {
+func transferCmdHandler(cmd *cobra.Command, args []string) {
 	printJSON := cmd.Flag("json").Value.String() == "true"
 
 	amount := args[0]
