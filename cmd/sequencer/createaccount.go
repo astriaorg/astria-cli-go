@@ -1,12 +1,9 @@
 package sequencer
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
-	"github.com/pterm/pterm"
+	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -35,28 +32,9 @@ func createaccountCmdHandler(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	// TODO - abstract table and json printing logic to helper functions
-	if printJSON {
-		obj := map[string]string{
-			"address":     account.Address,
-			"public_key":  account.PublicKey,
-			"private_key": account.PrivateKey,
-		}
-		j, err := json.MarshalIndent(obj, "", "  ")
-		if err != nil {
-			log.WithError(err).Error("Error marshalling account to JSON")
-			panic(err)
-		}
-		fmt.Println(string(j))
-	} else {
-		header := []string{"Address", "Public Key", "Private Key"}
-		row := []string{account.Address, account.PublicKey, account.PrivateKey}
-		data := pterm.TableData{header, row}
-		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
-		if err != nil {
-			log.WithError(err).Error("Error rendering table")
-			panic(err)
-		}
-		pterm.Println(output)
+	printer := ui.ResultsPrinter{
+		Data:      account,
+		PrintJSON: printJSON,
 	}
+	printer.Render()
 }

@@ -12,12 +12,6 @@ import (
 	"github.com/astriaorg/go-sequencer-client/client"
 )
 
-type Account struct {
-	Address    string
-	PublicKey  string
-	PrivateKey string
-}
-
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
 	signer, err := client.GenerateSigner()
@@ -36,7 +30,7 @@ func CreateAccount() (*Account, error) {
 }
 
 // GetBalances returns the balances of an address.
-func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse, error) {
+func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
 	address = strip0xPrefix(address)
 	sequencerURL = addPortToURL(sequencerURL)
 
@@ -70,11 +64,16 @@ func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse
 	for _, b := range balances {
 		log.Debug("Denom:", b.Denom, "Balance:", b.Balance.String())
 	}
-	return balances, nil
-}
 
-type BlockheightResponse struct {
-	Blockheight int64 `json:"blockheight"` // NOTE - cometbft returns int64 for this
+	// convert to our BalancesResponse type
+	b := make(BalancesResponse, len(balances))
+	for i, balance := range balances {
+		b[i] = &Balance{
+			Denom:   balance.Denom,
+			Balance: balance.Balance,
+		}
+	}
+	return &b, nil
 }
 
 // GetBlockheight returns the current blockheight of the sequencer.
@@ -102,11 +101,6 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 	return &BlockheightResponse{
 		Blockheight: blockheight,
 	}, nil
-}
-
-type NonceResponse struct {
-	Address string `json:"address"`
-	Nonce   uint32 `json:"nonce"`
 }
 
 // GetNonce returns the nonce of an address.
@@ -146,27 +140,6 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 		Address: address,
 		Nonce:   nonce,
 	}, nil
-}
-
-// TransferOpts are the options for the Transfer function.
-type TransferOpts struct {
-	// SequencerURL is the URL of the sequencer
-	SequencerURL string
-	// FromKey is the private key of the sender
-	FromKey string
-	// ToAddress is the address of the receiver
-	ToAddress string
-	// Amount is the amount to be transferred
-	Amount string
-}
-
-// TransferResponse is the response of the Transfer function.
-type TransferResponse struct {
-	From   string `json:"from"`
-	To     string `json:"to"`
-	Nonce  uint32 `json:"nonce"`
-	Amount string `json:"amount"` // NOTE - string so we can support huge numbers
-	TxHash string `json:"txHash"`
 }
 
 // Transfer transfers an amount from one address to another.

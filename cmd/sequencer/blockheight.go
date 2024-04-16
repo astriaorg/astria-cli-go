@@ -1,12 +1,9 @@
 package sequencer
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
-	"github.com/pterm/pterm"
+	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -35,22 +32,9 @@ func blockheightCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// TODO - abstract table and json printing logic to helper functions
-	if printJSON {
-		j, err := json.MarshalIndent(blockheight, "", "  ")
-		if err != nil {
-			log.WithError(err).Error("Error marshalling account to JSON")
-			panic(err)
-		}
-		fmt.Println(string(j))
-	} else {
-		header := []string{"Blockheight"}
-		data := pterm.TableData{header, []string{fmt.Sprintf("%d", blockheight.Blockheight)}}
-		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
-		if err != nil {
-			log.WithError(err).Error("Error rendering table")
-			panic(err)
-		}
-		pterm.Println(output)
+	printer := ui.ResultsPrinter{
+		Data:      blockheight,
+		PrintJSON: printJSON,
 	}
+	printer.Render()
 }

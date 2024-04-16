@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/astria/astria-cli-go/internal/sequencer"
-	"github.com/astriaorg/go-sequencer-client/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,12 +20,24 @@ const TestFromAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
 const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
 const TransferAmount = 535353
 
-type balances []client.BalanceResponse
+func TestCreateaccount(t *testing.T) {
+	createaccountCmd := exec.Command("../bin/astria-go-testy", "sequencer", "createaccount", "--json")
+	createaccountOutput, err := createaccountCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)
+
+	}
+	var account sequencer.Account
+	err = json.Unmarshal(createaccountOutput, &account)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal account json output: %v", err)
+	}
+	assert.NotEmpty(t, account.Address)
+	assert.NotEmpty(t, account.PrivateKey)
+	assert.NotEmpty(t, account.PublicKey)
+}
 
 func TestTransferAndGetNonce(t *testing.T) {
-	//setUp()
-	//defer tearDown()
-
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json")
 	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
@@ -59,7 +70,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
 	}
-	var toBalances balances
+	var toBalances sequencer.BalancesResponse
 	err = json.Unmarshal(balanceOutput, &toBalances)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal balance json output: %v", err)
@@ -114,7 +125,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
 	}
-	var toBalancesAfter balances
+	var toBalancesAfter sequencer.BalancesResponse
 	err = json.Unmarshal(balanceAfterOutput, &toBalancesAfter)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal balance json output: %v", err)

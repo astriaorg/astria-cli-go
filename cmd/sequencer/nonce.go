@@ -1,12 +1,9 @@
 package sequencer
 
 import (
-	"encoding/json"
-	"strconv"
-
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
-	"github.com/pterm/pterm"
+	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -37,21 +34,9 @@ func nonceCmdHandler(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	if printJSON {
-		j, err := json.MarshalIndent(nonce, "", "  ")
-		if err != nil {
-			log.WithError(err).Error("Error marshalling nonce to JSON")
-			panic(err)
-		}
-		pterm.Println(string(j))
-	} else {
-		header := []string{"Nonce"}
-		data := append([][]string{header}, [][]string{{strconv.Itoa(int(nonce.Nonce))}}...)
-		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
-		if err != nil {
-			log.WithError(err).Error("Error rendering table")
-			panic(err)
-		}
-		pterm.Println(output)
+	printer := ui.ResultsPrinter{
+		Data:      nonce,
+		PrintJSON: printJSON,
 	}
+	printer.Render()
 }

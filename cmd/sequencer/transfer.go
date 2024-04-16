@@ -1,12 +1,9 @@
 package sequencer
 
 import (
-	"encoding/json"
-	"strconv"
-
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/sequencer"
-	"github.com/pterm/pterm"
+	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -48,30 +45,15 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 		ToAddress:    to,
 		Amount:       amount,
 	}
-	res, err := sequencer.Transfer(opts)
+	tx, err := sequencer.Transfer(opts)
 	if err != nil {
 		log.WithError(err).Error("Error transferring tokens")
 		panic(err)
 	}
 
-	if printJSON {
-		j, err := json.MarshalIndent(res, "", "  ")
-		if err != nil {
-			log.WithError(err).Error("Error marshalling to JSON")
-			panic(err)
-		}
-		pterm.Println(string(j))
-		return
-	} else {
-		header := []string{"From", "To", "Nonce", "Amount", "TxHash"}
-		var rows [][]string
-		rows = append(rows, []string{res.From, res.To, strconv.Itoa(int(res.Nonce)), res.Amount, res.TxHash})
-		data := append([][]string{header}, rows...)
-		output, err := pterm.DefaultTable.WithHasHeader().WithSeparator(" ").WithData(data).Srender()
-		if err != nil {
-			log.WithError(err).Error("Error rendering table")
-			panic(err)
-		}
-		pterm.Println(output)
+	printer := ui.ResultsPrinter{
+		Data:      tx,
+		PrintJSON: printJSON,
 	}
+	printer.Render()
 }
