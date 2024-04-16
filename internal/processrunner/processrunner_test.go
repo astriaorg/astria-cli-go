@@ -96,7 +96,7 @@ func TestProcessRunner_LongRunningProcess(t *testing.T) {
 	opts := NewProcessRunnerOpts{
 		Title:   "Sleep Command",
 		BinPath: "sleep",
-		Args:    []string{"0.1"}, // sleep for a second
+		Args:    []string{"0.1"},
 	}
 
 	pr := NewProcessRunner(ctx, opts)
