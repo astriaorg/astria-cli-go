@@ -75,9 +75,6 @@ applications:
 | Astria-Conductor | v0.13.1 |
 | Astria-Composer  | v0.5.0  |
 
-And place them in a `local-dev-astria` directory, along with several other
-configuration files for everything.
-
 The cli runs the minimum viable components for testing a rollup against the
 Astria stack, allowing developers to confirm that their rollup interacts with
 Astria's apis correctly.
@@ -114,7 +111,7 @@ name>/config-remote/` directories to suit your needs.
 
 ## Development
 
-Requires go version 1.20 or newer.
+Requires go version 1.22 or newer.
 
 You may also need to update your `gopls` settings in your editor for build tags
 to allow for correct parsing of the build tags in the code. This will depend on
