@@ -19,14 +19,12 @@ type View interface {
 	// The Props argument is used to pass data to the view.
 	Render(p Props) *tview.Flex
 	// GetKeyboard is a callback for defining keyboard shortcuts
-	// FIXME - is there a way to avoid the App reference here?
 	GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey
 }
 
 // MainView represents the initial view when the app is started.
 // It shows all the process panes in a vertical layout.
 type MainView struct {
-	// FIXME - how can we avoid having to have a reference of the tview.Application here?
 	tApp         *tview.Application
 	processPanes []*ProcessPane
 	s            *StateStore
