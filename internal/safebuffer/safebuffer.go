@@ -53,3 +53,11 @@ func (sb *SafeBuffer) String() string {
 func (sb *SafeBuffer) GetLineCount() int64 {
 	return atomic.LoadInt64(&sb.lineCount)
 }
+
+// Reset resets the buffer and line count.
+func (sb *SafeBuffer) Reset() {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	sb.buf.Reset()
+	atomic.StoreInt64(&sb.lineCount, 0)
+}

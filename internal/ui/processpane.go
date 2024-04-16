@@ -14,6 +14,7 @@ import (
 type ProcessPane struct {
 	tApp           *tview.Application
 	textView       *tview.TextView
+	lineCount      int
 	pr             processrunner.ProcessRunner
 	ansiWriter     io.Writer
 	TickerInterval time.Duration
@@ -52,23 +53,17 @@ func (pp *ProcessPane) StartScan() {
 		ticker := time.NewTicker(pp.TickerInterval * time.Millisecond) // adjust the duration as needed
 		defer ticker.Stop()
 
-		var lastOutputSize int // tracks the last processed output size
-
 		for range ticker.C {
-			currentOutput := pp.pr.GetOutput() // get the current full output
-			currentSize := len(currentOutput)
-
-			if currentSize > lastOutputSize {
-				// new, unprocessed data.
-				newOutput := currentOutput[lastOutputSize:] // extract new data since last check
-				pp.tApp.QueueUpdateDraw(func() {
-					_, err := pp.ansiWriter.Write([]byte(newOutput))
-					if err != nil {
-						log.WithError(err).Error("Error writing to textView")
-					}
-				})
-				lastOutputSize = currentSize
-			}
+			currentOutput, lineCount := pp.pr.GetOutputAndClearBuf() // get the current full output
+			
+			// new, unprocessed data.
+			pp.tApp.QueueUpdateDraw(func() {
+				_, err := pp.ansiWriter.Write([]byte(currentOutput))
+				if err != nil {
+					log.WithError(err).Error("Error writing to textView")
+				}
+				pp.lineCount += lineCount
+			})
 		}
 	}()
 }
@@ -114,5 +109,5 @@ func (pp *ProcessPane) Highlight(highlight bool) {
 
 // GetLineCount returns the line count of the ProcessPane's textView.
 func (pp *ProcessPane) GetLineCount() int {
-	return pp.pr.GetLineCount()
+	return pp.lineCount
 }

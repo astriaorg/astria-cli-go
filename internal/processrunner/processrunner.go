@@ -17,8 +17,7 @@ type ProcessRunner interface {
 	Stop()
 	GetDidStart() <-chan bool
 	GetTitle() string
-	GetOutput() string
-	GetLineCount() int
+	GetOutputAndClearBuf() (string, int)
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -131,12 +130,12 @@ func (pr *processRunner) GetTitle() string {
 	return pr.title
 }
 
-// GetOutput returns the combined stdout and stderr output of the process.
-func (pr *processRunner) GetOutput() string {
-	return pr.outputBuf.String() // Safely access the buffer's content
-}
+// GetOutputAndClearBuf returns the combined stdout and stderr output of the process.
+func (pr *processRunner) GetOutputAndClearBuf() (string, int) {
+	defer pr.outputBuf.Reset()
 
-// GetLineCount returns the number of lines in the output buffer.
-func (pr *processRunner) GetLineCount() int {
-	return int(pr.outputBuf.GetLineCount())
+	o := pr.outputBuf.String()
+	lc := int(pr.outputBuf.GetLineCount())
+
+	return o, lc
 }
