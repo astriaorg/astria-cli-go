@@ -1,48 +1,39 @@
 package devtools
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
-type runOpts struct {
-	ctx          context.Context
-	instanceDir  string
-	monoRepoPath string
-}
-
-// loadEnvVariables loads the environment variables from the src file
-func loadEnvVariables(src ...string) {
-	err := godotenv.Load(src...)
+// loadEnvVariables loads the environment variables from the src file as a map of key-value pairs.
+func loadEnvVariables(src string) (map[string]string, error) {
+	envMap, err := godotenv.Read(src)
 	if err != nil {
 		log.Fatalf("Error loading environment file: %v", err)
 	}
+	return envMap, err
 }
 
-// getEnvList returns a list of environment variables in the form key=value
-func getEnvList() []string {
+// loadAndGetEnvVariables loads the environment variables from the src file and
+// returns a list of environment variables in the form key=value. It will panic
+// if the file can't be loaded.
+func loadEnvironment(filePath string) []string {
+	envMap, err := loadEnvVariables(filePath)
+	if err != nil {
+		panic(fmt.Sprintf("Error loading environment file: %v", err))
+	}
 	var envList []string
-	for _, env := range os.Environ() {
-		// Each string is in the form key=value
-		pair := strings.SplitN(env, "=", 2)
-		key := pair[0]
-		envList = append(envList, key+"="+os.Getenv(key))
+	for key, value := range envMap {
+		envList = append(envList, key+"="+value)
 	}
 	return envList
 }
 
-// loadAndGetEnvVariables loads the environment variables from the src file and returns a list of environment variables in the form key=value
-func loadAndGetEnvVariables(filePath ...string) []string {
-	loadEnvVariables(filePath...)
-	return getEnvList()
-}
-
+// IsInstanceNameValidOrPanic checks if the instance name is valid and panics if it's not.
 func IsInstanceNameValidOrPanic(instance string) {
 	re, err := regexp.Compile(`^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`)
 	if err != nil {
@@ -68,4 +59,13 @@ func CreateDirOrPanic(dirName string) {
 		panic(err)
 	}
 
+}
+
+// pathExists checks if a file or directory exists at the given path.
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return err == nil
 }

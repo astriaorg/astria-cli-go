@@ -82,29 +82,35 @@ func runLocalUsingMonoRepo(opts *runOpts) []processrunner.ProcessRunner {
 	defaultEnvironment := loadAndGetEnvVariables(defaultEnvPath)
 
 	// load the .env file from the mono-repo
-	sequencerEnvPath := filepath.Join(monoRepoPath, "crates", "astria-sequencer", "local.env.example")
-	log.Debug("sequencerEnvPath:", sequencerEnvPath)
-	sequencerEnvironment := loadAndGetEnvVariables(sequencerEnvPath, defaultEnvPath)
+	// sequencerEnvPath := filepath.Join(monoRepoPath, "crates", "astria-sequencer", "local.env.example")
+	// log.Debug("sequencerEnvPath:", sequencerEnvPath)
+	// sequencerEnvironment := loadAndGetEnvVariables(sequencerEnvPath)
+	// log.Debug("sequencerEnvironment:", sequencerEnvironment)
 	// TODO - set the db path for sequencer to use the instance data dir
-	conductorEnvPath := filepath.Join(monoRepoPath, "crates", "astria-conductor", "local.env.example")
-	log.Debug("conductorEnvPath:", conductorEnvPath)
-	conductorEnvironment := loadAndGetEnvVariables(conductorEnvPath, defaultEnvPath)
-	composerEnvPath := filepath.Join(monoRepoPath, "crates", "astria-composer", "local.env.example")
-	log.Debug("composerEnvPath:", composerEnvPath)
-	composerEnvironment := loadAndGetEnvVariables(composerEnvPath, defaultEnvPath)
+	// conductorEnvPath := filepath.Join(monoRepoPath, "crates", "astria-conductor", "local.env.example")
+	// log.Debug("conductorEnvPath:", conductorEnvPath)
+	// conductorEnvironment := loadAndGetEnvVariables(conductorEnvPath)
+	// composerEnvPath := filepath.Join(monoRepoPath, "crates", "astria-composer", "local.env.example")
+	// log.Debug("composerEnvPath:", composerEnvPath)
+	// composerEnvironment := loadAndGetEnvVariables(composerEnvPath)
 
 	// create the binaries paths for the services within the mono-repo
 	sequencerBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-sequencer")
-	// composerBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-composer")
-	composerBinPath := filepath.Join(instanceDir, BinariesDirName, "astria-composer")
-	// conductorBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-conductor")
-	conductorBinPath := filepath.Join(instanceDir, BinariesDirName, "astria-conductor")
+	log.Debug("sequencerBinPath:", sequencerBinPath)
+
+	composerBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-composer")
+	// composerBinPath := filepath.Join(instanceDir, BinariesDirName, "astria-composer")
+	log.Debug("composerBinPath:", composerBinPath)
+
+	conductorBinPath := filepath.Join(monoRepoPath, AstriaTargetDebugPath, "astria-conductor")
+	// conductorBinPath := filepath.Join(instanceDir, BinariesDirName, "astria-conductor")
+	log.Debug("conductorBinPath:", conductorBinPath)
 
 	// sequencer
 	seqOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Sequencer",
 		BinPath: sequencerBinPath,
-		Env:     sequencerEnvironment,
+		Env:     defaultEnvironment,
 		Args:    nil,
 	}
 	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
@@ -123,7 +129,7 @@ func runLocalUsingMonoRepo(opts *runOpts) []processrunner.ProcessRunner {
 	composerOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Composer",
 		BinPath: composerBinPath,
-		Env:     composerEnvironment,
+		Env:     defaultEnvironment,
 		Args:    nil,
 	}
 	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
@@ -132,7 +138,7 @@ func runLocalUsingMonoRepo(opts *runOpts) []processrunner.ProcessRunner {
 	conductorOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Conductor",
 		BinPath: conductorBinPath,
-		Env:     conductorEnvironment,
+		Env:     defaultEnvironment,
 		Args:    nil,
 	}
 	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
