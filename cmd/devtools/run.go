@@ -62,7 +62,7 @@ const (
 
 type runOpts struct {
 	ctx              context.Context
-	instance         string
+	instancePath     string
 	runConfiguration runConfiguration
 	environment      []string
 	conductorBinPath string
@@ -97,7 +97,7 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 	if flag != nil && flag.Changed {
 		path := flag.Value.String()
 		if pathExists(path) {
-			log.Info(fmt.Sprintf("Path provided for %s binary updated to: %s", flagName, path))
+			log.Info(fmt.Sprintf("Override path provided for %s binary: %s", flagName, path))
 			return path
 		} else {
 			panic(fmt.Sprintf("Path provided for input %s does not exist.", flagName))
@@ -158,7 +158,7 @@ func parseInput(c *cobra.Command) *runOpts {
 	// create the runOpts struct
 	runOpts := &runOpts{
 		ctx:              ctx,
-		instance:         instance,
+		instancePath:     instanceDir,
 		runConfiguration: runConfiguration,
 		environment:      loadEnvironment(envPath),
 		conductorBinPath: conductorPath,
@@ -180,7 +180,7 @@ func getLocalRunners(opts *runOpts) []processrunner.ProcessRunner {
 	seqRunner := processrunner.NewProcessRunner(opts.ctx, seqOpts)
 
 	// cometbft
-	cometDataPath := filepath.Join(opts.instance, DataDirName, ".cometbft")
+	cometDataPath := filepath.Join(opts.instancePath, DataDirName, ".cometbft")
 	cometOpts := processrunner.NewProcessRunnerOpts{
 		Title:   "Comet BFT",
 		BinPath: opts.cometBFTBinPath,

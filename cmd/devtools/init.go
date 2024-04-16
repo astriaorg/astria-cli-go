@@ -306,7 +306,7 @@ func initCometbft(defaultDir string, dataDirName string, binDirName string, conf
 
 	// verify that cometbft was downloaded and extracted to the correct location
 	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
-	if !exists(cometbftCmdPath) {
+	if !pathExists(cometbftCmdPath) {
 		log.Error("Error: cometbft binary not found here", cometbftCmdPath)
 		log.Error("\tCannot continue with initialization.")
 		return
