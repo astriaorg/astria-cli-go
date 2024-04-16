@@ -56,6 +56,10 @@ _lint-go:
 _lint-md:
     markdownlint-cli2 "**/*.md" "#bin" "#.github"
 
+# fix markdown linting issues that can be auto-fixed
+fix-md:
+    markdownlint-cli2 "**/*.md" "#bin" "#.github" --fix
+
 defaultargs := ''
 # run the cli. takes quoted cli command to run, e.g. `just run "dev init"`. logs cli output to tview_log.txt
 run args=defaultargs:

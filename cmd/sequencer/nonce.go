@@ -11,22 +11,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getNonceCmd represents the get-nonce command
-var getNonceCmd = &cobra.Command{
-	Use:    "get-nonce [address]",
+// nonceCmd represents the get-nonce command
+var nonceCmd = &cobra.Command{
+	Use:    "nonce [address]",
 	Short:  "Retrieves and prints the nonce of an account.",
 	Args:   cobra.ExactArgs(1),
 	PreRun: cmd.SetLogLevel,
-	Run:    runGetNonce,
+	Run:    nonceCmdHandler,
 }
 
 func init() {
-	sequencerCmd.AddCommand(getNonceCmd)
-	getNonceCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
-	getNonceCmd.Flags().Bool("json", false, "Output in JSON format.")
+	sequencerCmd.AddCommand(nonceCmd)
+	nonceCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
+	nonceCmd.Flags().Bool("json", false, "Output in JSON format.")
 }
 
-func runGetNonce(cmd *cobra.Command, args []string) {
+func nonceCmdHandler(cmd *cobra.Command, args []string) {
 	address := args[0]
 	url := cmd.Flag("url").Value.String()
 	printJSON := cmd.Flag("json").Value.String() == "true"

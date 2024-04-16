@@ -73,8 +73,12 @@ func GetBalances(address string, sequencerURL string) ([]*client.BalanceResponse
 	return balances, nil
 }
 
+type BlockheightResponse struct {
+	Blockheight int64 `json:"blockheight"` // NOTE - cometbft returns int64 for this
+}
+
 // GetBlockheight returns the current blockheight of the sequencer.
-func GetBlockheight(sequencerURL string) (int64, error) {
+func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 	sequencerURL = addPortToURL(sequencerURL)
 
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
@@ -82,7 +86,7 @@ func GetBlockheight(sequencerURL string) (int64, error) {
 	c, err := client.NewClient(sequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error creating sequencer client")
-		return 0, err
+		return &BlockheightResponse{}, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -91,11 +95,13 @@ func GetBlockheight(sequencerURL string) (int64, error) {
 	blockheight, err := c.GetBlockHeight(ctx)
 	if err != nil {
 		log.WithError(err).Error("Error getting blockheight")
-		return 0, err
+		return &BlockheightResponse{}, err
 	}
 
 	log.Debug("Blockheight: ", blockheight)
-	return blockheight, nil
+	return &BlockheightResponse{
+		Blockheight: blockheight,
+	}, nil
 }
 
 type NonceResponse struct {
