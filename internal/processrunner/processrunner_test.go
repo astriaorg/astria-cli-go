@@ -41,6 +41,9 @@ func TestProcessRunner(t *testing.T) {
 	output := pr.GetOutputAndClearBuf()
 	assert.Contains(t, output, "hello, world", "Output should contain the expected text")
 	assert.Contains(t, output, "process exited cleanly", "Output should contain the expected text")
+
+	output = pr.GetOutputAndClearBuf()
+	assert.Empty(t, output, "Output buffer should be empty after clearing")
 }
 
 func TestProcessRunner_StartError(t *testing.T) {
