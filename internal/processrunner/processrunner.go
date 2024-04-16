@@ -80,6 +80,9 @@ func (pr *processRunner) Restart() error {
 
 	// start the process again
 	err := pr.Start(pr.ctx, shouldStart)
+	if err != nil {
+		return err
+	}
 
 	// add a new line for visual separation
 	s := fmt.Sprintf("\n[black:white][astria-go] %s process restarted[-:-]\n", pr.title)
@@ -87,7 +90,8 @@ func (pr *processRunner) Restart() error {
 	if err != nil {
 		return err
 	}
-	return err
+
+	return nil
 }
 
 // Start starts the process and returns the ProcessRunner and an error.
