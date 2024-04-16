@@ -252,7 +252,7 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 				// hotkey for jumping to the tail of the logs
 				case '1':
 					fv.s.DisableAutoscroll()
-					fv.processPane.textView.ScrollTo(fv.processPane.GetLineCount(), 0)
+					fv.processPane.textView.ScrollTo(int(fv.processPane.GetLineCount()), 0)
 				}
 				// needed to call the Render method again to refresh the help info
 				a.RefreshView(fv.processPane)

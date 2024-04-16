@@ -30,12 +30,7 @@ func (m *MockProcessRunner) GetTitle() string {
 	return args.String(0)
 }
 
-func (m *MockProcessRunner) GetOutput() string {
+func (m *MockProcessRunner) GetOutputAndClearBuf() string {
 	args := m.Called()
 	return args.String(0)
-}
-
-func (m *MockProcessRunner) GetLineCount() int {
-	args := m.Called()
-	return args.Int(0)
 }

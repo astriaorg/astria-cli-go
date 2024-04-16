@@ -38,7 +38,7 @@ func TestProcessRunner(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	pr.Stop()
-	output := pr.GetOutput()
+	output := pr.GetOutputAndClearBuf()
 	assert.Contains(t, output, "hello, world", "Output should contain the expected text")
 	assert.Contains(t, output, "process exited cleanly", "Output should contain the expected text")
 }
@@ -80,7 +80,7 @@ func TestProcessRunner_ImmediateExitWithError(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	output := pr.GetOutput()
+	output := pr.GetOutputAndClearBuf()
 	assert.Contains(t, output, "process exited with error", "Output should contain the error exit status")
 }
 
@@ -105,6 +105,6 @@ func TestProcessRunner_LongRunningProcess(t *testing.T) {
 	// wait longer than the sleep command duration
 	<-time.After(200 * time.Millisecond)
 
-	output := pr.GetOutput()
+	output := pr.GetOutputAndClearBuf()
 	assert.Equal(t, "[black:white][astria-go] Sleep Command process exited cleanly[-:-]", output, "Expected clean exit after sleep")
 }
