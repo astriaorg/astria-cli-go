@@ -30,7 +30,7 @@ type processRunner struct {
 
 	// saving the opts so we can use them for restarts
 	opts NewProcessRunnerOpts
-	// only saving the context on a struct so that we can use it to restart the process
+	// NOTE - only saving the context on a struct so that we can use it to restart the process
 	ctx context.Context
 
 	didStart  chan bool
