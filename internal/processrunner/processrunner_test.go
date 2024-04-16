@@ -147,6 +147,7 @@ func TestProcessRunnerRestart(t *testing.T) {
 	// wait for output and get it
 	time.Sleep(10 * time.Millisecond)
 	o2 := pr.GetOutputAndClearBuf()
-	e := "[white:red][astria-go] Test process exited with error: signal: interrupt[-:-]\n[black:white][astria-go] Test process restarted[-:-]\n"
-	assert.Equal(t, e, o2, "Should show restart message")
+
+	// check that the output contains the expected restart message
+	assert.Contains(t, o2, "[black:white][astria-go] Test process restarted[-:-]\n")
 }

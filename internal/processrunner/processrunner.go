@@ -34,7 +34,7 @@ type processRunner struct {
 	ctx context.Context
 
 	didStart  chan bool
-	outputBuf *safebuffer.SafeBuffer // FIXME - implement ring buffer?
+	outputBuf *safebuffer.SafeBuffer
 }
 
 type NewProcessRunnerOpts struct {
@@ -62,7 +62,6 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 
 // Restart stops the process and starts it again.
 func (pr *processRunner) Restart() error {
-	// FIXME - softer way to shutdown?
 	pr.Stop()
 
 	// NOTE - you have to recreate the exec.Cmd. you can't just call cmd.Start() again.
