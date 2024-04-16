@@ -2,6 +2,7 @@ package processrunner
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -110,4 +111,42 @@ func TestProcessRunner_LongRunningProcess(t *testing.T) {
 
 	output := pr.GetOutputAndClearBuf()
 	assert.Equal(t, "[black:white][astria-go] Sleep Command process exited cleanly[-:-]", output, "Expected clean exit after sleep")
+}
+
+func TestProcessRunnerRestart(t *testing.T) {
+	ctx := context.Background()
+
+	opts := NewProcessRunnerOpts{
+		Title:   "Test",
+		BinPath: "/bin/sleep",
+		Args:    []string{"1"},
+		Env:     os.Environ(),
+	}
+
+	pr := NewProcessRunner(ctx, opts)
+
+	depStarted := make(chan bool)
+	close(depStarted)
+
+	err := pr.Start(ctx, depStarted)
+	if err != nil {
+		t.Fatalf("Failed to start the process: %v", err)
+	}
+
+	// wait for output and get it
+	time.Sleep(10 * time.Millisecond)
+	o := pr.GetOutputAndClearBuf()
+	assert.Equal(t, "", o, "Sleep output should be empty")
+
+	// restart
+	err = pr.Restart()
+	if err != nil {
+		t.Fatalf("Failed to restart the process: %v", err)
+	}
+
+	// wait for output and get it
+	time.Sleep(10 * time.Millisecond)
+	o2 := pr.GetOutputAndClearBuf()
+	e := "[white:red][astria-go] Test process exited with error: signal: interrupt[-:-]\n[black:white][astria-go] Test process restarted[-:-]\n"
+	assert.Equal(t, e, o2, "Should show restart message")
 }
