@@ -69,11 +69,11 @@ This will download, configure, and run the following binaries of these
 applications:
 
 | App              | Version |
-| ---------------- | ------- |
+| ---------------- |---------|
 | Cometbft         | v0.37.4 |
-| Astria-Sequencer | v0.9.0  |
-| Astria-Conductor | v0.12.0 |
-| Astria-Composer  | v0.4.0  |
+| Astria-Sequencer | v0.10.1 |
+| Astria-Conductor | v0.13.1 |
+| Astria-Composer  | v0.5.0  |
 
 And place them in a `local-dev-astria` directory, along with several other
 configuration files for everything.
