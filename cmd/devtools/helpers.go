@@ -58,7 +58,6 @@ func CreateDirOrPanic(dirName string) {
 		log.WithError(err).Error("Error creating data directory")
 		panic(err)
 	}
-
 }
 
 // pathExists checks if a file or directory exists at the given path.

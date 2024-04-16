@@ -100,7 +100,7 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 			log.Info(fmt.Sprintf("Override path provided for %s binary: %s", flagName, path))
 			return path
 		} else {
-			panic(fmt.Sprintf("Path provided for input %s does not exist.", flagName))
+			panic(fmt.Sprintf("Invalid input path provided for --%s flag", flagName))
 		}
 	} else {
 		log.Debug(fmt.Sprintf("No path provided for %s binary. Using default path: %s", flagName, defaultValue))
