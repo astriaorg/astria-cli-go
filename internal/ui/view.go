@@ -4,6 +4,7 @@ import (
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -70,6 +71,7 @@ func appendStatus(text string, status bool) string {
 func (mv *MainView) getHelpInfo() string {
 	output := " "
 	output += "(q)uit | "
+	output += "(r)estart selected | "
 	output += appendStatus("(a)utoscroll", mv.s.GetIsAutoscroll()) + " | "
 	output += appendStatus("(w)rap lines", mv.s.GetIsWordWrap()) + " | "
 	output += "(up/down) select pane | "
@@ -116,6 +118,15 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 				case 'q':
 					a.Exit()
 					return nil
+				// hotkey for restarting process
+				case 'r':
+					// get selected ProcessPane, restart its process, and start scanning again
+					selectedPP := mv.processPanes[mv.selectedPaneIdx]
+					err := selectedPP.pr.Restart()
+					if err != nil {
+						log.WithError(err).Error("error restarting process")
+					}
+					selectedPP.StartScan()
 				case 'w':
 					mv.s.ToggleWordWrap()
 					for _, pp := range mv.processPanes {
@@ -186,6 +197,7 @@ func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, s *Sta
 func (fv *FullscreenView) getHelpInfo() string {
 	output := " "
 	output += "(q/esc) back | "
+	output += "(r)estart | "
 	output += appendStatus("(a)utoscroll", fv.s.GetIsAutoscroll()) + " | "
 	output += appendStatus("(w)rap lines", fv.s.GetIsWordWrap()) + " | "
 	output += appendStatus("(b)orderless", fv.s.GetIsBorderless()) + " | "
@@ -241,6 +253,13 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 				case 'q':
 					backToMain()
 					return nil
+				// hotkey for restarting process
+				case 'r':
+					err := fv.processPane.pr.Restart()
+					if err != nil {
+						log.WithError(err).Error("error restarting process")
+					}
+					fv.processPane.StartScan()
 				// hotkey for word wrap
 				case 'w':
 					fv.s.ToggleWordWrap()
