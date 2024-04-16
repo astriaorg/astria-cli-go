@@ -63,7 +63,7 @@ fix-md:
 defaultargs := ''
 # run the cli. takes quoted cli command to run, e.g. `just run "dev init"`. logs cli output to tview_log.txt
 run args=defaultargs:
-    go run main.go {{args}} > tview_log.txt 2>&1
+    go run main.go {{args}} --log-level=debug > tview_log.txt 2>&1
 alias r := run
 
 run-race args=defaultargs:

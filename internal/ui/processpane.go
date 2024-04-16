@@ -2,6 +2,8 @@ package ui
 
 import (
 	"io"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/astria/astria-cli-go/internal/processrunner"
@@ -14,6 +16,7 @@ import (
 type ProcessPane struct {
 	tApp           *tview.Application
 	textView       *tview.TextView
+	lineCount      int64
 	pr             processrunner.ProcessRunner
 	ansiWriter     io.Writer
 	TickerInterval time.Duration
@@ -52,23 +55,17 @@ func (pp *ProcessPane) StartScan() {
 		ticker := time.NewTicker(pp.TickerInterval * time.Millisecond) // adjust the duration as needed
 		defer ticker.Stop()
 
-		var lastOutputSize int // tracks the last processed output size
-
 		for range ticker.C {
-			currentOutput := pp.pr.GetOutput() // get the current full output
-			currentSize := len(currentOutput)
+			currentOutput := pp.pr.GetOutputAndClearBuf() // get the current full output
 
-			if currentSize > lastOutputSize {
-				// new, unprocessed data.
-				newOutput := currentOutput[lastOutputSize:] // extract new data since last check
-				pp.tApp.QueueUpdateDraw(func() {
-					_, err := pp.ansiWriter.Write([]byte(newOutput))
-					if err != nil {
-						log.WithError(err).Error("Error writing to textView")
-					}
-				})
-				lastOutputSize = currentSize
-			}
+			// new, unprocessed data.
+			pp.tApp.QueueUpdateDraw(func() {
+				_, err := pp.ansiWriter.Write([]byte(currentOutput))
+				if err != nil {
+					log.WithError(err).Error("Error writing to textView")
+				}
+				atomic.AddInt64(&pp.lineCount, int64(strings.Count(currentOutput, "\n")))
+			})
 		}
 	}()
 }
@@ -113,6 +110,6 @@ func (pp *ProcessPane) Highlight(highlight bool) {
 }
 
 // GetLineCount returns the line count of the ProcessPane's textView.
-func (pp *ProcessPane) GetLineCount() int {
-	return pp.pr.GetLineCount()
+func (pp *ProcessPane) GetLineCount() int64 {
+	return pp.lineCount
 }
