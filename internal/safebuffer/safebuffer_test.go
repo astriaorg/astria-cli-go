@@ -81,3 +81,17 @@ func TestSafeBuffer_WriteString(t *testing.T) {
 	contents := sb.String()
 	assert.Equal(t, "First line\nSecond line\nThird line\n", contents)
 }
+
+func TestSafeBuffer_Reset(t *testing.T) {
+	sb := &SafeBuffer{}
+
+	// Write a line
+	_, _ = sb.WriteString("First line\n")
+
+	// Reset the buffer
+	sb.Reset()
+
+	// get contents
+	contents := sb.String()
+	assert.Equal(t, "", contents)
+}
