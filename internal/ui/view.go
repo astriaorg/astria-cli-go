@@ -4,6 +4,7 @@ import (
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -18,14 +19,12 @@ type View interface {
 	// The Props argument is used to pass data to the view.
 	Render(p Props) *tview.Flex
 	// GetKeyboard is a callback for defining keyboard shortcuts
-	// FIXME - is there a way to avoid the App reference here?
 	GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey
 }
 
 // MainView represents the initial view when the app is started.
 // It shows all the process panes in a vertical layout.
 type MainView struct {
-	// FIXME - how can we avoid having to have a reference of the tview.Application here?
 	tApp         *tview.Application
 	processPanes []*ProcessPane
 	s            *StateStore
@@ -70,6 +69,7 @@ func appendStatus(text string, status bool) string {
 func (mv *MainView) getHelpInfo() string {
 	output := " "
 	output += "(q)uit | "
+	output += "(r)estart selected | "
 	output += appendStatus("(a)utoscroll", mv.s.GetIsAutoscroll()) + " | "
 	output += appendStatus("(w)rap lines", mv.s.GetIsWordWrap()) + " | "
 	output += "(up/down) select pane | "
@@ -116,6 +116,15 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 				case 'q':
 					a.Exit()
 					return nil
+				// hotkey for restarting process
+				case 'r':
+					// get selected ProcessPane, restart its process, and start scanning again
+					selectedPP := mv.processPanes[mv.selectedPaneIdx]
+					err := selectedPP.pr.Restart()
+					if err != nil {
+						log.WithError(err).Error("error restarting process")
+					}
+					selectedPP.StartScan()
 				case 'w':
 					mv.s.ToggleWordWrap()
 					for _, pp := range mv.processPanes {
@@ -186,6 +195,7 @@ func NewFullscreenView(tApp *tview.Application, processPane *ProcessPane, s *Sta
 func (fv *FullscreenView) getHelpInfo() string {
 	output := " "
 	output += "(q/esc) back | "
+	output += "(r)estart | "
 	output += appendStatus("(a)utoscroll", fv.s.GetIsAutoscroll()) + " | "
 	output += appendStatus("(w)rap lines", fv.s.GetIsWordWrap()) + " | "
 	output += appendStatus("(b)orderless", fv.s.GetIsBorderless()) + " | "
@@ -241,6 +251,13 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 				case 'q':
 					backToMain()
 					return nil
+				// hotkey for restarting process
+				case 'r':
+					err := fv.processPane.pr.Restart()
+					if err != nil {
+						log.WithError(err).Error("error restarting process")
+					}
+					fv.processPane.StartScan()
 				// hotkey for word wrap
 				case 'w':
 					fv.s.ToggleWordWrap()
@@ -252,7 +269,7 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 				// hotkey for jumping to the tail of the logs
 				case '1':
 					fv.s.DisableAutoscroll()
-					fv.processPane.textView.ScrollTo(fv.processPane.GetLineCount(), 0)
+					fv.processPane.textView.ScrollTo(int(fv.processPane.GetLineCount()), 0)
 				}
 				// needed to call the Render method again to refresh the help info
 				a.RefreshView(fv.processPane)

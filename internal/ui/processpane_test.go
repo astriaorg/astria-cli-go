@@ -19,8 +19,8 @@ func TestProcessPane_DisplayOutput(t *testing.T) {
 	close(didStartChan)
 
 	mockPR.On("GetTitle").Return("Test Process")
-	mockPR.On("GetOutput").Return("Initial output").Once()
-	mockPR.On("GetOutput").Return("Initial output\nUpdated output\n")
+	mockPR.On("GetOutputAndClearBuf").Return("Initial output\n").Once()
+	mockPR.On("GetOutputAndClearBuf").Return("Updated output\n")
 
 	app := tview.NewApplication()
 	processPane := NewProcessPane(app, mockPR)
@@ -45,6 +45,7 @@ func TestProcessPane_DisplayOutput(t *testing.T) {
 	app.QueueUpdateDraw(func() {
 		text := processPane.GetTextView().GetText(true)
 		assert.Contains(t, text, "Updated output", "The textView should contain the latest process output")
+		assert.Equal(t, int64(2), processPane.GetLineCount(), "The line count should be updated and accurate")
 	})
 }
 

@@ -72,7 +72,6 @@ func (a *App) Start() {
 // Exit stops all the process runners and stops the tview application.
 func (a *App) Exit() {
 	for _, pr := range a.processRunners {
-		// FIXME - is there a cleaner way to stop the process runners?
 		pr.Stop()
 	}
 	a.Application.Stop()
