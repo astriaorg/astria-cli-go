@@ -156,4 +156,14 @@ go build -o ./bin/astria-go-testy
 go test ./integration_tests -tags=integration_tests
 # cleanup binary
 rm ./bin/astria-go-testy
+
+# of course, there are just commands to make this easier
+just test
+just t
+
+just test-integration
+just ti
+
+just test-all
+just ta
 ```
