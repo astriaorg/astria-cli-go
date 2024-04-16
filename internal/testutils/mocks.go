@@ -11,6 +11,11 @@ type MockProcessRunner struct {
 	mock.Mock
 }
 
+func (m *MockProcessRunner) Restart() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
 func (m *MockProcessRunner) Start(ctx context.Context, depStarted <-chan bool) error {
 	args := m.Called(ctx, depStarted)
 	return args.Error(0)

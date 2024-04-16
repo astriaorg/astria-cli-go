@@ -13,6 +13,7 @@ import (
 
 // ProcessRunner is an interface that represents a process to be run.
 type ProcessRunner interface {
+	Restart() error
 	Start(ctx context.Context, depStarted <-chan bool) error
 	Stop()
 	GetDidStart() <-chan bool
@@ -27,8 +28,13 @@ type processRunner struct {
 	// Title is the title of the process
 	title string
 
+	// saving the opts so we can use them for restarts
+	opts NewProcessRunnerOpts
+	// NOTE - only saving the context on a struct so that we can use it to restart the process
+	ctx context.Context
+
 	didStart  chan bool
-	outputBuf *safebuffer.SafeBuffer // FIXME - implement ring buffer?
+	outputBuf *safebuffer.SafeBuffer
 }
 
 type NewProcessRunnerOpts struct {
@@ -45,11 +51,46 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
 	return &processRunner{
+		ctx:       ctx,
 		cmd:       cmd,
 		title:     opts.Title,
 		didStart:  make(chan bool),
 		outputBuf: &safebuffer.SafeBuffer{},
+		opts:      opts,
 	}
+}
+
+// Restart stops the process and starts it again.
+func (pr *processRunner) Restart() error {
+	pr.Stop()
+
+	// NOTE - you have to recreate the exec.Cmd. you can't just call cmd.Start() again.
+	cmd := exec.CommandContext(pr.ctx, pr.opts.BinPath, pr.opts.Args...)
+	// setting env again
+	cmd.Env = pr.opts.Env
+	pr.cmd = cmd
+
+	// must recreate the didStart channel because it was previously closed
+	pr.didStart = make(chan bool)
+
+	// must create a new channel that triggers process start
+	shouldStart := make(chan bool)
+	close(shouldStart)
+
+	// start the process again
+	err := pr.Start(pr.ctx, shouldStart)
+	if err != nil {
+		return err
+	}
+
+	// add a new line for visual separation
+	s := fmt.Sprintf("\n[black:white][astria-go] %s process restarted[-:-]\n", pr.title)
+	_, err = pr.outputBuf.WriteString(s)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Start starts the process and returns the ProcessRunner and an error.
