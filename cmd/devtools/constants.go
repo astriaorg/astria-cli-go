@@ -6,10 +6,6 @@ const (
 	BinariesDirName     = "bin"
 	LocalConfigDirName  = "config-local"
 	RemoteConfigDirName = "config-remote"
-
-	// Astria monorepo paths
-	// All paths are relative to the root of the monorepo
-	AstriaTargetDebugPath = "target/debug"
 )
 
 // Flag variables for use in the different run commands
