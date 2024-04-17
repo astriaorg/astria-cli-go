@@ -28,11 +28,11 @@ func init() {
 	runCmd.Flags().BoolVarP(&isRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
 	runCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
 	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
-	runCmd.Flags().String("environment", "", "Provide an override path to a specific environment file.")
-	runCmd.Flags().String("conductor", "", "Provide an override path to a specific conductor binary.")
-	runCmd.Flags().String("cometbft", "", "Provide an override path to a specific cometbft binary.")
-	runCmd.Flags().String("composer", "", "Provide an override path to a specific composer binary.")
-	runCmd.Flags().String("sequencer", "", "Provide an override path to a specific sequencer binary.")
+	runCmd.Flags().String("environment-path", "", "Provide an override path to a specific environment file.")
+	runCmd.Flags().String("conductor-path", "", "Provide an override path to a specific conductor binary.")
+	runCmd.Flags().String("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
+	runCmd.Flags().String("composer-path", "", "Provide an override path to a specific composer binary.")
+	runCmd.Flags().String("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 }
 
 func runRun(c *cobra.Command, args []string) {
@@ -142,14 +142,14 @@ func parseInput(c *cobra.Command) *runOpts {
 	}
 
 	// get the environment file path
-	envPath := getFlagPathOrPanic(c, "environment", defaultEnvPath)
+	envPath := getFlagPathOrPanic(c, "environment-path", defaultEnvPath)
 	log.Debug("Using environment file:", envPath)
 
 	// get the binary paths
-	conductorPath := getFlagPathOrPanic(c, "conductor", filepath.Join(defaultBinPath, "astria-conductor"))
-	cometbftPath := getFlagPathOrPanic(c, "cometbft", filepath.Join(defaultBinPath, "cometbft"))
-	composerPath := getFlagPathOrPanic(c, "composer", filepath.Join(defaultBinPath, "astria-composer"))
-	sequencerPath := getFlagPathOrPanic(c, "sequencer", filepath.Join(defaultBinPath, "astria-sequencer"))
+	conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(defaultBinPath, "astria-conductor"))
+	cometbftPath := getFlagPathOrPanic(c, "cometbft-path", filepath.Join(defaultBinPath, "cometbft"))
+	composerPath := getFlagPathOrPanic(c, "composer-path", filepath.Join(defaultBinPath, "astria-composer"))
+	sequencerPath := getFlagPathOrPanic(c, "sequencer-path", filepath.Join(defaultBinPath, "astria-sequencer"))
 	log.Debug("Using conductor binary:", conductorPath)
 	log.Debug("Using cometbft binary:", cometbftPath)
 	log.Debug("Using composer binary:", composerPath)
