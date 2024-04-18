@@ -9,8 +9,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// loadEnvVariables loads the environment variables from the src file as a map of key-value pairs.
-func loadEnvVariables(src string) (map[string]string, error) {
+// ReadEnvVariables reads the environment variables from the src file as a map of key-value pairs.
+func ReadEnvVariables(src string) (map[string]string, error) {
 	envMap, err := godotenv.Read(src)
 	if err != nil {
 		log.Fatalf("Error loading environment file: %v", err)
@@ -18,11 +18,11 @@ func loadEnvVariables(src string) (map[string]string, error) {
 	return envMap, err
 }
 
-// loadAndGetEnvVariables loads the environment variables from the src file and
+// LoadEnvironment loads the environment variables from the file at filePath and
 // returns a list of environment variables in the form key=value. It will panic
 // if the file can't be loaded.
-func loadEnvironment(filePath string) []string {
-	envMap, err := loadEnvVariables(filePath)
+func LoadEnvironment(filePath string) []string {
+	envMap, err := ReadEnvVariables(filePath)
 	if err != nil {
 		panic(fmt.Sprintf("Error loading environment file: %v", err))
 	}
@@ -60,10 +60,11 @@ func CreateDirOrPanic(dirName string) {
 	}
 }
 
-// pathExists checks if a file or directory exists at the given path.
-func pathExists(path string) bool {
+// PathExists checks if a file or directory exists at the given path.
+func PathExists(path string) bool {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
+		log.Debug(err)
 		return false
 	}
 	return err == nil

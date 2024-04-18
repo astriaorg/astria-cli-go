@@ -69,7 +69,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := loadEnvironment(envPath)
+		env := LoadEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -142,7 +142,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := loadEnvironment(envPath)
+		env := LoadEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -210,7 +210,7 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 	flag := c.Flags().Lookup(flagName)
 	if flag != nil && flag.Changed {
 		path := flag.Value.String()
-		if pathExists(path) {
+		if PathExists(path) {
 			log.Info(fmt.Sprintf("Override path provided for %s binary: %s", flagName, path))
 			return path
 		} else {
