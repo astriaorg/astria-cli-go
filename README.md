@@ -4,22 +4,22 @@ The `astria-go` cli is a tool designed to make local rollup development as
 simple and dependency free as possible. It provides functionality to easily run
 the Astria stack and interact with the Sequencer.
 
-- [Available Commands](#available-commands)
-- [Installation](#installation)
-  - [Install and Run CLI from GitHub release](#install-and-run-cli-from-github-release)
-  - [Locally Build and Run the CLI](#locally-build-and-run-the-cli)
-- [Running Astria](#running-astria)
-  - [Run a Local Sequencer](#run-a-local-sequencer)
-  - [Run Against a Remote Sequencer](#run-against-a-remote-sequencer)
-  - [Run Custom Binaries](#run-custom-binaries)
-- [Instances](#instances)
-- [Development](#development)
-  - [Testing](#testing)
+* [Available Commands](#available-commands)
+* [Installation](#installation)
+  * [Install and Run CLI from GitHub release](#install-and-run-cli-from-github-release)
+  * [Locally Build and Run the CLI](#locally-build-and-run-the-cli)
+* [Running Astria](#running-astria)
+  * [Run a Local Sequencer](#run-a-local-sequencer)
+  * [Run Against a Remote Sequencer](#run-against-a-remote-sequencer)
+  * [Run Custom Binaries](#run-custom-binaries)
+* [Instances](#instances)
+* [Development](#development)
+  * [Testing](#testing)
 
 ## Available Commands
 
 | Command                   | Description                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------- |
+|---------------------------|-------------------------------------------------------------------------------------|
 | `version`                 | Prints the cli version.                                                             |
 | `help`                    | Show help.                                                                          |
 | `dev`                     | Root command for cli development functionality.                                     |
@@ -58,8 +58,8 @@ mv astria-go /usr/local/bin/
 
 Dependencies: (only required for development)
 
-- [GO](https://go.dev/doc/install)
-- [just](https://github.com/casey/just)
+* [GO](https://go.dev/doc/install)
+* [just](https://github.com/casey/just)
 
 ```bash
 git clone git@github.com:astriaorg/astria-cli-go.git
@@ -76,7 +76,7 @@ This will download, configure, and run the following binaries of these
 applications:
 
 | App              | Version |
-| ---------------- | ------- |
+|------------------|---------|
 | Cometbft         | v0.37.4 |
 | Astria-Sequencer | v0.10.1 |
 | Astria-Conductor | v0.13.1 |
@@ -104,20 +104,24 @@ astria-go dev init
 
 ### Run a Local Sequencer
 
-This is the simplest way to run things with the cli:
+The simplest way to run Astria:
 
 ```bash
-astria-go dev run --local
+astria-go dev run
 ```
 
 This will spin up a sequencer (Cometbft and Astria-sequencer), a Conductor
 and a Composer (for communicating with a rollup) all on your local machine using
-pre-build releases of all the required binaries. No building or additional configuration needed.
+pre-build releases of all the required binaries. No building or additional
+configuration needed.
+
+NOTE: Running a local sequencer is the default behavior of `dev run` command. Thus,
+`astria-go dev run` is effectively an alias of `astria-go dev run --local`.
 
 ### Run Against a Remote Sequencer
 
-If you want to only run Composer and Conductor and use a remote Astria
-sequencer, you can run the following:
+If you want to run Composer and Conductor locally while using a remote Astria
+Sequencer:
 
 ```bash
 astria-go dev run --remote
@@ -129,11 +133,14 @@ be [found here](https://docs.astria.org/developer/tutorials/1-using-astria-go-cl
 
 ### Run Custom Binaries
 
-You can also use the `astria-go` cli to test the components of Astria during
-development. For example if you are developing a new feature in the
-[`astria-conductor` crate](https://github.com/astriaorg/astria/tree/main/crates/astria-conductor) in
-the [Astria mono repo](https://github.com/astriaorg/astria) you can use the cli
-to run your locally compiled Conductor with the other components using the `--conductor-path` flag:
+You can also use the `astria-go` cli to run components of Astria from a local
+monorepo during development of Astria core itself. For example if you are
+developing a new feature in the
+[`astria-conductor`
+crate](https://github.com/astriaorg/astria/tree/main/crates/astria-conductor)
+in the [Astria mono repo](https://github.com/astriaorg/astria) you can use the cli
+to run your locally compiled Conductor with the other components using the
+`--conductor-path` flag:
 
 ```bash
 astria-go dev run --local \
