@@ -34,11 +34,11 @@ func init() {
 	runCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
 	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
 
-	runCmd.Flags().String("environment", "", "Provide an override path to a specific environment file.")
-	runCmd.Flags().String("conductor", "", "Provide an override path to a specific conductor binary.")
-	runCmd.Flags().String("cometbft", "", "Provide an override path to a specific cometbft binary.")
-	runCmd.Flags().String("composer", "", "Provide an override path to a specific composer binary.")
-	runCmd.Flags().String("sequencer", "", "Provide an override path to a specific sequencer binary.")
+	runCmd.Flags().String("environment-path", "", "Provide an override path to a specific environment file.")
+	runCmd.Flags().String("conductor-path", "", "Provide an override path to a specific conductor binary.")
+	runCmd.Flags().String("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
+	runCmd.Flags().String("composer-path", "", "Provide an override path to a specific composer binary.")
+	runCmd.Flags().String("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 }
 
 func runCmdHandler(c *cobra.Command, args []string) {
