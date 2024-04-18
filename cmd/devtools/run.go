@@ -205,7 +205,7 @@ func isLocalSequencer() bool {
 }
 
 // getFlagPathOrPanic gets the override path from the flag. It returns the default
-// value if the flag was unused, or panics if the provided path does not exist.
+// value if the flag was not set, or panics if no file exists at the provided path.
 func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) string {
 	flag := c.Flags().Lookup(flagName)
 	if flag != nil && flag.Changed {
