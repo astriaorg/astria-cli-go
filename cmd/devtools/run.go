@@ -1,6 +1,7 @@
 package devtools
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -180,8 +181,13 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		runners = []processrunner.ProcessRunner{compRunner, condRunner}
 	}
 
+	runOptsJSON, err := json.Marshal(runOpts)
+	if err != nil {
+		log.Fatalf("Error marshaling JSON: %v", err)
+	}
+
 	// create and start ui app
-	app := ui.NewApp(runners)
+	app := ui.NewApp(runners, runOptsJSON)
 	app.Start()
 }
 

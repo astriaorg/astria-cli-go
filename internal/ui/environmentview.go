@@ -8,18 +8,18 @@ import (
 
 // FullscreenView represents the fullscreen view when a pane is selected.
 type EnvironmentView struct {
-	tApp        *tview.Application
-	environment []string
-	s           *StateStore
+	tApp          *tview.Application
+	configuration []byte
+	s             *StateStore
 }
 
 // NewFullscreenView creates a new FullscreenView with the given tview.Application and ProcessPane.
-func NewEnvironmentView(tApp *tview.Application, environment []string, s *StateStore) *EnvironmentView {
+func NewEnvironmentView(tApp *tview.Application, configuration []byte, s *StateStore) *EnvironmentView {
 	// TODO - add some syntax highlighting to the environment view
 	return &EnvironmentView{
-		tApp:        tApp,
-		environment: environment,
-		s:           s,
+		tApp:          tApp,
+		configuration: configuration,
+		s:             s,
 	}
 }
 

@@ -33,14 +33,18 @@ type App struct {
 
 	// processRunners is a list of our running processes
 	processRunners []processrunner.ProcessRunner
+
+	// the app configuration
+	configuration []byte
 }
 
 // NewApp creates a new tview.Application with the necessary components
-func NewApp(processrunners []processrunner.ProcessRunner) *App {
+func NewApp(processrunners []processrunner.ProcessRunner, configuration []byte) *App {
 	tviewApp := tview.NewApplication()
 	return &App{
 		Application:    tviewApp,
 		processRunners: processrunners,
+		configuration:  configuration,
 	}
 }
 
@@ -52,11 +56,14 @@ func (a *App) Start() {
 	// create the views
 	mainView := NewMainView(a.Application, a.processRunners, stateStore)
 	fullscreenView := NewFullscreenView(a.Application, nil, stateStore)
+	// TODO - add environment view
+	// environmentView := NewEnvironmentView(a.Application, a.configuration, stateStore)
 
 	// set the views
 	a.viewMap = map[string]View{
 		"main":       mainView,
 		"fullscreen": fullscreenView,
+		// "environment": environmentView,
 	}
 
 	// show "main" view initially
