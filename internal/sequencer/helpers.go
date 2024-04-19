@@ -77,3 +77,10 @@ func AssetIdFromDenom(denom string) []byte {
 	hash := hasher.Sum(nil)
 	return hash
 }
+
+func RollupIdFromText(rollup string) []byte {
+	hasher := sha256.New()
+	hasher.Write([]byte(rollup))
+	hash := hasher.Sum(nil)
+	return hash
+}

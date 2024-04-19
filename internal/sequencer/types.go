@@ -92,6 +92,69 @@ func (nr *NonceResponse) TableRows() [][]string {
 	}
 }
 
+// InitbridgeOpts are the options for the InitBridge function.
+type InitBridgeOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// fromKey is the private key of the sender
+	FromKey string
+	// RollupID is the ID of the rollup to creatte the bridge account for
+	RollupID string
+}
+type InitBridgeResponse struct {
+	Nonce  uint32 `json:"nonce"`
+	TxHash string `json:"txHash"`
+}
+
+func (nr *InitBridgeResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(nr, "", "  ")
+}
+
+func (nr *InitBridgeResponse) TableHeader() []string {
+	return []string{"Nonce", "TxHash"}
+}
+
+func (nr *InitBridgeResponse) TableRows() [][]string {
+	return [][]string{
+		{strconv.Itoa(int(nr.Nonce)), nr.TxHash},
+	}
+}
+
+type BridgeLockOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// ToAddress is the address of the receiver
+	ToAddress string
+	// Amount is the amount to be locked
+	Amount string
+	// DestinationChain is the address on the destination chain
+	DestinationChain string
+}
+
+type BridgeLockResponse struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Amount string `json:"amount"`
+	Nonce  uint32 `json:"nonce"`
+	TxHash string `json:"txHash"`
+}
+
+func (nr *BridgeLockResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(nr, "", "  ")
+}
+
+func (nr *BridgeLockResponse) TableHeader() []string {
+	return []string{"From", "To", "Amount", "Nonce", "TxHash"}
+}
+
+func (nr *BridgeLockResponse) TableRows() [][]string {
+	return [][]string{
+		{nr.From, nr.To, nr.Amount, strconv.Itoa(int(nr.Nonce)), nr.TxHash},
+	}
+}
+
 // TransferOpts are the options for the Transfer function.
 type TransferOpts struct {
 	// SequencerURL is the URL of the sequencer
