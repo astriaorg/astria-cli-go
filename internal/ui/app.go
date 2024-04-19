@@ -52,7 +52,6 @@ func (a *App) Start() {
 	// create the views
 	mainView := NewMainView(a.Application, a.processRunners, stateStore)
 	fullscreenView := NewFullscreenView(a.Application, nil, stateStore)
-	// TODO - add environment view
 	environmentView := NewEnvironmentView(a.Application, a.processRunners, stateStore)
 
 	// set the views

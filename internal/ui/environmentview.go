@@ -20,9 +20,7 @@ import (
 // FullscreenView represents the fullscreen view when a pane is selected.
 type EnvironmentView struct {
 	tApp *tview.Application
-	// binarys being used
-	// environment
-	s *StateStore
+	s    *StateStore
 
 	textView   *tview.TextView
 	ansiWriter io.Writer
@@ -98,10 +96,10 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 	// Get the lexer for properties files, suitable for .env files
 	lexer := lexers.Get("python")
 	if lexer == nil {
-		lexer = lexers.Fallback // Fallback lexer if no specific one found
+		lexer = lexers.Fallback
 	}
 
-	style := styles.Get("monokai") // Choose a style
+	style := styles.Get("monokai")
 	iterator, err := lexer.Tokenise(nil, envForFormatting)
 	if err != nil {
 		panic(err)
@@ -115,7 +113,6 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 
 	ansiWriter.Write(buf.Bytes())
 
-	// TODO - add some syntax highlighting to the environment view
 	return &EnvironmentView{
 		tApp:       tApp,
 		textView:   tv,
@@ -157,12 +154,9 @@ func (ev *EnvironmentView) Render(_ Props) *tview.Flex {
 // GetKeyboard is a callback for defining keyboard shortcuts.
 func (ev *EnvironmentView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
 	backToPreviousView := func() {
-		// reset borderless state before going back to the previous view
 		ev.s.ResetBorderless()
 		ev.textView.SetBorder(ev.s.GetIsBorderless())
-		// rerender the process Pane to apply all settings
 		a.RefreshView(ev.textView)
-		// change views
 		prevView, prevProps := ev.s.GetPreviousView()
 		if prevProps != nil {
 			a.RefreshView(prevProps)
