@@ -7,6 +7,8 @@ type AppState struct {
 	isAutoScroll bool
 	isWordWrap   bool
 	isBorderless bool
+	previousView string
+	properties   Props
 }
 
 // StateStore is a struct that controls the state of the application
@@ -73,6 +75,14 @@ func (s *StateStore) ToggleBorderless() {
 	s.state.isBorderless = !s.state.isBorderless
 }
 
+// SetBorderless sets the borderless state
+func (s *StateStore) SetIsBorderless(b bool) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.state.isBorderless = b
+}
+
 // ResetBorderless resets the borderless state to false or "off"
 func (s *StateStore) ResetBorderless() {
 	s.mutex.Lock()
@@ -87,4 +97,21 @@ func (s *StateStore) GetIsBorderless() bool {
 	defer s.mutex.Unlock()
 
 	return s.state.isBorderless
+}
+
+// SetPreviousView sets the previous view
+func (s *StateStore) SetPreviousView(view string, p Props) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.state.previousView = view
+	s.state.properties = p
+}
+
+// GetPreviousView returns the previous view
+func (s *StateStore) GetPreviousView() (string, Props) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	return s.state.previousView, s.state.properties
 }

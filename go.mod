@@ -6,6 +6,7 @@ toolchain go1.22.0
 
 require (
 	buf.build/gen/go/astria/astria/protocolbuffers/go v1.32.0-20240314225002-310b29d1ef86.1
+	github.com/alecthomas/chroma v0.10.0
 	github.com/astriaorg/go-sequencer-client v0.2.0-alpha.2.0.20240403175831-6b8b007e2093
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/joho/godotenv v1.5.1
@@ -29,6 +30,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect

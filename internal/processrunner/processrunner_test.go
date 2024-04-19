@@ -2,7 +2,6 @@ package processrunner
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -120,7 +119,7 @@ func TestProcessRunnerRestart(t *testing.T) {
 		Title:   "Test",
 		BinPath: "/bin/sleep",
 		Args:    []string{"1"},
-		Env:     os.Environ(),
+		EnvPath: "",
 	}
 
 	pr := NewProcessRunner(ctx, opts)

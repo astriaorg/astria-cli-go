@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"syscall"
 
@@ -19,6 +20,9 @@ type ProcessRunner interface {
 	GetDidStart() <-chan bool
 	GetTitle() string
 	GetOutputAndClearBuf() string
+	GetEnvironment() []string
+	GetEnvironmentPath() string
+	GetBinPath() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -30,6 +34,8 @@ type processRunner struct {
 
 	// saving the opts so we can use them for restarts
 	opts NewProcessRunnerOpts
+	// Env is the environment variables for the process
+	env []string
 	// NOTE - only saving the context on a struct so that we can use it to restart the process
 	ctx context.Context
 
@@ -40,16 +46,24 @@ type processRunner struct {
 type NewProcessRunnerOpts struct {
 	Title   string
 	BinPath string
-	Env     []string
+	EnvPath string
 	Args    []string
 }
 
 // NewProcessRunner creates a new ProcessRunner.
-// It creates a new exec.Cmd with the given binPath and args, and sets the environment.
+// It creates a new exec.Cmd with the given binPath and args, and sets the
+// environment. If no envPath is provided, it uses the current environment using
+// os.Environ().
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
+	var env []string
+	if opts.EnvPath != "" {
+		env = LoadEnvironment(opts.EnvPath)
+	} else {
+		env = os.Environ()
+	}
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
-	cmd.Env = opts.Env
+	cmd.Env = env
 	return &processRunner{
 		ctx:       ctx,
 		cmd:       cmd,
@@ -57,7 +71,20 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		didStart:  make(chan bool),
 		outputBuf: &safebuffer.SafeBuffer{},
 		opts:      opts,
+		env:       env,
 	}
+}
+
+func (pr *processRunner) GetBinPath() string {
+	return pr.opts.BinPath
+}
+
+func (pr *processRunner) GetEnvironmentPath() string {
+	return pr.opts.EnvPath
+}
+
+func (pr *processRunner) GetEnvironment() []string {
+	return pr.env
 }
 
 // Restart stops the process and starts it again.
@@ -67,7 +94,7 @@ func (pr *processRunner) Restart() error {
 	// NOTE - you have to recreate the exec.Cmd. you can't just call cmd.Start() again.
 	cmd := exec.CommandContext(pr.ctx, pr.opts.BinPath, pr.opts.Args...)
 	// setting env again
-	cmd.Env = pr.opts.Env
+	cmd.Env = pr.env
 	pr.cmd = cmd
 
 	// must recreate the didStart channel because it was previously closed

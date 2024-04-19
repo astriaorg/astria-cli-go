@@ -5,33 +5,32 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
-// ReadEnvVariables reads the environment variables from the src file as a map of key-value pairs.
-func ReadEnvVariables(src string) (map[string]string, error) {
-	envMap, err := godotenv.Read(src)
-	if err != nil {
-		log.Fatalf("Error loading environment file: %v", err)
-	}
-	return envMap, err
-}
+// // ReadEnvVariables reads the environment variables from the src file as a map of key-value pairs.
+// func ReadEnvVariables(src string) (map[string]string, error) {
+// 	envMap, err := godotenv.Read(src)
+// 	if err != nil {
+// 		log.Fatalf("Error loading environment file: %v", err)
+// 	}
+// 	return envMap, err
+// }
 
-// LoadEnvironment loads the environment variables from the file at filePath and
-// returns a list of environment variables in the form key=value. It will panic
-// if the file can't be loaded.
-func LoadEnvironment(filePath string) []string {
-	envMap, err := ReadEnvVariables(filePath)
-	if err != nil {
-		panic(fmt.Sprintf("Error loading environment file: %v", err))
-	}
-	var envList []string
-	for key, value := range envMap {
-		envList = append(envList, key+"="+value)
-	}
-	return envList
-}
+// // LoadEnvironment loads the environment variables from the file at filePath and
+// // returns a list of environment variables in the form key=value. It will panic
+// // if the file can't be loaded.
+// func LoadEnvironment(filePath string) []string {
+// 	envMap, err := ReadEnvVariables(filePath)
+// 	if err != nil {
+// 		panic(fmt.Sprintf("Error loading environment file: %v", err))
+// 	}
+// 	var envList []string
+// 	for key, value := range envMap {
+// 		envList = append(envList, key+"="+value)
+// 	}
+// 	return envList
+// }
 
 // IsInstanceNameValidOrPanic checks if the instance name is valid and panics if it's not.
 func IsInstanceNameValidOrPanic(instance string) {

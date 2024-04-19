@@ -93,6 +93,10 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 					for _, pp := range mv.processPanes {
 						pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
 					}
+				case 'e':
+					mv.s.SetPreviousView("main", nil)
+					mv.s.SetIsBorderless(false)
+					a.SetView("environment", nil)
 				case 'q':
 					a.Exit()
 					return nil

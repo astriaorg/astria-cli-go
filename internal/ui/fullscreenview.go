@@ -46,6 +46,9 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 		SetChangedFunc(func() {
 			fv.tApp.Draw()
 		})
+	// update the shared state for the process pane
+	fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
+	fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
 	flex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(fv.processPane.GetTextView(), 0, 1, true).
 		AddItem(help, 1, 0, false), 0, 4, false)
@@ -79,6 +82,11 @@ func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey)
 				case 'b':
 					fv.s.ToggleBorderless()
 					fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
+				case 'e':
+					fv.s.SetPreviousView("fullscreen", fv.processPane)
+					fv.s.SetIsBorderless(false)
+					a.SetView("environment", nil)
+
 				// hotkey for quitting fullscreen
 				case 'q':
 					backToMain()

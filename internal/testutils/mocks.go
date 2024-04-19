@@ -39,3 +39,18 @@ func (m *MockProcessRunner) GetOutputAndClearBuf() string {
 	args := m.Called()
 	return args.String(0)
 }
+
+func (m *MockProcessRunner) GetEnvironmentPath() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+func (m *MockProcessRunner) GetEnvironment() []string {
+	args := m.Called()
+	return args.Get(0).([]string)
+}
+
+func (m *MockProcessRunner) GetBinPath() string {
+	args := m.Called()
+	return args.String(0)
+}
