@@ -50,13 +50,14 @@ func PathExists(path string) bool {
 
 	// Check if it's a regular file
 	if !fileInfo.Mode().IsRegular() {
-		log.Error("The path is not a regular file: %s", path)
+		log.WithField("path", path).Error("The path is not a regular file")
 		return false
 	}
 
 	// Check if the file is executable
 	if fileInfo.Mode().Perm()&0111 == 0 {
-		log.Error("The file is not executable: %s", path)
+		log.WithField("path", path).Error("The file is not executable")
+
 		return false
 	}
 
