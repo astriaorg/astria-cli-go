@@ -34,6 +34,8 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 		return nil
 	}
 
+	// the primary text view for the environment view does not change like it does in
+	// other views, so we only need to set it up here instead of in the Render method
 	tv := tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true).
@@ -45,7 +47,7 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 		SetTitle(" Environment ")
 	ansiWriter := tview.ANSIWriter(tv)
 
-	// formate the binnary names and their paths
+	// formate the binary names and their paths
 	lineCount := int64(0)
 	output := ""
 	longestTitle := 0
@@ -60,8 +62,9 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 	}
 	output += "\n"
 	lineCount++
+	ansiWriter.Write([]byte(output))
 
-	// generate the text for the environment view
+	// load the text for the environment view
 	envPath := processrunners[0].GetEnvironmentPath()
 	sourceCode, err := os.ReadFile(envPath)
 	if err != nil {
@@ -70,7 +73,7 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 	content := string(sourceCode)
 	lines := strings.Split(content, "\n")
 
-	// Filter out empty lines and lines that start with '#'
+	// Filter out empty lines and comments
 	var filteredLines []string
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
@@ -78,7 +81,7 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 			filteredLines = append(filteredLines, trimmedLine)
 		}
 	}
-	// remove duplicates line
+	// remove duplicate lines
 	seen := make(map[string]bool)
 	var unique []string
 	for _, entry := range filteredLines {
@@ -89,20 +92,19 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 	}
 	sort.Strings(unique)
 	envForFormatting := strings.Join(unique, "\n")
-	ansiWriter.Write([]byte(output))
 
-	// Get the lexer for properties files, suitable for .env files
+	// TODO - add configuration for the lexer and style?
+	// there isn't a lexer for .env files in chroma, the python lexer happends
+	// to work well which is why it is used here
 	lexer := lexers.Get("python")
 	if lexer == nil {
 		lexer = lexers.Fallback
 	}
-
 	style := styles.Get("monokai")
 	iterator, err := lexer.Tokenise(nil, envForFormatting)
 	if err != nil {
 		panic(err)
 	}
-
 	var buf bytes.Buffer
 	formatter := formatters.TTY256 // Assuming we're outputting to a terminal that supports 256 colors
 	if err := formatter.Format(&buf, style, iterator); err != nil {
