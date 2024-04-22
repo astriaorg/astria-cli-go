@@ -1,7 +1,7 @@
 package devtools
 
 import (
-	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -12,8 +12,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var IsRunLocal bool
-var IsRunRemote bool
+// boolean flags
+var (
+	isRunLocal  bool
+	isRunRemote bool
+)
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
@@ -21,43 +24,160 @@ var runCmd = &cobra.Command{
 	Short:  "Run all the Astria services locally.",
 	Long:   `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
 	PreRun: cmd.SetLogLevel,
-	Run:    runRun,
+	Run:    runCmdHandler,
 }
 
 func init() {
 	devCmd.AddCommand(runCmd)
 	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
-	runCmd.Flags().BoolVarP(&IsRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
-	runCmd.Flags().BoolVarP(&IsRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
+	runCmd.Flags().BoolVarP(&isRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
+	runCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
 	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
+
+	runCmd.Flags().String("environment-path", "", "Provide an override path to a specific environment file.")
+	runCmd.Flags().String("conductor-path", "", "Provide an override path to a specific conductor binary.")
+	runCmd.Flags().String("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
+	runCmd.Flags().String("composer-path", "", "Provide an override path to a specific composer binary.")
+	runCmd.Flags().String("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 }
 
-func runRun(c *cobra.Command, args []string) {
+func runCmdHandler(c *cobra.Command, args []string) {
 	ctx := c.Context()
-
-	instance := c.Flag("instance").Value.String()
-	IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	defaultDir := filepath.Join(homePath, ".astria")
-	instanceDir := filepath.Join(defaultDir, instance)
 
+	// astriaDir is the directory where all the astria instances data is stored
+	astriaDir := filepath.Join(homePath, ".astria")
+
+	// get instance name and check if it's valid
+	instance := c.Flag("instance").Value.String()
+	IsInstanceNameValidOrPanic(instance)
+
+	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
-	switch {
-	case !IsRunLocal && !IsRunRemote:
-		log.Info("No --local or --remote flag provided. Defaulting to --local.")
-		IsRunLocal = true
-		runners = runLocal(ctx, instanceDir)
-	case IsRunLocal:
-		log.Info("--local flag provided. Running local sequencer.")
-		runners = runLocal(ctx, instanceDir)
-	case IsRunRemote:
-		log.Info("--remote flag provided. Connecting to remote sequencer.")
-		runners = runRemote(ctx, instanceDir)
+
+	// check if running local or remote sequencer.
+	isLocalSequencer := isLocalSequencer()
+	if isLocalSequencer {
+		log.Debug("Running local sequencer")
+		confDir := filepath.Join(astriaDir, instance, LocalConfigDirName)
+		dataDir := filepath.Join(astriaDir, instance, DataDirName)
+		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
+		// env path
+		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
+		env := GetEnvironment(envPath)
+
+		// get the binary paths
+		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
+		cometbftPath := getFlagPathOrPanic(c, "cometbft-path", filepath.Join(binDir, "cometbft"))
+		composerPath := getFlagPathOrPanic(c, "composer-path", filepath.Join(binDir, "astria-composer"))
+		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", filepath.Join(binDir, "astria-sequencer"))
+		log.Debugf("Using binaries from %s", binDir)
+
+		// sequencer
+		seqOpts := processrunner.NewProcessRunnerOpts{
+			Title:   "Sequencer",
+			BinPath: sequencerPath,
+			Env:     env,
+			Args:    nil,
+		}
+		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
+
+		// cometbft
+		cometDataPath := filepath.Join(dataDir, ".cometbft")
+		cometOpts := processrunner.NewProcessRunnerOpts{
+			Title:   "Comet BFT",
+			BinPath: cometbftPath,
+			Env:     env,
+			Args:    []string{"node", "--home", cometDataPath},
+		}
+		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
+
+		// composer
+		composerOpts := processrunner.NewProcessRunnerOpts{
+			Title:   "Composer",
+			BinPath: composerPath,
+			Env:     env,
+			Args:    nil,
+		}
+		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
+
+		// conductor
+		conductorOpts := processrunner.NewProcessRunnerOpts{
+			Title:   "Conductor",
+			BinPath: conductorPath,
+			Env:     env,
+			Args:    nil,
+		}
+		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
+
+		// shouldStart acts as a control channel to start this first process
+		shouldStart := make(chan bool)
+		close(shouldStart)
+		err := seqRunner.Start(ctx, shouldStart)
+		if err != nil {
+			log.WithError(err).Error("Error running sequencer")
+		}
+		err = cometRunner.Start(ctx, seqRunner.GetDidStart())
+		if err != nil {
+			log.WithError(err).Error("Error running cometbft")
+		}
+		err = compRunner.Start(ctx, cometRunner.GetDidStart())
+		if err != nil {
+			log.WithError(err).Error("Error running composer")
+		}
+		err = condRunner.Start(ctx, compRunner.GetDidStart())
+		if err != nil {
+			log.WithError(err).Error("Error running conductor")
+		}
+
+		runners = []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
+	} else {
+		log.Debug("Running remote sequencer")
+		confDir := filepath.Join(astriaDir, instance, RemoteConfigDirName)
+		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
+		// env path
+		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
+		env := GetEnvironment(envPath)
+
+		// get the binary paths
+		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
+		composerPath := getFlagPathOrPanic(c, "composer-path", filepath.Join(binDir, "astria-composer"))
+
+		// composer
+		composerOpts := processrunner.NewProcessRunnerOpts{
+			Title:   "Composer",
+			BinPath: composerPath,
+			Env:     env,
+			Args:    nil,
+		}
+		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
+
+		// conductor
+		conductorOpts := processrunner.NewProcessRunnerOpts{
+			Title:   "Conductor",
+			BinPath: conductorPath,
+			Env:     env,
+			Args:    nil,
+		}
+		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
+
+		// shouldStart acts as a control channel to start this first process
+		shouldStart := make(chan bool)
+		close(shouldStart)
+		err := compRunner.Start(ctx, shouldStart)
+		if err != nil {
+			log.WithError(err).Error("Error running composer")
+		}
+		err = condRunner.Start(ctx, compRunner.GetDidStart())
+		if err != nil {
+			log.WithError(err).Error("Error running conductor")
+		}
+		runners = []processrunner.ProcessRunner{compRunner, condRunner}
 	}
 
 	// create and start ui app
@@ -65,110 +185,39 @@ func runRun(c *cobra.Command, args []string) {
 	app.Start()
 }
 
-func runLocal(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
-	// load the .env file and get the environment variables
-	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
-	envPath := filepath.Join(instanceDir, LocalConfigDirName, ".env")
-
-	environment := loadAndGetEnvVariables(envPath)
-
-	// sequencer
-	seqOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Sequencer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-sequencer"),
-		Env:     environment,
-		Args:    nil,
+// isLocalSequencer returns true if we should run the local sequencer
+func isLocalSequencer() bool {
+	switch {
+	case !isRunLocal && !isRunRemote:
+		log.Debug("No --local or --remote flag provided. Defaulting to --local.")
+		return true
+	case isRunLocal:
+		log.Debug("--local flag provided. Running local sequencer.")
+		return true
+	case isRunRemote:
+		log.Debug("--remote flag provided. Connecting to remote sequencer.")
+		return false
+	default:
+		// this should never happen
+		log.Debug("Unknown run configuration found. Defaulting to --local.")
+		return true
 	}
-	seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
-
-	// cometbft
-	cometDataPath := filepath.Join(instanceDir, DataDirName, ".cometbft")
-	cometOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Comet BFT",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "cometbft"),
-		Env:     environment,
-		Args:    []string{"node", "--home", cometDataPath},
-	}
-	cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
-
-	// composer
-	composerOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
-		Env:     environment,
-		Args:    nil,
-	}
-	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
-
-	// conductor
-	conductorOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
-		Env:     environment,
-		Args:    nil,
-	}
-	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
-
-	// shouldStart acts as a control channel to start this first process
-	shouldStart := make(chan bool)
-	close(shouldStart)
-	err := seqRunner.Start(ctx, shouldStart)
-	if err != nil {
-		log.WithError(err).Error("Error running sequencer")
-	}
-	err = cometRunner.Start(ctx, seqRunner.GetDidStart())
-	if err != nil {
-		log.WithError(err).Error("Error running cometbft")
-	}
-	err = compRunner.Start(ctx, cometRunner.GetDidStart())
-	if err != nil {
-		log.WithError(err).Error("Error running composer")
-	}
-	err = condRunner.Start(ctx, compRunner.GetDidStart())
-	if err != nil {
-		log.WithError(err).Error("Error running conductor")
-	}
-
-	runners := []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
-	return runners
 }
 
-func runRemote(ctx context.Context, instanceDir string) []processrunner.ProcessRunner {
-	// load the .env file and get the environment variables
-	// TODO - move config to own package w/ structs w/ defaults. still use .env for overrides.
-	envPath := filepath.Join(instanceDir, RemoteConfigDirName, ".env")
-	environment := loadAndGetEnvVariables(envPath)
-
-	// composer
-	composerOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Composer",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-composer"),
-		Env:     environment,
-		Args:    nil,
+// getFlagPathOrPanic gets the override path from the flag. It returns the default
+// value if the flag was not set, or panics if no file exists at the provided path.
+func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) string {
+	flag := c.Flags().Lookup(flagName)
+	if flag != nil && flag.Changed {
+		path := flag.Value.String()
+		if PathExists(path) {
+			log.Info(fmt.Sprintf("Override path provided for %s binary: %s", flagName, path))
+			return path
+		} else {
+			panic(fmt.Sprintf("Invalid input path provided for --%s flag", flagName))
+		}
+	} else {
+		log.Debug(fmt.Sprintf("No path provided for %s binary. Using default path: %s", flagName, defaultValue))
+		return defaultValue
 	}
-	compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
-
-	// conductor
-	conductorOpts := processrunner.NewProcessRunnerOpts{
-		Title:   "Conductor",
-		BinPath: filepath.Join(instanceDir, BinariesDirName, "astria-conductor"),
-		Env:     environment,
-		Args:    nil,
-	}
-	condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
-
-	// shouldStart acts as a control channel to start this first process
-	shouldStart := make(chan bool)
-	close(shouldStart)
-	err := compRunner.Start(ctx, shouldStart)
-	if err != nil {
-		log.WithError(err).Error("Error running composer")
-	}
-	err = condRunner.Start(ctx, compRunner.GetDidStart())
-	if err != nil {
-		log.WithError(err).Error("Error running conductor")
-	}
-
-	runners := []processrunner.ProcessRunner{compRunner, condRunner}
-	return runners
 }

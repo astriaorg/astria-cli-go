@@ -6,8 +6,13 @@ the Astria stack and interact with the Sequencer.
 
 * [Available Commands](#available-commands)
 * [Installation](#installation)
-  * [Install and Run CLI from GitHub release](#install-and-run-cli-from-github-release)
-  * [Locally Build and Run the CLI](#locally-build-and-run-the-cli)
+  * [Install from GitHub release](#install-from-github-release)
+  * [Build Locally from Source](#build-locally-from-source)
+* [Running the Astria Sequencer](#running-the-astria-sequencer)
+  * [Initialize Configuration](#initialize-configuration)
+  * [Usage](#usage)
+    * [Run a Local Sequencer](#run-a-local-sequencer)
+    * [Run Against a Remote Sequencer](#run-against-a-remote-sequencer)
 * [Instances](#instances)
 * [Development](#development)
   * [Testing](#testing)
@@ -31,7 +36,7 @@ the Astria stack and interact with the Sequencer.
 
 ## Installation
 
-### Install and Run CLI from GitHub release
+### Install from GitHub release
 
 The CLI binaries are available for download from the
 [releases page](https://github.com/astriaorg/astria-cli-go/releases). There are
@@ -50,7 +55,7 @@ tar -xzvf astria-go.tar.gz
 mv astria-go /usr/local/bin/
 ```
 
-### Locally Build and Run the CLI
+### Build Locally from Source
 
 Dependencies: (only required for development)
 
@@ -58,26 +63,121 @@ Dependencies: (only required for development)
 * [just](https://github.com/casey/just)
 
 ```bash
+# checkout repo
 git clone git@github.com:astriaorg/astria-cli-go.git
 cd astria-cli-go
+
+# run build command
 just build
-just run "dev init"
-just run "dev run"
+
+# check the version
+just run "version"
+# or
+go run main.go version
 ```
 
-This will download, configure, and run the following binaries of these
-applications:
+## Running the Astria Sequencer
+
+### Initialize Configuration
+
+```bash
+astria-go dev init
+```
+
+The `init` command downloads binaries, generates environment and
+configuration files, and initializes CometBFT.
+
+The following files are generated:
+
+* In `~/.astria/<instance>/config-local`:
+  * A `.env` file for local configuration
+  * `genesis.json` for the sequencer genesis
+  * `priv_validator_key.json` for configuring the sequencer validators
+* In `~/.astria/<instance>/config-remote`:
+  * A `.env` file for remote configuration
+
+The following binaries are downloaded:
 
 | App              | Version |
-| ---------------- |---------|
+|------------------|---------|
 | Cometbft         | v0.37.4 |
 | Astria-Sequencer | v0.10.1 |
 | Astria-Conductor | v0.13.1 |
 | Astria-Composer  | v0.5.0  |
 
+The `init` command will also run the initialization steps required by CometBFT, using the `genesis.json` and
+`priv_validator_key.json` files in the `config-local` directory. This will
+create a `.cometbft` directory in `~/.astria/<instance>/data`.
+
+### Usage
+
 The cli runs the minimum viable components for testing a rollup against the
 Astria stack, allowing developers to confirm that their rollup interacts with
-Astria's apis correctly.
+Astria's APIs correctly.
+
+You can choose to run the Sequencer locally, or you can run the stack against
+the remote Sequencer. You may also run local binaries instead of downloaded
+pre-built binaries.
+
+#### Run a Local Sequencer
+
+The simplest way to run Astria:
+
+```bash
+astria-go dev run
+```
+
+This will spin up a Sequencer (Cometbft and Astria-Sequencer), a Conductor,
+and a Composer -- all on your local machine, using pre-built binaries of the
+dependencies.
+
+> NOTE: Running a local Sequencer is the default behavior of `dev run` command.
+> Thus, `astria-go dev run` is effectively an alias of
+> `astria-go dev run --local`.
+
+#### Run Against a Remote Sequencer
+
+If you want to run Composer and Conductor locally against a remote Astria
+Sequencer:
+
+```bash
+astria-go dev run --remote
+```
+
+Using the `--remote` flag, the cli will handle configuration of the components
+running on your local machine, but you will need to create an account on the
+remote sequencer. More details can be
+[found here](https://docs.astria.org/developer/tutorials/1-using-astria-go-cli#setup-and-run-the-local-astria-components-to-communicate-with-the-remote-sequencer).
+
+### Run Custom Binaries
+
+You can also run components of Astria from a local monorepo during development
+of Astria core itself. For example if you are developing a new feature in the
+[`astria-conductor` crate](https://github.com/astriaorg/astria/tree/main/crates/astria-conductor)
+in the [Astria mono repo](https://github.com/astriaorg/astria) you can use the
+cli to run your locally compiled Conductor with the other components using the
+`--conductor-path` flag:
+
+```bash
+astria-go dev run --local \
+  --conductor-path <absolute path to the Astria mono repo>/target/debug/astria-conductor
+```
+
+This will run Composer, Cometbft, and Sequencer using the downloaded pre-built
+binaries, while using a locally built version of the Conductor binary. You can
+swap out some or all binaries for the Astria stack with their appropriate flags:
+
+```bash
+astria-go dev run --local \
+  --sequencer-path <sequencer bin path> \
+  --cometbft-path <cometbft bin path> \
+  --composer-path <composer bin path> \
+  --conductor-path <conductor bin path>
+```
+
+If additional configuration is required, you can update the `.env` files in
+`~/.astria/<instance>/config-local/` or
+`~/.astria/<instance>/config-remote/` based on your needs.
 
 ## Instances
 
@@ -99,9 +199,9 @@ You will see the following in the `~/.astria` directory:
 
 ```bash
 .astria/
-    default/
-    hello/
-    world/
+  default/
+  hello/
+  world/
 ```
 
 Each of these directories will contain configs and binaries for
