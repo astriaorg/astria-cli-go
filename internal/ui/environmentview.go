@@ -3,7 +3,6 @@ package ui
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"sort"
 	"strings"
@@ -22,8 +21,7 @@ type EnvironmentView struct {
 	tApp *tview.Application
 	s    *StateStore
 
-	textView   *tview.TextView
-	ansiWriter io.Writer
+	textView *tview.TextView
 
 	previousView string
 	lineCount    int64
@@ -114,11 +112,10 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 	ansiWriter.Write(buf.Bytes())
 
 	return &EnvironmentView{
-		tApp:       tApp,
-		textView:   tv,
-		ansiWriter: ansiWriter,
-		s:          s,
-		lineCount:  lineCount,
+		tApp:      tApp,
+		textView:  tv,
+		s:         s,
+		lineCount: lineCount,
 	}
 }
 
