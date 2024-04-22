@@ -84,10 +84,11 @@ go run main.go version
 astria-go dev init
 ```
 
-The `init` command downloads binaries and generates environment and 
+The `init` command downloads binaries and generates environment and
 configuration files.
 
 The following files are generated:
+
 * TODO
 
 The following binaries are downloaded:
@@ -98,7 +99,6 @@ The following binaries are downloaded:
 | Astria-Sequencer | v0.10.1 |
 | Astria-Conductor | v0.13.1 |
 | Astria-Composer  | v0.5.0  |
-
 
 ### Usage
 
@@ -123,7 +123,7 @@ and a Composer -- all on your local machine, using pre-built binaries of the
 dependencies.
 
 > NOTE: Running a local Sequencer is the default behavior of `dev run` command.
-> Thus, `astria-go dev run` is effectively an alias of 
+> Thus, `astria-go dev run` is effectively an alias of
 > `astria-go dev run --local`.
 
 #### Run Against a Remote Sequencer
