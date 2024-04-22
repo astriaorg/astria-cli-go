@@ -84,12 +84,17 @@ go run main.go version
 astria-go dev init
 ```
 
-The `init` command downloads binaries and generates environment and
-configuration files.
+The `init` command downloads binaries, generates environment and
+configuration files, and initializes CometBFT.
 
 The following files are generated:
 
-* TODO
+* In `~/.astria/<instance>/config-local`:
+  * A `.env` file for local configuration
+  * `genesis.json` for the sequencer genesis
+  * `priv_validator_key.json` for configuring the sequencer validators
+* In `~/.astria/<instance>/config-remote`:
+  * A `.env` file for remote configuration
 
 The following binaries are downloaded:
 
@@ -99,6 +104,10 @@ The following binaries are downloaded:
 | Astria-Sequencer | v0.10.1 |
 | Astria-Conductor | v0.13.1 |
 | Astria-Composer  | v0.5.0  |
+
+The `init` command will also run the initialization steps required by CometBFT, using the `genesis.json` and
+`priv_validator_key.json` files in the `config-local` directory. This will
+create a `.cometbft` directory in `~/.astria/<instance>/data`.
 
 ### Usage
 
