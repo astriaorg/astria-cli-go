@@ -69,7 +69,6 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := GetEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -115,25 +114,6 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
-		// shouldStart acts as a control channel to start this first process
-		shouldStart := make(chan bool)
-		close(shouldStart)
-		err := seqRunner.Start(ctx, shouldStart)
-		if err != nil {
-			log.WithError(err).Error("Error running sequencer")
-		}
-		err = cometRunner.Start(ctx, seqRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running cometbft")
-		}
-		err = compRunner.Start(ctx, cometRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running composer")
-		}
-		err = condRunner.Start(ctx, compRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running conductor")
-		}
 		// shouldStart acts as a control channel to start this first process
 		shouldStart := make(chan bool)
 		close(shouldStart)
