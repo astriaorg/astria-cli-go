@@ -16,7 +16,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// FullscreenView represents the fullscreen view when a pane is selected.
+// EnvironmentView represents the view for the environment variables and paths
+// used by the running processes.
 type EnvironmentView struct {
 	tApp *tview.Application
 	s    *StateStore
@@ -27,7 +28,7 @@ type EnvironmentView struct {
 	lineCount    int64
 }
 
-// NewFullscreenView creates a new FullscreenView with the given tview.Application and ProcessPane.
+// NewEnvironmentView creates a new EnvironmentView with the given tview.Application,
 func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.ProcessRunner, s *StateStore) *EnvironmentView {
 	if len(processrunners) == 0 {
 		log.Error("no process runners provided to environment view")
@@ -121,7 +122,7 @@ func NewEnvironmentView(tApp *tview.Application, processrunners []processrunner.
 	}
 }
 
-// Build the help text legend at the bottom of the fullscreen view with dynamically
+// Build the help text legend at the bottom of the environment view with dynamically
 // changing setting status
 func (ev *EnvironmentView) getHelpInfo() string {
 	output := " "
@@ -133,7 +134,7 @@ func (ev *EnvironmentView) getHelpInfo() string {
 	return output
 }
 
-// Render returns the tview.Flex that represents the FullscreenView.
+// Render returns the tview.Flex that represents the EnvironmentView.
 func (ev *EnvironmentView) Render(_ Props) *tview.Flex {
 	// build tview text views and flex
 	help := tview.NewTextView().
@@ -188,7 +189,7 @@ func (ev *EnvironmentView) GetKeyboard(a AppController) func(evt *tcell.EventKey
 				// hotkey for jumping to the tail of the logs
 				case '1':
 					ev.s.DisableAutoscroll()
-					ev.textView.ScrollTo(int(ev.GetLineCount()), 0)
+					ev.textView.ScrollTo(int(ev.getLineCount()), 0)
 				}
 				// needed to call the Render method again to refresh the help info
 				a.RefreshView(nil)
@@ -212,6 +213,7 @@ func (ev *EnvironmentView) GetKeyboard(a AppController) func(evt *tcell.EventKey
 	}
 }
 
-func (ev *EnvironmentView) GetLineCount() int64 {
+// getLineCount returns the number of lines in the text view.
+func (ev *EnvironmentView) getLineCount() int64 {
 	return ev.lineCount
 }
