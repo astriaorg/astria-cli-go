@@ -69,7 +69,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := LoadEnvironment(envPath)
+		env := GetEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -142,7 +142,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := LoadEnvironment(envPath)
+		env := GetEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))

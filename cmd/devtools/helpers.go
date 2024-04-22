@@ -9,20 +9,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ReadEnvVariables reads the environment variables from the src file as a map of key-value pairs.
-func ReadEnvVariables(src string) (map[string]string, error) {
-	envMap, err := godotenv.Read(src)
+// GetEnvironment reads the environment variables from the file at filePath and
+// returns a list of environment variables in the form key=value. It will panic
+// if the file can't be loaded.
+func GetEnvironment(filePath string) []string {
+	envMap, err := godotenv.Read(filePath)
 	if err != nil {
 		log.Fatalf("Error loading environment file: %v", err)
 	}
-	return envMap, err
-}
-
-// LoadEnvironment loads the environment variables from the file at filePath and
-// returns a list of environment variables in the form key=value. It will panic
-// if the file can't be loaded.
-func LoadEnvironment(filePath string) []string {
-	envMap, err := ReadEnvVariables(filePath)
 	if err != nil {
 		panic(fmt.Sprintf("Error loading environment file: %v", err))
 	}
@@ -60,12 +54,30 @@ func CreateDirOrPanic(dirName string) {
 	}
 }
 
-// PathExists checks if a file or directory exists at the given path.
+// PathExists checks if the file or binary for the input path is a regular file
+// and is executable. A regular file is one where no mode type bits are set.
 func PathExists(path string) bool {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		log.Debug(err)
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.WithError(err).Error("File does not exist")
+		} else {
+			log.WithError(err).Error("Error checking file")
+		}
 		return false
 	}
-	return err == nil
+
+	// Check if it's a regular file
+	if !fileInfo.Mode().IsRegular() {
+		log.Error("The path is not a regular file: %s", path)
+		return false
+	}
+
+	// Check if the file is executable
+	if fileInfo.Mode().Perm()&0111 == 0 {
+		log.Error("The file is not executable: %s", path)
+		return false
+	}
+
+	return true
 }
