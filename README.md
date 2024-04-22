@@ -88,7 +88,7 @@ The `init` command downloads binaries and generates environment and
 configuration files.
 
 The following files are generated:
-* todo
+* TODO
 
 The following binaries are downloaded:
 
