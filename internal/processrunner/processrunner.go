@@ -57,7 +57,7 @@ type NewProcessRunnerOpts struct {
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
 	var env []string
 	if opts.EnvPath != "" {
-		env = LoadEnvironment(opts.EnvPath)
+		env = GetEnvironment(opts.EnvPath)
 	} else {
 		env = os.Environ()
 	}
