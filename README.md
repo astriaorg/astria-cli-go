@@ -156,7 +156,7 @@ astria-go dev run --local \
 
 This will run Composer, Cometbft, and Sequencer using the downloaded pre-built
 binaries, while using a locally built version of the Conductor binary. You can
-swap out any or all binaries for the Astria stack with their appropriate flags:
+swap out some or all binaries for the Astria stack with their appropriate flags:
 
 ```bash
 astria-go dev run --local \
