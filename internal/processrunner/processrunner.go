@@ -146,8 +146,18 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 	}
 
 	// multiwriter to write both stdout and stderr to the same buffer
-	go io.Copy(pr.outputBuf, stdout)
-	go io.Copy(pr.outputBuf, stderr)
+	go func() {
+		_, err := io.Copy(pr.outputBuf, stdout)
+		if err != nil {
+			log.WithError(err).Error("Error during io.Copy to stdout")
+		}
+	}()
+	go func() {
+		_, err := io.Copy(pr.outputBuf, stderr)
+		if err != nil {
+			log.WithError(err).Error("Error during io.Copy to stderr")
+		}
+	}()
 
 	// actually start the process
 	if err := pr.cmd.Start(); err != nil {
