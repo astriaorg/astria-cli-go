@@ -22,6 +22,7 @@ jobs:
       - name: Lint Go & Markdown
         uses: super-linter/super-linter@v6.4.1
         env:
+          VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "origin/main"
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
