@@ -251,7 +251,6 @@ currently running TUI will be at `~/.astria/default/astria-go.log`.
 > to keep these logs, you will need to manually rename the file after closing
 > the TUI.
 
-
 ### Testing
 
 ```bash
