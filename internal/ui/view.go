@@ -7,6 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	MainTitle = "Astria Dev"
+)
+
 // Props is an empty interface for passing data to the view.
 type Props interface{}
 
@@ -26,10 +30,6 @@ func appendStatus(text string, status bool) string {
 		return text + ": [white:darkslategray]off[-:-]"
 	}
 }
-
-const (
-	MainTitle = "Astria Dev"
-)
 
 // MainView represents the initial view when the app is started.
 // It shows all the process panes in a vertical layout.

@@ -4,11 +4,9 @@ import "sync"
 
 // AppState is a struct containing the state of the application
 type AppState struct {
-	isAutoScroll   bool
-	isWordWrap     bool
-	isBorderless   bool
-	prevView       string
-	prevProperties Props
+	isAutoScroll bool
+	isWordWrap   bool
+	isBorderless bool
 }
 
 // StateStore is a struct that controls the state of the application
@@ -73,14 +71,6 @@ func (s *StateStore) ToggleBorderless() {
 	defer s.mutex.Unlock()
 
 	s.state.isBorderless = !s.state.isBorderless
-}
-
-// SetBorderless sets the borderless state
-func (s *StateStore) SetIsBorderless(b bool) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	s.state.isBorderless = b
 }
 
 // ResetBorderless resets the borderless state to false or "off"
