@@ -69,7 +69,6 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := GetEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -82,7 +81,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		seqOpts := processrunner.NewProcessRunnerOpts{
 			Title:   "Sequencer",
 			BinPath: sequencerPath,
-			Env:     env,
+			EnvPath: envPath,
 			Args:    nil,
 		}
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
@@ -92,7 +91,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		cometOpts := processrunner.NewProcessRunnerOpts{
 			Title:   "Comet BFT",
 			BinPath: cometbftPath,
-			Env:     env,
+			EnvPath: envPath,
 			Args:    []string{"node", "--home", cometDataPath},
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
@@ -101,7 +100,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:   "Composer",
 			BinPath: composerPath,
-			Env:     env,
+			EnvPath: envPath,
 			Args:    nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
@@ -110,7 +109,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:   "Conductor",
 			BinPath: conductorPath,
-			Env:     env,
+			EnvPath: envPath,
 			Args:    nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
@@ -142,7 +141,6 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
-		env := GetEnvironment(envPath)
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -152,7 +150,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:   "Composer",
 			BinPath: composerPath,
-			Env:     env,
+			EnvPath: envPath,
 			Args:    nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
@@ -161,7 +159,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:   "Conductor",
 			BinPath: conductorPath,
-			Env:     env,
+			EnvPath: envPath,
 			Args:    nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
