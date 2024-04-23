@@ -22,6 +22,15 @@ type View interface {
 	GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey
 }
 
+// appendStatus appends the settings status to the end of the input string.
+func appendStatus(text string, status bool) string {
+	if status {
+		return text + ": [black:white]ON [-:-]"
+	} else {
+		return text + ": [white:darkslategray]off[-:-]"
+	}
+}
+
 // MainView represents the initial view when the app is started.
 // It shows all the process panes in a vertical layout.
 type MainView struct {
@@ -52,15 +61,6 @@ func NewMainView(tApp *tview.Application, processrunners []processrunner.Process
 		processPanes:    processPanes,
 		s:               s,
 		selectedPaneIdx: 0,
-	}
-}
-
-// Append the settings status to the end of the input string
-func appendStatus(text string, status bool) string {
-	if status {
-		return text + ": [black:white]ON [-:-]"
-	} else {
-		return text + ": [white:darkslategray]off[-:-]"
 	}
 }
 
@@ -208,13 +208,24 @@ func (fv *FullscreenView) getHelpInfo() string {
 func (fv *FullscreenView) Render(p Props) *tview.Flex {
 	fv.processPane = p.(*ProcessPane)
 	// build tview text views and flex
+	info := tview.NewTextView().
+		SetDynamicColors(true).
+		SetText(fv.processPane.pr.GetInfo()).
+		SetChangedFunc(func() {
+			fv.tApp.Draw()
+		})
+	info.SetBorder(true).SetTitle(fv.processPane.pr.GetTitle() + " Info")
 	help := tview.NewTextView().
 		SetDynamicColors(true).
 		SetText(fv.getHelpInfo()).
 		SetChangedFunc(func() {
 			fv.tApp.Draw()
 		})
+	// update the shared state for the process pane
+	fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
+	fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
 	flex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(info, 4, 0, true).
 		AddItem(fv.processPane.GetTextView(), 0, 1, true).
 		AddItem(help, 1, 0, false), 0, 4, false)
 	return flex

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"syscall"
 
@@ -19,6 +20,7 @@ type ProcessRunner interface {
 	GetDidStart() <-chan bool
 	GetTitle() string
 	GetOutputAndClearBuf() string
+	GetInfo() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -30,6 +32,8 @@ type processRunner struct {
 
 	// saving the opts so we can use them for restarts
 	opts NewProcessRunnerOpts
+	// Env is the environment variables for the process
+	env []string
 	// NOTE - only saving the context on a struct so that we can use it to restart the process
 	ctx context.Context
 
@@ -40,16 +44,24 @@ type processRunner struct {
 type NewProcessRunnerOpts struct {
 	Title   string
 	BinPath string
-	Env     []string
+	EnvPath string
 	Args    []string
 }
 
 // NewProcessRunner creates a new ProcessRunner.
-// It creates a new exec.Cmd with the given binPath and args, and sets the environment.
+// It creates a new exec.Cmd with the given binPath and args, and sets the
+// environment. If no envPath is provided, it uses the current environment using
+// os.Environ().
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
+	var env []string
+	if opts.EnvPath != "" {
+		env = GetEnvironment(opts.EnvPath)
+	} else {
+		env = os.Environ()
+	}
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
-	cmd.Env = opts.Env
+	cmd.Env = env
 	return &processRunner{
 		ctx:       ctx,
 		cmd:       cmd,
@@ -57,6 +69,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		didStart:  make(chan bool),
 		outputBuf: &safebuffer.SafeBuffer{},
 		opts:      opts,
+		env:       env,
 	}
 }
 
@@ -67,7 +80,7 @@ func (pr *processRunner) Restart() error {
 	// NOTE - you have to recreate the exec.Cmd. you can't just call cmd.Start() again.
 	cmd := exec.CommandContext(pr.ctx, pr.opts.BinPath, pr.opts.Args...)
 	// setting env again
-	cmd.Env = pr.opts.Env
+	cmd.Env = pr.env
 	pr.cmd = cmd
 
 	// must recreate the didStart channel because it was previously closed
@@ -118,8 +131,18 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 	}
 
 	// multiwriter to write both stdout and stderr to the same buffer
-	go io.Copy(pr.outputBuf, stdout)
-	go io.Copy(pr.outputBuf, stderr)
+	go func() {
+		_, err := io.Copy(pr.outputBuf, stdout)
+		if err != nil {
+			log.WithError(err).Error("Error during io.Copy to stdout")
+		}
+	}()
+	go func() {
+		_, err := io.Copy(pr.outputBuf, stderr)
+		if err != nil {
+			log.WithError(err).Error("Error during io.Copy to stderr")
+		}
+	}()
 
 	// actually start the process
 	if err := pr.cmd.Start(); err != nil {
@@ -178,4 +201,20 @@ func (pr *processRunner) GetOutputAndClearBuf() string {
 	o := pr.outputBuf.String()
 
 	return o
+}
+
+// GetInfo returns the formatted binary path and environment path of the process.
+func (pr *processRunner) GetInfo() string {
+	binaryPathTitle := " " + pr.GetTitle() + " binary path:"
+	environmentPathTitle := " Environment path:"
+	var maxLen int
+	if len(binaryPathTitle) > len(environmentPathTitle) {
+		maxLen = len(binaryPathTitle)
+	} else {
+		maxLen = len(environmentPathTitle)
+	}
+	output := ""
+	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.opts.BinPath + "\n"
+	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
+	return output
 }
