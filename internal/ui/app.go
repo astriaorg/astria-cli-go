@@ -52,13 +52,11 @@ func (a *App) Start() {
 	// create the views
 	mainView := NewMainView(a.Application, a.processRunners, stateStore)
 	fullscreenView := NewFullscreenView(a.Application, nil, stateStore)
-	environmentView := NewEnvironmentView(a.Application, a.processRunners, stateStore)
 
 	// set the views
 	a.viewMap = map[string]View{
-		"main":        mainView,
-		"fullscreen":  fullscreenView,
-		"environment": environmentView,
+		"main":       mainView,
+		"fullscreen": fullscreenView,
 	}
 
 	// show "main" view initially

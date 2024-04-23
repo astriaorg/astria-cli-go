@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"syscall"
@@ -23,6 +24,7 @@ type ProcessRunner interface {
 	GetEnvironment() []string
 	GetEnvironmentPath() string
 	GetBinPath() string
+	GetInfo() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -205,4 +207,15 @@ func (pr *processRunner) GetOutputAndClearBuf() string {
 	o := pr.outputBuf.String()
 
 	return o
+}
+
+// GetInfo returns the formated binary path and environment path of the process.
+func (pr *processRunner) GetInfo() string {
+	binaryPathTitle := " " + pr.GetTitle() + " binary path:"
+	environmentPathTitle := " Environment path:"
+	maxLen := int64(math.Max(float64(len(binaryPathTitle)), float64(len(environmentPathTitle))))
+	output := ""
+	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.GetBinPath() + "\n"
+	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.GetEnvironmentPath() + "\n"
+	return output
 }

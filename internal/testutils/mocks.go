@@ -54,3 +54,8 @@ func (m *MockProcessRunner) GetBinPath() string {
 	args := m.Called()
 	return args.String(0)
 }
+
+func (m *MockProcessRunner) GetInfo() string {
+	args := m.Called()
+	return args.String(0)
+}

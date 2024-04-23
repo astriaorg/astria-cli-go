@@ -98,20 +98,3 @@ func (s *StateStore) GetIsBorderless() bool {
 
 	return s.state.isBorderless
 }
-
-// SetPreviousView sets the previous view
-func (s *StateStore) SetPreviousView(view string, p Props) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	s.state.prevView = view
-	s.state.prevProperties = p
-}
-
-// GetPreviousView returns the previous view
-func (s *StateStore) GetPreviousView() (string, Props) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	return s.state.prevView, s.state.prevProperties
-}
