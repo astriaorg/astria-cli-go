@@ -57,6 +57,18 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
 
+	logPath := filepath.Join(astriaDir, instance, "ui.log")
+	appLogFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	log.SetOutput(appLogFile)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true, // Disable ANSI color codes
+		FullTimestamp: true,
+	})
+	log.Info("New log file created successfully:", logPath)
+
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
 
