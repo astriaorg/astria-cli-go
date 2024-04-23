@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+        with:
+          # NOTE - super-linter needs the full git history to get
+          #  the list of files that changed across commits
+          fetch-depth: 0
       - uses: actions/setup-go@v4
         with:
           go-version: 1.22.0
