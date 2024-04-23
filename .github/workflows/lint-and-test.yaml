@@ -19,16 +19,17 @@ jobs:
         with:
           go-version: 1.22.0
           cache-dependency-path: ./go.sum
-      - name: Lint Go & Markdown
-        uses: super-linter/super-linter@v6.4.1
-        env:
-          DEFAULT_BRANCH: "origin/main"
-          # To report GitHub Actions status checks
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: "false"
-          VALIDATE_GO: "false"
-          VALIDATE_GO_MODULES: "true"
-          VALIDATE_MARKDOWN: "true"
+      - name: Lint Go
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          skip-pulls: false
+      - name: Lint Markdown
+        uses: nosborn/github-action-markdown-cli@v3.3.0
+        with:
+          files: .
+          config_file: .markdownlint.json
+          dot: true
       - name: Test Go
         # FIXME - the ProcessPane tests require tty or pty i think.
         #  no solutions have worked so far https://github.com/actions/runner/issues/241
