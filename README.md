@@ -245,7 +245,7 @@ the logs that would usually go to `stdout` or `stderr` are written to a log
 file. You can find this log file in the `~/.astria/<instance>` directory that
 the CLI is using for `dev run`.
 For example, if you run `astria-go dev run`, the log file for the
-currently running TUI will be at `~/.astria/default/ui.log`.
+currently running TUI will be at `~/.astria/default/astria-go.log`.
 
 > NOTE: This log file gets overwritten every time you run the TUI. If you need
 > to keep these logs, you will need to manually rename the file after closing
