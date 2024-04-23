@@ -203,7 +203,7 @@ func (pr *processRunner) GetOutputAndClearBuf() string {
 	return o
 }
 
-// GetInfo returns the formated binary path and environment path of the process.
+// GetInfo returns the formatted binary path and environment path of the process.
 func (pr *processRunner) GetInfo() string {
 	binaryPathTitle := " " + pr.GetTitle() + " binary path:"
 	environmentPathTitle := " Environment path:"
