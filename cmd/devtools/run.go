@@ -57,6 +57,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
 
+	cmd.CreateUILog(filepath.Join(astriaDir, instance))
+
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
 
