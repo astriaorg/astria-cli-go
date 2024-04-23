@@ -15,6 +15,7 @@ the Astria stack and interact with the Sequencer.
     * [Run Against a Remote Sequencer](#run-against-a-remote-sequencer)
 * [Instances](#instances)
 * [Development](#development)
+  * [TUI Logs](#tui-logs)
   * [Testing](#testing)
 
 ## Available Commands
@@ -235,6 +236,20 @@ go install github.com/spf13/cobra-cli@latest
 # add new command, e.g. `transfer`
 cobra-cli add transfer
 ```
+
+### TUI Logs
+
+Because the TUI that is launched when using `dev run` manipulates the terminal,
+the logs that would usually go to `stdout` or `stderr` are written to a log
+file. You can find this log file in the `~/.astria/<instance>` directory that
+the CLI is using for `dev run`.
+For example, if you run `astria-go dev run`, the log file for the
+currently running TUI will be at `~/.astria/default/ui.log`.
+
+> NOTE: This log file gets overwritten every time you run the TUI. If you need
+> to keep these logs, you will need to manually rename the file after closing
+> the TUI.
+
 
 ### Testing
 

@@ -57,6 +57,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
 
+	// create log file for the UI app
 	logPath := filepath.Join(astriaDir, instance, "ui.log")
 	appLogFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
