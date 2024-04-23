@@ -105,9 +105,10 @@ The following binaries are downloaded:
 | Astria-Conductor | v0.13.1 |
 | Astria-Composer  | v0.5.0  |
 
-The `init` command will also run the initialization steps required by CometBFT, using the `genesis.json` and
-`priv_validator_key.json` files in the `config-local` directory. This will
-create a `.cometbft` directory in `~/.astria/<instance>/data`.
+The `init` command will also run the initialization steps required by CometBFT,
+using the `genesis.json` and `priv_validator_key.json` files in the
+`config-local` directory. This will create a `.cometbft` directory in
+`~/.astria/<instance>/data`.
 
 ### Usage
 
