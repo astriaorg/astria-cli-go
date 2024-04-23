@@ -20,9 +20,6 @@ type ProcessRunner interface {
 	GetDidStart() <-chan bool
 	GetTitle() string
 	GetOutputAndClearBuf() string
-	GetEnvironment() []string
-	GetEnvironmentPath() string
-	GetBinPath() string
 	GetInfo() string
 }
 
@@ -74,18 +71,6 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		opts:      opts,
 		env:       env,
 	}
-}
-
-func (pr *processRunner) GetBinPath() string {
-	return pr.opts.BinPath
-}
-
-func (pr *processRunner) GetEnvironmentPath() string {
-	return pr.opts.EnvPath
-}
-
-func (pr *processRunner) GetEnvironment() []string {
-	return pr.env
 }
 
 // Restart stops the process and starts it again.
@@ -229,7 +214,7 @@ func (pr *processRunner) GetInfo() string {
 		maxLen = len(environmentPathTitle)
 	}
 	output := ""
-	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.GetBinPath() + "\n"
-	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.GetEnvironmentPath() + "\n"
+	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.opts.BinPath + "\n"
+	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
 	return output
 }
