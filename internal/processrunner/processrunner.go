@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"os/exec"
 	"syscall"
@@ -213,7 +212,12 @@ func (pr *processRunner) GetOutputAndClearBuf() string {
 func (pr *processRunner) GetInfo() string {
 	binaryPathTitle := " " + pr.GetTitle() + " binary path:"
 	environmentPathTitle := " Environment path:"
-	maxLen := int64(math.Max(float64(len(binaryPathTitle)), float64(len(environmentPathTitle))))
+	var maxLen int
+	if len(binaryPathTitle) > len(environmentPathTitle) {
+		maxLen = len(binaryPathTitle)
+	} else {
+		maxLen = len(environmentPathTitle)
+	}
 	output := ""
 	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.GetBinPath() + "\n"
 	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.GetEnvironmentPath() + "\n"
