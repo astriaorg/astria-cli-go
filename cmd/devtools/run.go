@@ -1,12 +1,12 @@
 package devtools
 
 import (
-	"bytes"
 	"fmt"
+	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
@@ -139,23 +139,21 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		// Wait for the sequencer gRPC server to start
 		count := 0
 		for {
-			cmd := exec.Command("curl", "-i", "http://"+seqGRPCAddr+"/health")
+			// Make the HTTP request
+			resp, err := http.Get("http://" + seqGRPCAddr + "/health")
+			if err != nil {
+				log.WithError(err).Error("Error making request")
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			defer resp.Body.Close()
 
-			var out bytes.Buffer
-			cmd.Stdout = &out
-
-			_ = cmd.Run()
-			response := out.String()
-
-			// Check for HTTP status code or a specific response body content
-			if strings.Contains(response, "200 OK") {
-				log.Info("Connected to sequencer gRPC server")
-				break
-			} else if strings.Contains(response, "HTTP/1.1 200 OK") {
-				log.Info("Connected to sequencer gRPC server")
+			// Check status code
+			if resp.StatusCode == 200 {
+				log.Info("Sequencer gRPC server started")
 				break
 			} else {
-				log.Error("Could not connect to sequencer gRPC server. Retrying...")
+				log.Warn("Could not connect to sequencer gRPC server. Retrying...")
 			}
 
 			if count > 10 {
