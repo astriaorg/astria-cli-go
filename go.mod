@@ -6,6 +6,7 @@ toolchain go1.22.0
 
 require (
 	buf.build/gen/go/astria/astria/protocolbuffers/go v1.32.0-20240314225002-310b29d1ef86.1
+	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/go-sequencer-client v0.2.0-alpha.2.0.20240403175831-6b8b007e2093
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/joho/godotenv v1.5.1
@@ -21,22 +22,27 @@ require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.9 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
+	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cometbft/cometbft v0.37.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/cosmos/gogoproto v1.4.1 // indirect
+	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -48,6 +54,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect

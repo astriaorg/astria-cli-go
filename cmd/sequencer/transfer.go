@@ -2,6 +2,7 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/internal/keys"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -19,15 +20,12 @@ var transferCmd = &cobra.Command{
 func init() {
 	sequencerCmd.AddCommand(transferCmd)
 
-	transferCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens.")
 	transferCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
 	transferCmd.Flags().Bool("json", false, "Output in JSON format.")
 
-	err := transferCmd.MarkFlagRequired("privkey")
-	if err != nil {
-		log.WithError(err).Error("Error marking flag as required")
-		panic(err)
-	}
+	transferCmd.Flags().String("address", "", "The address of the account from which to transfer tokens. Requires keystore or keyfile.")
+	transferCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens.")
+	transferCmd.MarkFlagsOneRequired("address", "privkey")
 }
 
 func transferCmdHandler(cmd *cobra.Command, args []string) {
@@ -37,17 +35,27 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 	to := args[1]
 
 	url := cmd.Flag("url").Value.String()
-	from := cmd.Flag("privkey").Value.String()
+	priv := cmd.Flag("privkey").Value.String()
+	address := cmd.Flag("address").Value.String()
+
+	if address != "" {
+		key, err := keys.GetKeyring(address)
+		if err != nil {
+			log.WithError(err).Error("error getting private key from keyring")
+			panic(err)
+		}
+		priv = key
+	}
 
 	opts := sequencer.TransferOpts{
 		SequencerURL: url,
-		FromKey:      from,
+		FromKey:      priv,
 		ToAddress:    to,
 		Amount:       amount,
 	}
 	tx, err := sequencer.Transfer(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("error transferring tokens")
 		panic(err)
 	}
 
