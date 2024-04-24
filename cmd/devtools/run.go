@@ -1,9 +1,12 @@
 package devtools
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
@@ -123,6 +126,45 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		if err != nil {
 			log.WithError(err).Error("Error running sequencer")
 		}
+
+		// Get the sequencer gRPC address from the environment
+		seqEnv := seqRunner.GetEnvironment()
+		var seqGRPCAddr string
+		for _, envVar := range seqEnv {
+			if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
+				seqGRPCAddr = strings.Split(envVar, "=")[1]
+				break
+			}
+		}
+		// Wait for the sequencer gRPC server to start
+		count := 0
+		for {
+			cmd := exec.Command("curl", "-i", "http://"+seqGRPCAddr+"/health")
+
+			var out bytes.Buffer
+			cmd.Stdout = &out
+
+			_ = cmd.Run()
+			response := out.String()
+
+			// Check for HTTP status code or a specific response body content
+			if strings.Contains(response, "200 OK") {
+				log.Info("Connected to sequencer gRPC server")
+				break
+			} else if strings.Contains(response, "HTTP/1.1 200 OK") {
+				log.Info("Connected to sequencer gRPC server")
+				break
+			} else {
+				log.Error("Could not connect to sequencer gRPC server. Retrying...")
+			}
+
+			if count > 10 {
+				log.Error("Connecting to gRPC server failed after 10 attempts. Continuing anyway...")
+				break
+			}
+			count++
+		}
+
 		err = cometRunner.Start(ctx, seqRunner.GetDidStart())
 		if err != nil {
 			log.WithError(err).Error("Error running cometbft")

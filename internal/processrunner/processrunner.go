@@ -21,6 +21,7 @@ type ProcessRunner interface {
 	GetTitle() string
 	GetOutputAndClearBuf() string
 	GetInfo() string
+	GetEnvironment() []string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -217,4 +218,9 @@ func (pr *processRunner) GetInfo() string {
 	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.opts.BinPath + "\n"
 	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
 	return output
+}
+
+// GetEnvironment returns the environment variables for the process.
+func (pr *processRunner) GetEnvironment() []string {
+	return pr.env
 }
