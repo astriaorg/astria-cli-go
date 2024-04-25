@@ -53,14 +53,6 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	if !isInsecure {
-		if useKeyring {
-			err = keys.StoreKeyring(account.Address, account.PrivateKeyString())
-			if err != nil {
-				log.WithError(err).Error("Error storing private key")
-				panic(err)
-			}
-			log.Infof("Private key for %s stored in keychain", account.Address)
-		}
 		if useKeyfile {
 			pwIn := pterm.DefaultInteractiveTextInput.WithMask("*")
 			pw, _ := pwIn.Show("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:")
@@ -83,8 +75,16 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 
 			log.Infof("Storing private key in keyfile at %s", filename)
 		}
+		if useKeyring {
+			err = keys.StoreKeyring(account.Address, account.PrivateKeyString())
+			if err != nil {
+				log.WithError(err).Error("Error storing private key")
+				panic(err)
+			}
+			log.Infof("Private key for %s stored in keychain", account.Address)
+		}
 
-		// clear the private key since we are "secure" here
+		// clear the private key. we don't want to print it since we are "secure" here
 		account.PrivateKey = nil
 	}
 
