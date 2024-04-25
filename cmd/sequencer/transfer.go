@@ -1,12 +1,7 @@
 package sequencer
 
 import (
-	"encoding/hex"
-	"fmt"
-	"strings"
-
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/internal/keys"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -40,7 +35,7 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 	to := args[1]
 	url := cmd.Flag("url").Value.String()
 
-	priv, err := getPrivateKeyFromFlags(cmd)
+	priv, err := GetPrivateKeyFromFlags(cmd)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
@@ -63,42 +58,4 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 		PrintJSON: printJSON,
 	}
 	printer.Render()
-}
-
-func getPrivateKeyFromFlags(cmd *cobra.Command) (string, error) {
-	keyfile := cmd.Flag("keyfile").Value.String()
-	keyringAddress := cmd.Flag("keyring-address").Value.String()
-	priv := cmd.Flag("privkey").Value.String()
-
-	if priv != "" {
-		return priv, nil
-	}
-
-	if keyringAddress != "" {
-		key, err := keys.GetKeyring(keyringAddress)
-		if err != nil {
-			log.WithError(err).Error("Error getting private key from keyring")
-			return "", err
-		}
-		return key, nil
-	}
-
-	if keyfile == "" {
-		kf, err := keys.ResolveKeyfilePath(keyfile)
-		if err != nil {
-			return "", err
-		}
-
-		// TODO - get password from user input
-		password := "banana"
-
-		privKey, err := keys.DecryptKeyfile(kf, strings.TrimRight(string(password), "\r\n"))
-		if err != nil {
-			log.WithError(err).Error("Error decrypting keyfile")
-			return "", err
-		}
-		return hex.EncodeToString(privKey), nil
-	}
-
-	return "", fmt.Errorf("no private key specified")
 }

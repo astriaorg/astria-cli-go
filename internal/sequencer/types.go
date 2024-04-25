@@ -15,6 +15,18 @@ type Account struct {
 	PrivateKey ed25519.PrivateKey
 }
 
+// NewAccountFromPrivKey creates a new Account struct from a given private key.
+// It calculates the public key from the private key, generates the address from the public key,
+// and returns a pointer to the new Account struct with the address, public key, and private key set.
+func NewAccountFromPrivKey(privkey ed25519.PrivateKey) *Account {
+	pub := privkey.Public().(ed25519.PublicKey)
+	return &Account{
+		Address:    AddressFromPublicKey(pub),
+		PublicKey:  pub,
+		PrivateKey: privkey,
+	}
+}
+
 // AccountJSON is for representing an `Account` as JSON
 type AccountJSON struct {
 	Address    string `json:"address"`
