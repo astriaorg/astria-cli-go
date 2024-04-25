@@ -1,54 +1,70 @@
 package keys
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
-//func TestDecryptKeyfile(t *testing.T) {
-//	privateKey, _ := crypto.HexToECDSA("976f9f7772781ff6d1c93941129d417c49a209c674056a3cf5e27e225ee55fa8")
-//	type args struct {
-//		keyfile  string
-//		password string
-//	}
-//	tests := []struct {
-//		name    string
-//		args    args
-//		want    *ecdsa.PrivateKey
-//		wantErr bool
-//	}{
-//		{
-//			name: "empty",
-//			args: args{
-//				keyfile:  "testdata/keystore/empty",
-//				password: "foobar",
-//			},
-//			want:    nil,
-//			wantErr: true,
-//		},
-//		{
-//			name: "success",
-//			args: args{
-//				keyfile:  "testdata/keystore/UTC--2016-03-22T12-57-55.920751759Z--7ef5a6135f1fd6a02593eedc869c6d41d934aef8",
-//				password: "foobar",
-//			},
-//			want:    privateKey,
-//			wantErr: false,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			got, err := DecryptKeyfile(tt.args.keyfile, tt.args.password)
-//			if (err != nil) != tt.wantErr {
-//				t.Errorf("DecryptPrivateKey() error = %v, wantErr %v", err, tt.wantErr)
-//				return
-//			}
-//			if !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("DecryptPrivateKey() got = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
+func TestDecryptKeyfile(t *testing.T) {
+	// NOTE - this is a test private key! don't use for anything real
+	privkeyBytes, _ := hex.DecodeString("158fb2953ecb5a4fd416ec345df586d88ed7494e09075e5cf872337eede03424")
+	privkey := ed25519.NewKeyFromSeed(privkeyBytes)
+
+	type args struct {
+		keyfile  string
+		password string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    ed25519.PrivateKey
+		wantErr bool
+	}{
+		{
+			name: "empty",
+			args: args{
+				keyfile:  "testdata/keystore/empty",
+				password: "foobar",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "keyfile doesn't exist",
+			args: args{
+				keyfile:  "testdata/keystore/nofile",
+				password: "foobar",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "success",
+			args: args{
+				keyfile:  "testdata/keystore/UTC--2024-04-25T13:47:31-06:00--b1f11f673cfd6aa4cc69b25f7f59bc89bccc62f3",
+				password: "foobar",
+			},
+			want:    privkey,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DecryptKeyfile(tt.args.keyfile, tt.args.password)
+			if tt.wantErr && err == nil {
+				t.Errorf("DecryptPrivateKey() error %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DecryptPrivateKey() got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestResolveKeyfilePath(t *testing.T) {
 	tests := []struct {
@@ -60,7 +76,7 @@ func TestResolveKeyfilePath(t *testing.T) {
 		{
 			name:    "directory",
 			keydir:  "testdata/keystore",
-			want:    "UTC--2016-03-22T12-57-55.920751759Z--7ef5a6135f1fd6a02593eedc869c6d41d934aef8",
+			want:    "UTC--2024-04-25T13:47:31-06:00--b1f11f673cfd6aa4cc69b25f7f59bc89bccc62f3",
 			wantErr: false,
 		},
 		{
