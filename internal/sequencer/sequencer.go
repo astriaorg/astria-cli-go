@@ -15,17 +15,21 @@ import (
 func CreateAccount() (*Account, error) {
 	signer, err := client.GenerateSigner()
 	if err != nil {
-		log.WithError(err).Error("failed to generate signer")
+		log.WithError(err).Error("Failed to generate signer")
 		return nil, err
 	}
 	address := signer.Address()
 	seed := signer.Seed()
 
-	log.Debug("Created account with address: ", hex.EncodeToString(address[:]))
+	addr := hex.EncodeToString(address[:])
+	priv := ed25519.NewKeyFromSeed(seed[:])
+	pub := priv.Public().(ed25519.PublicKey)
+
+	log.Debug("Created account with address: ", addr)
 	return &Account{
-		Address:    hex.EncodeToString(address[:]),
-		PublicKey:  hex.EncodeToString(signer.PublicKey()),
-		PrivateKey: hex.EncodeToString(seed[:]),
+		Address:    addr,
+		PublicKey:  pub,
+		PrivateKey: priv,
 	}, nil
 }
 

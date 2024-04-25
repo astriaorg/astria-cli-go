@@ -5,6 +5,7 @@ import (
 	"github.com/astria/astria-cli-go/internal/keys"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
+	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -19,26 +20,28 @@ transactions and blocks. The account will be created with a private key, public 
 	Run:    createaccountCmdHandler,
 }
 
-var useKeyfile = true
-
 func init() {
 	sequencerCmd.AddCommand(createaccountCmd)
 	createaccountCmd.Flags().Bool("json", false, "Output the account information in JSON format.")
 
 	createaccountCmd.Flags().Bool("insecure", false, "Print the account private key to terminal instead of storing securely.")
 	// user has multiple options for storing private key
-	createaccountCmd.Flags().BoolVar(&useKeyfile, "keyfile", true, "Store the account private key in a keyfile.")
+	createaccountCmd.Flags().Bool("keyfile", false, "Store the account private key in a keyfile.")
 	createaccountCmd.Flags().Bool("keyring", false, "Store the account private key in the system keyring.")
 
-	// user can't print private key AND store securely.
+	// you can't print private key AND store securely
 	createaccountCmd.MarkFlagsMutuallyExclusive("insecure", "keyring", "keyfile")
 }
 
 func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
 	printJSON := cmd.Flag("json").Value.String() == "true"
-
-	insecure := cmd.Flag("insecure").Value.String() == "true"
-	keyring := cmd.Flag("keyring").Value.String() == "true"
+	isInsecure := cmd.Flag("insecure").Value.String() == "true"
+	useKeyfile := cmd.Flag("keyfile").Value.String() == "true"
+	useKeyring := cmd.Flag("keyring").Value.String() == "true"
+	if !isInsecure && !useKeyring && !useKeyfile {
+		// useKeyfile is the default if nothing is set
+		useKeyfile = true
+	}
 
 	account, err := sequencer.CreateAccount()
 	if err != nil {
@@ -46,12 +49,9 @@ func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	if !insecure {
-		// clear the private key since we are "secure" here
-		account.PrivateKey = ""
-
-		if keyring {
-			err = keys.StoreKeyring(account.Address, account.PrivateKey)
+	if !isInsecure {
+		if useKeyring {
+			err = keys.StoreKeyring(account.Address, account.PrivateKeyString())
 			if err != nil {
 				log.WithError(err).Error("error storing private key")
 				panic(err)
@@ -59,9 +59,21 @@ func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
 			log.Infof("Private key for %s stored in keychain", account.Address)
 		}
 		if useKeyfile {
+			pwIn := pterm.DefaultInteractiveTextInput.WithMask("*")
+			pw, _ := pwIn.Show("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:")
+			ks, err := keys.NewEncryptedKeyStore(pw, account.PrivateKey)
+			if err != nil {
+				log.WithError(err).Error("Error storing private key")
+				panic(err)
+			}
+			filename, err := keys.SaveKeystoreToFile("~/.astria/keystore/UTC--foofoo--abcd1234fakeaddress", ks)
+
 			// TODO
-			log.Infof("Storing private key in keyfile %s", "/fake/path")
+			log.Infof("Storing private key in keyfile %s", filename)
 		}
+
+		// clear the private key since we are "secure" here
+		account.PrivateKey = nil
 	}
 
 	printer := ui.ResultsPrinter{
