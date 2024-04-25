@@ -72,6 +72,10 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 			cmd.CreateDirOrPanic(keydir)
 
 			filename, err := keys.SaveKeystoreToFile(keydir, ks)
+			if err != nil {
+				log.WithError(err).Error("Error storing private key")
+				panic(err)
+			}
 
 			log.Infof("Storing private key in keyfile at %s", filename)
 		}
