@@ -88,7 +88,7 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 			log.Infof("Private key for %s stored in keychain", account.Address)
 		}
 
-		// clear the private key. we don't want to print it since we are "secure" here
+		// clear the private key. we don't want to print it since we are secure here
 		account.PrivateKey = nil
 	}
 
