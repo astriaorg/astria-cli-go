@@ -24,6 +24,8 @@ type ProcessRunner interface {
 	GetEnvironment() []string
 }
 
+type readinessFunction func() error
+
 // ProcessRunner is a struct that represents a process to be run.
 type processRunner struct {
 	// cmd is the exec.Cmd to be run
@@ -40,13 +42,16 @@ type processRunner struct {
 
 	didStart  chan bool
 	outputBuf *safebuffer.SafeBuffer
+
+	readyChecker readinessFunction
 }
 
 type NewProcessRunnerOpts struct {
-	Title   string
-	BinPath string
-	EnvPath string
-	Args    []string
+	Title      string
+	BinPath    string
+	EnvPath    string
+	Args       []string
+	ReadyCheck readinessFunction
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -64,13 +69,14 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = env
 	return &processRunner{
-		ctx:       ctx,
-		cmd:       cmd,
-		title:     opts.Title,
-		didStart:  make(chan bool),
-		outputBuf: &safebuffer.SafeBuffer{},
-		opts:      opts,
-		env:       env,
+		ctx:          ctx,
+		cmd:          cmd,
+		title:        opts.Title,
+		didStart:     make(chan bool),
+		outputBuf:    &safebuffer.SafeBuffer{},
+		opts:         opts,
+		env:          env,
+		readyChecker: opts.ReadyCheck,
 	}
 }
 
@@ -147,8 +153,16 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 
 	// actually start the process
 	if err := pr.cmd.Start(); err != nil {
-		log.WithError(err).Errorf("error starting process %s", pr.title)
+		log.WithError(err).Errorf("Error starting process %s", pr.title)
 		return err
+	}
+
+	// run the readiness check if present
+	if pr.readyChecker != nil {
+		err := pr.readyChecker()
+		if err != nil {
+			log.WithError(err).Errorf("Error when running readiness check for %s", pr.title)
+		}
 	}
 
 	// signal that this process has started.

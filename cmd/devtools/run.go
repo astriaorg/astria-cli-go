@@ -82,40 +82,84 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", filepath.Join(binDir, "astria-sequencer"))
 		log.Debugf("Using binaries from %s", binDir)
 
+		gRPCServerIsOK := func() error {
+			// Get the sequencer gRPC address from the environment
+			seqEnv := processrunner.GetEnvironment(envPath)
+			var seqGRPCAddr string
+			for _, envVar := range seqEnv {
+				if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
+					seqGRPCAddr = strings.Split(envVar, "=")[1]
+					break
+				}
+			}
+			// Wait for the sequencer gRPC server to start
+			count := 0
+			for {
+				// Make the HTTP request
+				resp, err := http.Get("http://" + seqGRPCAddr + "/health")
+				if err != nil {
+					log.WithError(err).Error("Error making request")
+					time.Sleep(100 * time.Millisecond)
+					continue
+				}
+				defer resp.Body.Close()
+
+				// Check status code
+				if resp.StatusCode == 200 {
+					log.Info("Sequencer gRPC server started")
+					break
+				} else {
+					log.Warn("Could not connect to sequencer gRPC server. Retrying...")
+				}
+
+				if count > 10 {
+					log.Error("Connecting to gRPC server failed after 10 attempts. Continuing anyway...")
+					break
+				}
+				count++
+			}
+
+			return nil
+		}
+
 		// sequencer
 		seqOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Sequencer",
-			BinPath: sequencerPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Sequencer",
+			BinPath:    sequencerPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: gRPCServerIsOK,
 		}
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 		// cometbft
 		cometDataPath := filepath.Join(dataDir, ".cometbft")
 		cometOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Comet BFT",
-			BinPath: cometbftPath,
-			EnvPath: envPath,
-			Args:    []string{"node", "--home", cometDataPath},
+			Title:      "Comet BFT",
+			BinPath:    cometbftPath,
+			EnvPath:    envPath,
+			Args:       []string{"node", "--home", cometDataPath},
+			ReadyCheck: nil,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Composer",
-			BinPath: composerPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Composer",
+			BinPath:    composerPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Conductor",
-			BinPath: conductorPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Conductor",
+			BinPath:    conductorPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -126,43 +170,6 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		if err != nil {
 			log.WithError(err).Error("Error running sequencer")
 		}
-
-		// Get the sequencer gRPC address from the environment
-		seqEnv := seqRunner.GetEnvironment()
-		var seqGRPCAddr string
-		for _, envVar := range seqEnv {
-			if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
-				seqGRPCAddr = strings.Split(envVar, "=")[1]
-				break
-			}
-		}
-		// Wait for the sequencer gRPC server to start
-		count := 0
-		for {
-			// Make the HTTP request
-			resp, err := http.Get("http://" + seqGRPCAddr + "/health")
-			if err != nil {
-				log.WithError(err).Error("Error making request")
-				time.Sleep(100 * time.Millisecond)
-				continue
-			}
-			defer resp.Body.Close()
-
-			// Check status code
-			if resp.StatusCode == 200 {
-				log.Info("Sequencer gRPC server started")
-				break
-			} else {
-				log.Warn("Could not connect to sequencer gRPC server. Retrying...")
-			}
-
-			if count > 10 {
-				log.Error("Connecting to gRPC server failed after 10 attempts. Continuing anyway...")
-				break
-			}
-			count++
-		}
-
 		err = cometRunner.Start(ctx, seqRunner.GetDidStart())
 		if err != nil {
 			log.WithError(err).Error("Error running cometbft")
@@ -190,19 +197,21 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Composer",
-			BinPath: composerPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Composer",
+			BinPath:    composerPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Conductor",
-			BinPath: conductorPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Conductor",
+			BinPath:    conductorPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
