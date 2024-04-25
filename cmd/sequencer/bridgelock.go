@@ -9,8 +9,8 @@ import (
 )
 
 var bridgeLockCmd = &cobra.Command{
-	Use:    "bridge-lock [address] [amount] [destination-chain-address] --privkey=[privkey]",
-	Short:  "Lock tokens on the bridge",
+	Use:    "bridgelock [address] [amount] [destination-chain-address] --privkey=[privkey]",
+	Short:  "Locks tokens on the bridge account",
 	Args:   cobra.ExactArgs(3),
 	PreRun: cmd.SetLogLevel,
 	Run:    bridgeLockCmdHandler,

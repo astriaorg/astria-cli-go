@@ -295,13 +295,12 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 	log.Debugf("Broadcast response: %v", resp)
 
-	// can add a check for ok response
-
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &InitBridgeResponse{
-		Nonce:  nonce,
-		TxHash: hash,
+		RollupID: opts.RollupID,
+		Nonce:    nonce,
+		TxHash:   hash,
 	}
 
 	log.Debugf("Transfer hash: %v", hash)

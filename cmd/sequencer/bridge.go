@@ -10,7 +10,7 @@ import (
 
 // initBridgeCmd represents the init-bridge command
 var initBridgeCmd = &cobra.Command{
-	Use:    "init-bridge [rollup-id] --privkey=[privkey]",
+	Use:    "initbridge [rollup-id] --privkey=[privkey]",
 	Short:  "Initializing a bridge account",
 	Args:   cobra.ExactArgs(1),
 	PreRun: cmd.SetLogLevel,

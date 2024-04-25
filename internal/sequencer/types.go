@@ -102,8 +102,9 @@ type InitBridgeOpts struct {
 	RollupID string
 }
 type InitBridgeResponse struct {
-	Nonce  uint32 `json:"nonce"`
-	TxHash string `json:"txHash"`
+	RollupID string `json:"rollupID"`
+	Nonce    uint32 `json:"nonce"`
+	TxHash   string `json:"txHash"`
 }
 
 func (nr *InitBridgeResponse) JSON() ([]byte, error) {
@@ -111,12 +112,12 @@ func (nr *InitBridgeResponse) JSON() ([]byte, error) {
 }
 
 func (nr *InitBridgeResponse) TableHeader() []string {
-	return []string{"Nonce", "TxHash"}
+	return []string{"RollupId", "Nonce", "TxHash"}
 }
 
 func (nr *InitBridgeResponse) TableRows() [][]string {
 	return [][]string{
-		{strconv.Itoa(int(nr.Nonce)), nr.TxHash},
+		{nr.RollupID, strconv.Itoa(int(nr.Nonce)), nr.TxHash},
 	}
 }
 
