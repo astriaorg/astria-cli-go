@@ -24,6 +24,7 @@ func init() {
 	transferCmd.Flags().Bool("json", false, "Output in JSON format.")
 
 	transferCmd.Flags().String("address", "", "The address of the account from which to transfer tokens. Requires keystore or keyfile.")
+	transferCmd.Flags().String("keyfile", "", "The private key of the account from which to transfer tokens.")
 	transferCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens.")
 	transferCmd.MarkFlagsOneRequired("address", "privkey")
 }
@@ -65,3 +66,24 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	printer.Render()
 }
+
+//func getPrivateKeyFromFlags(cmd *cobra.Command) (string, error) {
+//	privkey := cmd.Flag("privkey").Value.String()
+//	keyfilePath := cmd.Flag("keyfile").Value.String()
+//	keyfilePass := cmd.Flag("keyfile-pass").Value.String()
+//
+//	if privkey != "" {
+//		return privkey, nil
+//	}
+//
+//	keyfile, err := keys.ResolveKeyfilePath(keyfilePath)
+//	if err != nil {
+//		return "", err
+//	}
+//	password, err := os.ReadFile(keyfilePass)
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	return keys.DecryptKeyfile(keyfile, strings.TrimRight(string(password), "\r\n"))
+//}

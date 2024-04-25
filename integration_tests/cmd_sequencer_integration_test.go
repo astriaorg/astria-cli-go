@@ -21,7 +21,7 @@ const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
 const TransferAmount = 535353
 
 func TestCreateaccount(t *testing.T) {
-	createaccountCmd := exec.Command("../bin/astria-go-testy", "sequencer", "createaccount", "--json")
+	createaccountCmd := exec.Command("../bin/astria-go-testy", "sequencer", "createaccount", "--insecure", "--json")
 	createaccountOutput, err := createaccountCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)

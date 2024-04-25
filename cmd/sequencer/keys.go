@@ -12,15 +12,17 @@ var setKeyCmd = &cobra.Command{
 	Short:  "Set private key for an address in system keyring.",
 	Args:   cobra.ExactArgs(2),
 	PreRun: cmd.SetLogLevel,
-	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-		val := args[1]
+	Run:    setKeyCmdHandler,
+}
 
-		err := keys.StoreKeyring(key, val)
-		if err != nil {
-			panic(err)
-		}
-	},
+func setKeyCmdHandler(cmd *cobra.Command, args []string) {
+	key := args[0]
+	val := args[1]
+
+	err := keys.StoreKeyring(key, val)
+	if err != nil {
+		panic(err)
+	}
 }
 
 var getKeyCmd = &cobra.Command{
@@ -28,15 +30,17 @@ var getKeyCmd = &cobra.Command{
 	Short:  "Get private key for an address in system keyring.",
 	Args:   cobra.ExactArgs(1),
 	PreRun: cmd.SetLogLevel,
-	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
+	Run:    getKeyCmdHandler,
+}
 
-		val, err := keys.GetKeyring(key)
-		if err != nil {
-			panic(err)
-		}
-		log.Infof("value: %s", val)
-	},
+func getKeyCmdHandler(cmd *cobra.Command, args []string) {
+	key := args[0]
+
+	val, err := keys.GetKeyring(key)
+	if err != nil {
+		panic(err)
+	}
+	log.Infof("value: %s", val)
 }
 
 func init() {
