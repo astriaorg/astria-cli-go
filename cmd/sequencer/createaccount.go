@@ -1,6 +1,9 @@
 package sequencer
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/keys"
 	"github.com/astria/astria-cli-go/internal/sequencer"
@@ -33,11 +36,11 @@ func init() {
 	createaccountCmd.MarkFlagsMutuallyExclusive("insecure", "keyring", "keyfile")
 }
 
-func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
-	printJSON := cmd.Flag("json").Value.String() == "true"
-	isInsecure := cmd.Flag("insecure").Value.String() == "true"
-	useKeyfile := cmd.Flag("keyfile").Value.String() == "true"
-	useKeyring := cmd.Flag("keyring").Value.String() == "true"
+func createaccountCmdHandler(c *cobra.Command, _ []string) {
+	printJSON := c.Flag("json").Value.String() == "true"
+	isInsecure := c.Flag("insecure").Value.String() == "true"
+	useKeyfile := c.Flag("keyfile").Value.String() == "true"
+	useKeyring := c.Flag("keyring").Value.String() == "true"
 	if !isInsecure && !useKeyring && !useKeyfile {
 		// useKeyfile is the default if nothing is set
 		useKeyfile = true
@@ -45,7 +48,7 @@ func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
 
 	account, err := sequencer.CreateAccount()
 	if err != nil {
-		log.WithError(err).Error("error creating account")
+		log.WithError(err).Error("Error creating account")
 		panic(err)
 	}
 
@@ -53,7 +56,7 @@ func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
 		if useKeyring {
 			err = keys.StoreKeyring(account.Address, account.PrivateKeyString())
 			if err != nil {
-				log.WithError(err).Error("error storing private key")
+				log.WithError(err).Error("Error storing private key")
 				panic(err)
 			}
 			log.Infof("Private key for %s stored in keychain", account.Address)
@@ -61,15 +64,24 @@ func createaccountCmdHandler(cmd *cobra.Command, _ []string) {
 		if useKeyfile {
 			pwIn := pterm.DefaultInteractiveTextInput.WithMask("*")
 			pw, _ := pwIn.Show("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:")
-			ks, err := keys.NewEncryptedKeyStore(pw, account.PrivateKey)
+
+			ks, err := keys.NewEncryptedKeyStore(pw, account.Address, account.PrivateKey)
 			if err != nil {
 				log.WithError(err).Error("Error storing private key")
 				panic(err)
 			}
-			filename, err := keys.SaveKeystoreToFile("~/.astria/keystore/UTC--foofoo--abcd1234fakeaddress", ks)
+			homePath, err := os.UserHomeDir()
+			if err != nil {
+				log.WithError(err).Error("Error getting home dir")
+				panic(err)
+			}
+			astriaDir := filepath.Join(homePath, ".astria")
+			keydir := filepath.Join(astriaDir, "keyfiles")
+			cmd.CreateDirOrPanic(keydir)
 
-			// TODO
-			log.Infof("Storing private key in keyfile %s", filename)
+			filename, err := keys.SaveKeystoreToFile(keydir, ks)
+
+			log.Infof("Storing private key in keyfile at %s", filename)
 		}
 
 		// clear the private key since we are "secure" here

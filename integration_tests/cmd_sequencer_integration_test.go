@@ -27,14 +27,14 @@ func TestCreateaccount(t *testing.T) {
 		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)
 
 	}
-	var account sequencer.Account
+	var account sequencer.AccountJSON
 	err = json.Unmarshal(createaccountOutput, &account)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal account json output: %v", err)
 	}
-	assert.NotEmpty(t, account.Address)
-	assert.NotEmpty(t, account.PrivateKey)
-	assert.NotEmpty(t, account.PublicKey)
+	assert.NotEmpty(t, account.Address, "Address should not be empty")
+	assert.NotEmpty(t, account.PublicKey, "PublicKey should not be empty")
+	assert.NotEmpty(t, account.PrivateKey, "PrivateKey should not be empty")
 }
 
 func TestTransferAndGetNonce(t *testing.T) {

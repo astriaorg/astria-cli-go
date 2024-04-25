@@ -13,7 +13,7 @@ func StoreKeyring(key string, secret string) error {
 		ServiceName: service,
 	})
 	if err != nil {
-		log.WithError(err).Error("error opening keyring service")
+		log.WithError(err).Error("Error opening keyring service")
 		return err
 	}
 
@@ -23,11 +23,11 @@ func StoreKeyring(key string, secret string) error {
 		Label: "Astria Sequencer account private key",
 	})
 	if err != nil {
-		log.WithError(err).Error("error setting key")
+		log.WithError(err).Error("Error setting key")
 		return err
 	}
 
-	log.Debug("stored secret using keyring service")
+	log.Debug("Stored secret using keyring service")
 	return nil
 }
 
@@ -37,14 +37,14 @@ func GetKeyring(key string) (string, error) {
 		ServiceName: service,
 	})
 	if err != nil {
-		log.WithError(err).Error("error opening keyring service")
+		log.WithError(err).Error("Error opening keyring service")
 		return "", err
 	}
 
-	log.Debugf("retrieving secret for %s", key)
+	log.Debugf("Retrieving secret for %s", key)
 	item, err := ring.Get(key)
 	if err != nil {
-		log.WithError(err).Error("error getting secret from keyring")
+		log.WithError(err).Error("Error getting secret from keyring")
 		return "", nil
 	}
 
