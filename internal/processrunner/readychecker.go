@@ -21,7 +21,10 @@ type ReadyChecker struct {
 type ReadyCheckerOpts struct {
 	// CallBackName is the name of the callback function and is used for logging purposes.
 	CallBackName string
-	// Callback is the function that will be called to check if the process is ready.
+	// Callback is the anonymous function that will be called to check if all
+	// startup requirements for the process have been completed. The function
+	// should return true if all startup checks are complete, and false if any
+	// startup checks have not completed.
 	Callback      func() bool
 	RetryCount    int
 	RetryInterval time.Duration
@@ -56,7 +59,7 @@ func (r *ReadyChecker) waitUntilReady() error {
 			log.Info(fmt.Sprintf("ReadyChecker callback to '%s' completed successfully.", r.callBackName))
 			return nil
 		}
-		log.Debug(fmt.Sprintf("ReadyChecker callback to '%s' run %d failed to complete. Retrying...", r.callBackName, i+1))
+		log.Debug(fmt.Sprintf("ReadyChecker callback to '%s': attempt %d, failed to complete. Retrying...", r.callBackName, i+1))
 		time.Sleep(r.retryInterval)
 	}
 	complete := r.callback()

@@ -82,43 +82,15 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", filepath.Join(binDir, "astria-sequencer"))
 		log.Debugf("Using binaries from %s", binDir)
 
-		gRPCServerIsOK := func() bool {
-			// Get the sequencer gRPC address from the environment
-			seqEnv := processrunner.GetEnvironment(envPath)
-			var seqGRPCAddr string
-			for _, envVar := range seqEnv {
-				if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
-					seqGRPCAddr = strings.Split(envVar, "=")[1]
-					break
-				}
-			}
-
-			// Make the HTTP request
-			resp, err := http.Get("http://" + seqGRPCAddr + "/health")
-			if err != nil {
-				log.WithError(err).Error("Error making sequencer gRPC request")
-				return false
-			}
-			defer resp.Body.Close()
-
-			// Check status code
-			if resp.StatusCode == 200 {
-				log.Info("Sequencer gRPC server started")
-				return true
-			}
-
-			return false
-		}
+		// sequencer
 		seqRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "Sequencer gRPC server is OK",
-			Callback:      gRPCServerIsOK,
+			Callback:      gRPCServerIsOK(envPath),
 			RetryCount:    10,
 			RetryInterval: 100 * time.Millisecond,
 			HaltIfFailed:  false,
 		}
 		seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
-
-		// sequencer
 		seqOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Sequencer",
 			BinPath:    sequencerPath,
@@ -264,5 +236,40 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 	} else {
 		log.Debug(fmt.Sprintf("No path provided for %s binary. Using default path: %s", flagName, defaultValue))
 		return defaultValue
+	}
+}
+
+// gRPCServerIsOK builds an anonymous function for use in a ProcessRunner
+// ReadyChecker callback. The anonymous function checks if the gRPC server that
+// is started by the sequencer is OK by making an HTTP request to the health
+// endpoint. Being able to connect to the gRPC server is a requirement for both
+// the Conductor and Composer services.
+func gRPCServerIsOK(envPath string) func() bool {
+	return func() bool {
+		// Get the sequencer gRPC address from the environment
+		seqEnv := processrunner.GetEnvironment(envPath)
+		var seqGRPCAddr string
+		for _, envVar := range seqEnv {
+			if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
+				seqGRPCAddr = strings.Split(envVar, "=")[1]
+				break
+			}
+		}
+
+		// Make the HTTP request
+		resp, err := http.Get("http://" + seqGRPCAddr + "/health")
+		if err != nil {
+			log.WithError(err).Error("Error making sequencer gRPC request")
+			return false
+		}
+		defer resp.Body.Close()
+
+		// Check status code
+		if resp.StatusCode == 200 {
+			log.Info("Sequencer gRPC server started")
+			return true
+		}
+
+		return false
 	}
 }
