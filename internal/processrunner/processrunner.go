@@ -80,6 +80,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 
 // Restart stops the process and starts it again.
 func (pr *processRunner) Restart() error {
+	log.Debug(fmt.Sprintf("Stopping process %s", pr.title))
 	pr.Stop()
 
 	// NOTE - you have to recreate the exec.Cmd. you can't just call cmd.Start() again.
@@ -115,6 +116,8 @@ func (pr *processRunner) Restart() error {
 // It takes a channel that's closed when the dependency starts.
 // This allows us to control the order of process startup.
 func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) error {
+	log.Debug(fmt.Sprintf("Starting process %s", pr.title))
+
 	select {
 	case <-depStarted:
 	// continue if the dependency has started.
@@ -170,16 +173,18 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 	go func() {
 		err = pr.cmd.Wait()
 		if err != nil {
-			err = fmt.Errorf("[white:red][astria-go] %s process exited with error: %w[-:-]", pr.title, err)
-			log.Error(err)
-			_, err := pr.outputBuf.WriteString(err.Error())
+			logErr := fmt.Errorf("%s process exited with error: %w", pr.title, err)
+			outputErr := fmt.Errorf("[white:red][astria-go] %s[-:-]", logErr)
+			log.Error(logErr)
+			_, err := pr.outputBuf.WriteString(outputErr.Error())
 			if err != nil {
 				return
 			}
 		} else {
-			s := fmt.Sprintf("[black:white][astria-go] %s process exited cleanly[-:-]", pr.title)
-			log.Infof(s)
-			_, err := pr.outputBuf.WriteString(s)
+			exitStatusMessage := fmt.Sprintf("%s process exited cleanly", pr.title)
+			outputStatusMessage := fmt.Sprintf("[black:white][astria-go] %s[-:-]", exitStatusMessage)
+			log.Infof(exitStatusMessage)
+			_, err := pr.outputBuf.WriteString(outputStatusMessage)
 			if err != nil {
 				return
 			}

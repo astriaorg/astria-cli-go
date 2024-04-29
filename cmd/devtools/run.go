@@ -259,14 +259,14 @@ func gRPCServerIsOK(envPath string) func() bool {
 		// Make the HTTP request
 		resp, err := http.Get("http://" + seqGRPCAddr + "/health")
 		if err != nil {
-			log.WithError(err).Error("Error making sequencer gRPC request")
+			log.WithError(err).Debug("Startup callback check to sequencer gRPC /health did not succeed")
 			return false
 		}
 		defer resp.Body.Close()
 
 		// Check status code
 		if resp.StatusCode == 200 {
-			log.Info("Sequencer gRPC server started")
+			log.Debug("Sequencer gRPC server started")
 			return true
 		}
 

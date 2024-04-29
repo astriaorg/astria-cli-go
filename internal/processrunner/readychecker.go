@@ -56,7 +56,7 @@ func (r *ReadyChecker) waitUntilReady() error {
 	for i := 0; i < r.retryCount-1; i++ {
 		complete := r.callback()
 		if complete {
-			log.Info(fmt.Sprintf("ReadyChecker callback to '%s' completed successfully.", r.callBackName))
+			log.Debug(fmt.Sprintf("ReadyChecker callback to '%s' completed successfully.", r.callBackName))
 			return nil
 		}
 		log.Debug(fmt.Sprintf("ReadyChecker callback to '%s': attempt %d, failed to complete. Retrying...", r.callBackName, i+1))
