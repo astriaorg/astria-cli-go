@@ -24,8 +24,6 @@ type ProcessRunner interface {
 	GetEnvironment() []string
 }
 
-type readinessFunction func() error
-
 // ProcessRunner is a struct that represents a process to be run.
 type processRunner struct {
 	// cmd is the exec.Cmd to be run

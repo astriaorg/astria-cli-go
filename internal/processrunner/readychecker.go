@@ -12,7 +12,6 @@ import (
 type ReadyChecker struct {
 	callBackName  string
 	callback      func() bool
-	startDelay    time.Duration
 	retryCount    int
 	retryInterval time.Duration
 	haltIfFailed  bool
