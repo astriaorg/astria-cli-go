@@ -85,7 +85,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		// sequencer
 		seqRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "Sequencer gRPC server is OK",
-			Callback:      gRPCServerIsOK(envPath),
+			Callback:      getSequencerOKCallback(envPath),
 			RetryCount:    10,
 			RetryInterval: 100 * time.Millisecond,
 			HaltIfFailed:  false,
@@ -239,12 +239,12 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 	}
 }
 
-// gRPCServerIsOK builds an anonymous function for use in a ProcessRunner
+// getSequencerOKCallback builds an anonymous function for use in a ProcessRunner
 // ReadyChecker callback. The anonymous function checks if the gRPC server that
 // is started by the sequencer is OK by making an HTTP request to the health
 // endpoint. Being able to connect to the gRPC server is a requirement for both
 // the Conductor and Composer services.
-func gRPCServerIsOK(envPath string) func() bool {
+func getSequencerOKCallback(envPath string) func() bool {
 	return func() bool {
 		// Get the sequencer gRPC address from the environment
 		seqEnv := processrunner.GetEnvironment(envPath)

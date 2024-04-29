@@ -10,27 +10,27 @@ import (
 // ReadyChecker is a struct used within the ProcessRunner to check if the
 // process being run has completed all its startup steps.
 type ReadyChecker struct {
-	callBackName  string
+	// callBackName is the name of the callback function and is used for logging purposes.
+	callBackName string
+	// callback is the anonymous function that will be called to check if all
+	// startup requirements for the process have been completed. The function
+	// should return true if all startup checks are complete, and false if any
+	// startup checks have not completed.
 	callback      func() bool
 	retryCount    int
 	retryInterval time.Duration
-	haltIfFailed  bool
+	// haltIfFailed is a flag that determines if the process should halt the app or
+	// continue if all retries of the callback complete without success.
+	haltIfFailed bool
 }
 
 // ReadyCheckerOpts is a struct used to pass options into NewReadyChecker.
 type ReadyCheckerOpts struct {
-	// CallBackName is the name of the callback function and is used for logging purposes.
-	CallBackName string
-	// Callback is the anonymous function that will be called to check if all
-	// startup requirements for the process have been completed. The function
-	// should return true if all startup checks are complete, and false if any
-	// startup checks have not completed.
+	CallBackName  string
 	Callback      func() bool
 	RetryCount    int
 	RetryInterval time.Duration
-	// HaltIfFailed is a flag that determines if the process should halt the app or
-	// continue if all retries of the callback complete without success.
-	HaltIfFailed bool
+	HaltIfFailed  bool
 }
 
 // NewReadyChecker creates a new ReadyChecker.
@@ -44,7 +44,7 @@ func NewReadyChecker(opts ReadyCheckerOpts) ReadyChecker {
 	}
 }
 
-// WaitUntilReady calls the ReadyChecker.callback function N number of times,
+// waitUntilReady calls the ReadyChecker.callback function N number of times,
 // waiting M amount of time between retries, where N = ReadyChecker.retryCount
 // and M = ReadyChecker.retryInterval.
 // If the callback returns true, the function returns nil.
