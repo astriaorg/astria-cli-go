@@ -2,7 +2,6 @@
 
 package devtools
 
-// Your code here
 type Binary struct {
 	Name string
 	Url  string

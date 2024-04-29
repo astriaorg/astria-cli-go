@@ -21,6 +21,7 @@ type ProcessRunner interface {
 	GetTitle() string
 	GetOutputAndClearBuf() string
 	GetInfo() string
+	GetEnvironment() []string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -39,13 +40,16 @@ type processRunner struct {
 
 	didStart  chan bool
 	outputBuf *safebuffer.SafeBuffer
+
+	readyChecker *ReadyChecker
 }
 
 type NewProcessRunnerOpts struct {
-	Title   string
-	BinPath string
-	EnvPath string
-	Args    []string
+	Title      string
+	BinPath    string
+	EnvPath    string
+	Args       []string
+	ReadyCheck *ReadyChecker
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -63,18 +67,20 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = env
 	return &processRunner{
-		ctx:       ctx,
-		cmd:       cmd,
-		title:     opts.Title,
-		didStart:  make(chan bool),
-		outputBuf: &safebuffer.SafeBuffer{},
-		opts:      opts,
-		env:       env,
+		ctx:          ctx,
+		cmd:          cmd,
+		title:        opts.Title,
+		didStart:     make(chan bool),
+		outputBuf:    &safebuffer.SafeBuffer{},
+		opts:         opts,
+		env:          env,
+		readyChecker: opts.ReadyCheck,
 	}
 }
 
 // Restart stops the process and starts it again.
 func (pr *processRunner) Restart() error {
+	log.Debug(fmt.Sprintf("Stopping process %s", pr.title))
 	pr.Stop()
 
 	// NOTE - you have to recreate the exec.Cmd. you can't just call cmd.Start() again.
@@ -110,6 +116,8 @@ func (pr *processRunner) Restart() error {
 // It takes a channel that's closed when the dependency starts.
 // This allows us to control the order of process startup.
 func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) error {
+	log.Debug(fmt.Sprintf("Starting process %s", pr.title))
+
 	select {
 	case <-depStarted:
 	// continue if the dependency has started.
@@ -146,8 +154,16 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 
 	// actually start the process
 	if err := pr.cmd.Start(); err != nil {
-		log.WithError(err).Errorf("error starting process %s", pr.title)
+		log.WithError(err).Errorf("Error starting process %s", pr.title)
 		return err
+	}
+
+	// run the readiness check if present
+	if pr.readyChecker != nil {
+		err := pr.readyChecker.waitUntilReady()
+		if err != nil {
+			log.WithError(err).Errorf("Error when running readiness check for %s", pr.title)
+		}
 	}
 
 	// signal that this process has started.
@@ -157,16 +173,18 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 	go func() {
 		err = pr.cmd.Wait()
 		if err != nil {
-			err = fmt.Errorf("[white:red][astria-go] %s process exited with error: %w[-:-]", pr.title, err)
-			log.Error(err)
-			_, err := pr.outputBuf.WriteString(err.Error())
+			logErr := fmt.Errorf("%s process exited with error: %w", pr.title, err)
+			outputErr := fmt.Errorf("[white:red][astria-go] %s[-:-]", logErr)
+			log.Error(logErr)
+			_, err := pr.outputBuf.WriteString(outputErr.Error())
 			if err != nil {
 				return
 			}
 		} else {
-			s := fmt.Sprintf("[black:white][astria-go] %s process exited cleanly[-:-]", pr.title)
-			log.Infof(s)
-			_, err := pr.outputBuf.WriteString(s)
+			exitStatusMessage := fmt.Sprintf("%s process exited cleanly", pr.title)
+			outputStatusMessage := fmt.Sprintf("[black:white][astria-go] %s[-:-]", exitStatusMessage)
+			log.Infof(exitStatusMessage)
+			_, err := pr.outputBuf.WriteString(outputStatusMessage)
 			if err != nil {
 				return
 			}
@@ -217,4 +235,9 @@ func (pr *processRunner) GetInfo() string {
 	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.opts.BinPath + "\n"
 	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
 	return output
+}
+
+// GetEnvironment returns the environment variables for the process.
+func (pr *processRunner) GetEnvironment() []string {
+	return pr.env
 }
