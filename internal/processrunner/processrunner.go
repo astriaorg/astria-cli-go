@@ -43,7 +43,7 @@ type processRunner struct {
 	didStart  chan bool
 	outputBuf *safebuffer.SafeBuffer
 
-	readyChecker readinessFunction
+	readyChecker *ReadyChecker
 }
 
 type NewProcessRunnerOpts struct {
@@ -51,7 +51,7 @@ type NewProcessRunnerOpts struct {
 	BinPath    string
 	EnvPath    string
 	Args       []string
-	ReadyCheck readinessFunction
+	ReadyCheck *ReadyChecker
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -159,7 +159,7 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 
 	// run the readiness check if present
 	if pr.readyChecker != nil {
-		err := pr.readyChecker()
+		err := pr.readyChecker.waitUntilReady()
 		if err != nil {
 			log.WithError(err).Errorf("Error when running readiness check for %s", pr.title)
 		}

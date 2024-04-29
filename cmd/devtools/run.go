@@ -82,7 +82,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", filepath.Join(binDir, "astria-sequencer"))
 		log.Debugf("Using binaries from %s", binDir)
 
-		gRPCServerIsOK := func() error {
+		gRPCServerIsOK := func() bool {
 			// Get the sequencer gRPC address from the environment
 			seqEnv := processrunner.GetEnvironment(envPath)
 			var seqGRPCAddr string
@@ -92,35 +92,31 @@ func runCmdHandler(c *cobra.Command, args []string) {
 					break
 				}
 			}
-			// Wait for the sequencer gRPC server to start
-			count := 0
-			for {
-				// Make the HTTP request
-				resp, err := http.Get("http://" + seqGRPCAddr + "/health")
-				if err != nil {
-					log.WithError(err).Error("Error making request")
-					time.Sleep(100 * time.Millisecond)
-					continue
-				}
-				defer resp.Body.Close()
 
-				// Check status code
-				if resp.StatusCode == 200 {
-					log.Info("Sequencer gRPC server started")
-					break
-				} else {
-					log.Warn("Could not connect to sequencer gRPC server. Retrying...")
-				}
+			// Make the HTTP request
+			resp, err := http.Get("http://" + seqGRPCAddr + "/health")
+			if err != nil {
+				log.WithError(err).Error("Error making sequencer gRPC request")
+				return false
+			}
+			defer resp.Body.Close()
 
-				if count > 10 {
-					log.Error("Connecting to gRPC server failed after 10 attempts. Continuing anyway...")
-					break
-				}
-				count++
+			// Check status code
+			if resp.StatusCode == 200 {
+				log.Info("Sequencer gRPC server started")
+				return true
 			}
 
-			return nil
+			return false
 		}
+		seqRCOpts := processrunner.ReadyCheckerOpts{
+			CallBackName:  "Sequencer gRPC server is OK",
+			Callback:      gRPCServerIsOK,
+			RetryCount:    10,
+			RetryInterval: 100 * time.Millisecond,
+			HaltIfFailed:  false,
+		}
+		seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
 
 		// sequencer
 		seqOpts := processrunner.NewProcessRunnerOpts{
@@ -128,7 +124,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 			BinPath:    sequencerPath,
 			EnvPath:    envPath,
 			Args:       nil,
-			ReadyCheck: gRPCServerIsOK,
+			ReadyCheck: &seqReadinessCheck,
 		}
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
