@@ -61,13 +61,13 @@ fix-md:
     markdownlint-cli2 "**/*.md" "#bin" "#.github" --fix
 
 defaultargs := ''
-# run the cli. takes quoted cli command to run, e.g. `just run "dev init"`. logs cli output to tview_log.txt
-run args=defaultargs:
-    go run main.go {{args}} --log-level=debug > tview_log.txt 2>&1
+# run the cli with --log-level=debug
+run *args=defaultargs:
+    go run main.go {{args}} --log-level=debug
 alias r := run
 
 run-race args=defaultargs:
-    go run -race main.go {{args}} > tview_log.txt 2>&1
+    go run -race main.go {{args}}
 
 # show any running Astria processes
 [no-exit-message]

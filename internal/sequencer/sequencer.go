@@ -6,26 +6,30 @@ import (
 	"encoding/hex"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	sqproto "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/sequencer/v1"
 	"github.com/astriaorg/go-sequencer-client/client"
+	log "github.com/sirupsen/logrus"
 )
 
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
 	signer, err := client.GenerateSigner()
 	if err != nil {
+		log.WithError(err).Error("Failed to generate signer")
 		return nil, err
 	}
 	address := signer.Address()
 	seed := signer.Seed()
 
-	log.Debug("Created account with address: ", hex.EncodeToString(address[:]))
+	addr := hex.EncodeToString(address[:])
+	priv := ed25519.NewKeyFromSeed(seed[:])
+	pub := priv.Public().(ed25519.PublicKey)
+
+	log.Debug("Created account with address: ", addr)
 	return &Account{
-		Address:    hex.EncodeToString(address[:]),
-		PublicKey:  hex.EncodeToString(signer.PublicKey()),
-		PrivateKey: hex.EncodeToString(seed[:]),
+		Address:    addr,
+		PublicKey:  pub,
+		PrivateKey: priv,
 	}, nil
 }
 

@@ -22,20 +22,22 @@ func init() {
 	bridgeLockCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to lock tokens")
 	bridgeLockCmd.Flags().Bool("json", false, "Output bridge lock transaction as JSON")
 
-	err := bridgeLockCmd.MarkFlagRequired("privkey")
-	if err != nil {
-		log.WithError(err).Error("Error marking flag as required")
-		panic(err)
-	}
+	transferCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
+	transferCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
+	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
 }
 
 func bridgeLockCmdHandler(cmd *cobra.Command, args []string) {
-	from := cmd.Flag("privkey").Value.String()
 	url := cmd.Flag("url").Value.String()
 	printJSON := cmd.Flag("json").Value.String() == "true"
+	priv, err := GetPrivateKeyFromFlags(cmd)
+	if err != nil {
+		log.WithError(err).Error("Could not get private key from flags")
+		panic(err)
+	}
 	opts := sequencer.BridgeLockOpts{
 		SequencerURL:     url,
-		FromKey:          from,
+		FromKey:          priv,
 		ToAddress:        args[0],
 		Amount:           args[1],
 		DestinationChain: args[2],
