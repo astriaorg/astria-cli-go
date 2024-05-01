@@ -1,8 +1,6 @@
 module github.com/astria/astria-cli-go
 
-go 1.22
-
-toolchain go1.22.0
+go 1.22.2
 
 require (
 	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.33.0-20240422195039-812e347acd6b.1
