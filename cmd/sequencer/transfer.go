@@ -21,6 +21,7 @@ func init() {
 
 	transferCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens.")
 	transferCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
+	// add chainId
 	transferCmd.Flags().Bool("json", false, "Output in JSON format.")
 
 	err := transferCmd.MarkFlagRequired("privkey")
