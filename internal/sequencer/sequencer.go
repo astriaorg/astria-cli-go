@@ -12,7 +12,6 @@ import (
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 
 	"github.com/astriaorg/go-sequencer-client/client"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
