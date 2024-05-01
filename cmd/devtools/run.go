@@ -2,8 +2,11 @@ package devtools
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
@@ -80,39 +83,51 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		log.Debugf("Using binaries from %s", binDir)
 
 		// sequencer
+		seqRCOpts := processrunner.ReadyCheckerOpts{
+			CallBackName:  "Sequencer gRPC server is OK",
+			Callback:      getSequencerOKCallback(envPath),
+			RetryCount:    10,
+			RetryInterval: 100 * time.Millisecond,
+			HaltIfFailed:  false,
+		}
+		seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
 		seqOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Sequencer",
-			BinPath: sequencerPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Sequencer",
+			BinPath:    sequencerPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: &seqReadinessCheck,
 		}
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 		// cometbft
 		cometDataPath := filepath.Join(dataDir, ".cometbft")
 		cometOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Comet BFT",
-			BinPath: cometbftPath,
-			EnvPath: envPath,
-			Args:    []string{"node", "--home", cometDataPath},
+			Title:      "Comet BFT",
+			BinPath:    cometbftPath,
+			EnvPath:    envPath,
+			Args:       []string{"node", "--home", cometDataPath},
+			ReadyCheck: nil,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Composer",
-			BinPath: composerPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Composer",
+			BinPath:    composerPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Conductor",
-			BinPath: conductorPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Conductor",
+			BinPath:    conductorPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -150,19 +165,21 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Composer",
-			BinPath: composerPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Composer",
+			BinPath:    composerPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:   "Conductor",
-			BinPath: conductorPath,
-			EnvPath: envPath,
-			Args:    nil,
+			Title:      "Conductor",
+			BinPath:    conductorPath,
+			EnvPath:    envPath,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -219,5 +236,40 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 	} else {
 		log.Debug(fmt.Sprintf("No path provided for %s binary. Using default path: %s", flagName, defaultValue))
 		return defaultValue
+	}
+}
+
+// getSequencerOKCallback builds an anonymous function for use in a ProcessRunner
+// ReadyChecker callback. The anonymous function checks if the gRPC server that
+// is started by the sequencer is OK by making an HTTP request to the health
+// endpoint. Being able to connect to the gRPC server is a requirement for both
+// the Conductor and Composer services.
+func getSequencerOKCallback(envPath string) func() bool {
+	return func() bool {
+		// Get the sequencer gRPC address from the environment
+		seqEnv := processrunner.GetEnvironment(envPath)
+		var seqGRPCAddr string
+		for _, envVar := range seqEnv {
+			if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
+				seqGRPCAddr = strings.Split(envVar, "=")[1]
+				break
+			}
+		}
+
+		// Make the HTTP request
+		resp, err := http.Get("http://" + seqGRPCAddr + "/health")
+		if err != nil {
+			log.WithError(err).Debug("Startup callback check to sequencer gRPC /health did not succeed")
+			return false
+		}
+		defer resp.Body.Close()
+
+		// Check status code
+		if resp.StatusCode == 200 {
+			log.Debug("Sequencer gRPC server started")
+			return true
+		}
+
+		return false
 	}
 }
