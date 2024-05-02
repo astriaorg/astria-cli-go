@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 )
@@ -28,7 +26,7 @@ func (rp *ResultsPrinter) Render() {
 			log.WithError(err).Error("Error marshalling to JSON")
 			return
 		}
-		fmt.Println(string(jsonData))
+		pterm.Println(string(jsonData))
 	} else {
 		header := rp.Data.TableHeader()
 		rows := rp.Data.TableRows()

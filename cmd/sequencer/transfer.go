@@ -19,16 +19,14 @@ var transferCmd = &cobra.Command{
 func init() {
 	sequencerCmd.AddCommand(transferCmd)
 
-	transferCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens.")
-	transferCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
-	// add chainId
 	transferCmd.Flags().Bool("json", false, "Output in JSON format.")
+	transferCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
 
-	err := transferCmd.MarkFlagRequired("privkey")
-	if err != nil {
-		log.WithError(err).Error("Error marking flag as required")
-		panic(err)
-	}
+	transferCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
+	transferCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
+	transferCmd.Flags().String("privkey", "", "The private key of the sender.")
+	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	transferCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 }
 
 func transferCmdHandler(cmd *cobra.Command, args []string) {
@@ -36,13 +34,17 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 
 	amount := args[0]
 	to := args[1]
-
 	url := cmd.Flag("url").Value.String()
-	from := cmd.Flag("privkey").Value.String()
+
+	priv, err := GetPrivateKeyFromFlags(cmd)
+	if err != nil {
+		log.WithError(err).Error("Could not get private key from flags")
+		panic(err)
+	}
 
 	opts := sequencer.TransferOpts{
 		SequencerURL: url,
-		FromKey:      from,
+		FromKey:      priv,
 		ToAddress:    to,
 		Amount:       amount,
 	}
