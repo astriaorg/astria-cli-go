@@ -104,7 +104,7 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 
 	_, err = os.Stat(newGenesisPath)
 	if err == nil {
-		log.Infof("%s already exists. Skipping download.\n", newGenesisPath)
+		log.Infof("%s already exists. Skipping initialization.\n", newGenesisPath)
 	} else {
 		// Create a new file
 		newGenesisFile, err := os.Create(newGenesisPath)
@@ -126,7 +126,7 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 
 	_, err = os.Stat(newValidatorPath)
 	if err == nil {
-		log.Infof("%s already exists. Skipping download.\n", newValidatorPath)
+		log.Infof("%s already exists. Skipping initialization.\n", newValidatorPath)
 	} else {
 		newValidatorFile, err := os.Create(newValidatorPath)
 		if err != nil {
@@ -166,7 +166,7 @@ func recreateLocalEnvFile(instancDir string, path string) {
 	// check if the local .env file already exists
 	_, err = os.Stat(newPath)
 	if err == nil {
-		log.Infof("%s already exists. Skipping download.\n", newPath)
+		log.Infof("%s already exists. Skipping initialization.\n", newPath)
 		return
 	}
 
@@ -203,7 +203,7 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 
 	_, err = os.Stat(newPath)
 	if err == nil {
-		log.Infof("%s already exists. Skipping download.\n", newPath)
+		log.Infof("%s already exists. Skipping initialization.\n", newPath)
 		return
 	}
 

@@ -14,7 +14,7 @@ import (
 var resetCmd = &cobra.Command{
 	Use:    "reset",
 	Short:  "The root command for resetting the local development instance data.",
-	Long:   `The root command for resetting the local development instance data.`,
+	Long:   `The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run.`,
 	PreRun: cmd.SetLogLevel,
 }
 
