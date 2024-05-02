@@ -49,13 +49,13 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	log.Info("Creating new instance in:", instanceDir)
 
-	// create the local config directories
+	// create the local config and env files
 	localConfigPath := filepath.Join(instanceDir, LocalConfigDirName)
 	CreateDirOrPanic(localConfigPath)
 	recreateLocalEnvFile(instanceDir, localConfigPath)
 	recreateCometbftAndSequencerGenesisData(localConfigPath)
 
-	// create the remote config directories
+	// create the remote env file
 	remoteConfigPath := filepath.Join(instanceDir, RemoteConfigDirName)
 	CreateDirOrPanic(remoteConfigPath)
 	recreateRemoteEnvFile(instanceDir, remoteConfigPath)
@@ -102,33 +102,47 @@ func recreateCometbftAndSequencerGenesisData(path string) {
 	newGenesisPath := filepath.Join(path, "genesis.json")
 	newValidatorPath := filepath.Join(path, "priv_validator_key.json")
 
-	// Create a new file
-	newGenesisFile, err := os.Create(newGenesisPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-		panic(err)
-	}
-	defer newGenesisFile.Close()
-	newValidatorFile, err := os.Create(newValidatorPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-		panic(err)
-	}
-	defer newValidatorFile.Close()
+	_, err = os.Stat(newGenesisPath)
+	if err == nil {
+		log.Infof("%s already exists. Skipping download.\n", newGenesisPath)
+	} else {
+		// Create a new file
+		newGenesisFile, err := os.Create(newGenesisPath)
+		if err != nil {
+			log.Fatalf("failed to create new file: %v", err)
+			panic(err)
+		}
+		defer newGenesisFile.Close()
 
-	// Write the data to the new file
-	_, err = newGenesisFile.Write(genesisData)
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-		panic(err)
+		// Write the data to the new file
+		_, err = newGenesisFile.Write(genesisData)
+		if err != nil {
+			log.Fatalf("failed to write data to new file: %v", err)
+			panic(err)
+		}
+		log.Infof("New Cometbft Genesis file created successfully: %s\n", newGenesisPath)
+
 	}
-	_, err = newValidatorFile.Write(validatorData)
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-		panic(err)
+
+	_, err = os.Stat(newValidatorPath)
+	if err == nil {
+		log.Infof("%s already exists. Skipping download.\n", newValidatorPath)
+	} else {
+		newValidatorFile, err := os.Create(newValidatorPath)
+		if err != nil {
+			log.Fatalf("failed to create new file: %v", err)
+			panic(err)
+		}
+		defer newValidatorFile.Close()
+
+		_, err = newValidatorFile.Write(validatorData)
+		if err != nil {
+			log.Fatalf("failed to write data to new file: %v", err)
+			panic(err)
+		}
+		log.Infof("New Cometbft Validator file created successfully: %s\n", newValidatorPath)
+
 	}
-	log.Info("Cometbft genesis data created successfully.")
-	log.Info("Cometbft validator data created successfully.")
 }
 
 //go:embed config/local.env.example
@@ -149,6 +163,13 @@ func recreateLocalEnvFile(instancDir string, path string) {
 	// Specify the path for the new file
 	newPath := filepath.Join(path, ".env")
 
+	// check if the local .env file already exists
+	_, err = os.Stat(newPath)
+	if err == nil {
+		log.Infof("%s already exists. Skipping download.\n", newPath)
+		return
+	}
+
 	// Create a new file
 	newFile, err := os.Create(newPath)
 	if err != nil {
@@ -163,7 +184,7 @@ func recreateLocalEnvFile(instancDir string, path string) {
 		log.Fatalf("failed to write data to new file: %v", err)
 		panic(err)
 	}
-	log.Info("Local .env file created successfully.")
+	log.Infof("Local .env file created successfully: %s\n", newPath)
 }
 
 //go:embed config/remote.env.example
@@ -180,6 +201,12 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 	// Specify the path for the new file
 	newPath := filepath.Join(path, ".env")
 
+	_, err = os.Stat(newPath)
+	if err == nil {
+		log.Infof("%s already exists. Skipping download.\n", newPath)
+		return
+	}
+
 	// Create a new file
 	newFile, err := os.Create(newPath)
 	if err != nil {
@@ -194,7 +221,8 @@ func recreateRemoteEnvFile(instancDir string, path string) {
 		log.Fatalf("failed to write data to new file: %v", err)
 		panic(err)
 	}
-	log.Info("Remote .env file created successfully.")
+	log.Infof("Remote .env file created successfully: %s\n", newPath)
+
 }
 
 // downloadFile downloads a file from the specified URL to the given local path.

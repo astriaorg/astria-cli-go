@@ -16,12 +16,27 @@ var cleanCmd = &cobra.Command{
 	Short:  "Delete the local development instance data, excluding binaries.",
 	Long:   `Delete the local development instance data. Does not delete the binaries or the config files.`,
 	PreRun: cmd.SetLogLevel,
-	Run:    runClean,
+	Run:    cleanCmdHandler,
 }
 
-func runClean(cmd *cobra.Command, args []string) {
+func init() {
+	// top level command
+	devCmd.AddCommand(cleanCmd)
+	cleanCmd.PersistentFlags().StringP("instance", "i", DefaultInstanceName, "Choose the instance that will be cleaned.")
+
+	// subcommands
+	cleanCmd.AddCommand(allCmd)
+}
+
+// clean config
+// clean state
+// clean env
+// clean binaries
+// clean all
+
+func cleanCmdHandler(c *cobra.Command, args []string) {
 	// Get the instance name from the -i flag or use the default
-	instance := cmd.Flag("instance").Value.String()
+	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
@@ -68,13 +83,4 @@ func runCleanAll(cmd *cobra.Command, args []string) {
 		log.WithError(err).Error("Error running rm")
 		panic(err)
 	}
-}
-
-func init() {
-	// top level command
-	devCmd.AddCommand(cleanCmd)
-	cleanCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Choose the instance that will be cleaned.")
-
-	// subcommands
-	cleanCmd.AddCommand(allCmd)
 }
