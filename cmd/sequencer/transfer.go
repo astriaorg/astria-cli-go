@@ -26,6 +26,7 @@ func init() {
 	transferCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	transferCmd.Flags().String("privkey", "", "The private key of the sender.")
 	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	transferCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 }
 
 func transferCmdHandler(cmd *cobra.Command, args []string) {
