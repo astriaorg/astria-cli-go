@@ -353,30 +353,22 @@ func initCometbft(defaultDir string, dataDirName string, binDirName string, conf
 		log.Info("\tSuccess")
 	}
 
-	// create the comand to replace the defualt genesis.json with the
-	// configured one
-	initGenesisJsonPath := filepath.Join(defaultDir, configDirName, "genesis.json")
-	endGenesisJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/genesis.json")
-	copyArgs := []string{initGenesisJsonPath, endGenesisJsonPath}
-	copyCmd := exec.Command("cp", copyArgs...)
-
-	_, err = copyCmd.CombinedOutput()
+	// copy the initialized genesis.json to the .cometbft directory
+	initGenesisJsonPath := filepath.Join(defaultDir, configDirName, DefaultCometbftGenesisFilename)
+	endGenesisJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft", "config", DefaultCometbftGenesisFilename)
+	err = copyFile(initGenesisJsonPath, endGenesisJsonPath)
 	if err != nil {
-		log.Info("Error executing command", copyCmd, ":", err)
+		log.WithError(err).Error("Error copying CometBFT genesis.json file")
 		return
 	}
 	log.Info("Copied genesis.json to", endGenesisJsonPath)
 
-	// create the comand to replace the defualt priv_validator_key.json with the
-	// configured one
-	initPrivValidatorJsonPath := filepath.Join(defaultDir, configDirName, "priv_validator_key.json")
-	endPrivValidatorJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/priv_validator_key.json")
-	copyArgs = []string{initPrivValidatorJsonPath, endPrivValidatorJsonPath}
-	copyCmd = exec.Command("cp", copyArgs...)
-
-	_, err = copyCmd.CombinedOutput()
+	// copy the initialized priv_validator_key.json to the .cometbft directory
+	initPrivValidatorJsonPath := filepath.Join(defaultDir, configDirName, DefaultCometbftValidatorFilename)
+	endPrivValidatorJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft", "config", DefaultCometbftValidatorFilename)
+	err = copyFile(initPrivValidatorJsonPath, endPrivValidatorJsonPath)
 	if err != nil {
-		log.Error("Error executing command", copyCmd, ":", err)
+		log.WithError(err).Error("Error copying CometBFT priv_validator_key.json file")
 		return
 	}
 	log.Info("Copied priv_validator_key.json to", endPrivValidatorJsonPath)
@@ -429,4 +421,31 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	}
 
 	return nil
+}
+
+// copyFile copies the contents of the src file to dst.
+// If dst does not exist, it will be created, and if it does, it will be overwritten.
+func copyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Open the destination file for writing.
+	// Create the file if it does not exist, truncate it if it does.
+	destFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Ensure that any writes made to the destination file are committed to stable storage.
+	err = destFile.Sync()
+	return err
 }
