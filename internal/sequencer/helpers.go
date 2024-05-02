@@ -1,7 +1,9 @@
 package sequencer
 
 import (
+	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"regexp"
@@ -77,4 +79,11 @@ func AssetIdFromDenom(denom string) []byte {
 	hasher.Write([]byte(denom))
 	hash := hasher.Sum(nil)
 	return hash
+}
+
+func AddressFromPublicKey(pubkey ed25519.PublicKey) string {
+	hash := sha256.Sum256(pubkey)
+	var addr [20]byte
+	copy(addr[:], hash[:20])
+	return hex.EncodeToString(addr[:])
 }

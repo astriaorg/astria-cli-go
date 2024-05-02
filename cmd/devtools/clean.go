@@ -34,7 +34,7 @@ func init() {
 // clean binaries
 // clean all
 
-func cleanCmdHandler(c *cobra.Command, args []string) {
+func cleanCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance := c.Flag("instance").Value.String()
 	IsInstanceNameValidOrPanic(instance)
@@ -56,7 +56,7 @@ func cleanCmdHandler(c *cobra.Command, args []string) {
 	}
 
 	log.Infof("Recreating data dir for instance '%s'", instance)
-	CreateDirOrPanic(dataDir)
+	cmd.CreateDirOrPanic(dataDir)
 }
 
 var allCmd = &cobra.Command{
@@ -67,7 +67,7 @@ var allCmd = &cobra.Command{
 	Run:    runCleanAll,
 }
 
-func runCleanAll(cmd *cobra.Command, args []string) {
+func runCleanAll(_ *cobra.Command, _ []string) {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.WithError(err).Error("Error getting home dir")

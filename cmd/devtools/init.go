@@ -51,26 +51,26 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	// create the local config and env files
 	localConfigPath := filepath.Join(instanceDir, LocalConfigDirName)
-	CreateDirOrPanic(localConfigPath)
+	cmd.CreateDirOrPanic(localConfigPath)
 	recreateLocalEnvFile(instanceDir, localConfigPath)
 	recreateCometbftAndSequencerGenesisData(localConfigPath)
 
 	// create the remote env file
 	remoteConfigPath := filepath.Join(instanceDir, RemoteConfigDirName)
-	CreateDirOrPanic(remoteConfigPath)
+	cmd.CreateDirOrPanic(remoteConfigPath)
 	recreateRemoteEnvFile(instanceDir, remoteConfigPath)
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, BinariesDirName)
 	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
-	CreateDirOrPanic(localBinPath)
+	cmd.CreateDirOrPanic(localBinPath)
 	for _, bin := range Binaries {
 		downloadAndUnpack(bin.Url, bin.Name, localBinPath)
 	}
 
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, DataDirName)
-	CreateDirOrPanic(dataPath)
+	cmd.CreateDirOrPanic(dataPath)
 
 	initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
 
@@ -275,7 +275,7 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 		case tar.TypeDir:
 			// handle directory
 			if _, err := os.Stat(target); err != nil {
-				CreateDirOrPanic(target)
+				cmd.CreateDirOrPanic(target)
 			}
 		case tar.TypeReg:
 			// handle normal file
