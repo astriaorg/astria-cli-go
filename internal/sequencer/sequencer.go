@@ -6,11 +6,8 @@ import (
 	"encoding/hex"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
-
 	"github.com/astriaorg/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
 )
@@ -254,8 +251,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// sha256 hash of rollupID
-	hashedRollupID := RollupIdFromText(opts.RollupID)
+	rollupID := RollupIdFromText(opts.RollupID)
 
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
@@ -284,14 +280,13 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 
 	// build transaction
-	tx := &sqproto.UnsignedTransaction{
-		Nonce: nonce,
-		Actions: []*sqproto.Action{
+	tx := &txproto.UnsignedTransaction{
+		Actions: []*txproto.Action{
 			{
-				Value: &sqproto.Action_InitBridgeAccountAction{
-					InitBridgeAccountAction: &sqproto.InitBridgeAccountAction{
-						RollupId:   hashedRollupID,
-						AssetIds:   [][]byte{AssetIdFromDenom("nria")},
+				Value: &txproto.Action_InitBridgeAccountAction{
+					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
+						RollupId:   rollupID,
+						AssetId:    AssetIdFromDenom("nria"),
 						FeeAssetId: AssetIdFromDenom("nria"),
 					},
 				},
@@ -364,18 +359,21 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		return &BridgeLockResponse{}, err
 	}
 	opts.ToAddress = strip0xPrefix(opts.ToAddress)
-	to, err := hex.DecodeString(opts.ToAddress)
+	toBytes, err := hex.DecodeString(opts.ToAddress)
+	to := &primproto.Address{
+		Inner: toBytes,
+	}
+
 	if err != nil {
 		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
 		return &BridgeLockResponse{}, err
 	}
 
-	tx := &sqproto.UnsignedTransaction{
-		Nonce: nonce,
-		Actions: []*sqproto.Action{
+	tx := &txproto.UnsignedTransaction{
+		Actions: []*txproto.Action{
 			{
-				Value: &sqproto.Action_BridgeLockAction{
-					BridgeLockAction: &sqproto.BridgeLockAction{
+				Value: &txproto.Action_BridgeLockAction{
+					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      to,
 						Amount:                  amount,
 						AssetId:                 AssetIdFromDenom("nria"),

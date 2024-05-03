@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// convertToUint128 converts a string to a Uint128 protobuf
+// convertToUint128 converts a string to an Uint128 protobuf
 func convertToUint128(numStr string) (*primproto.Uint128, error) {
 	bigInt := new(big.Int)
 
@@ -81,11 +81,14 @@ func AssetIdFromDenom(denom string) []byte {
 	return hash
 }
 
-func RollupIdFromText(rollup string) []byte {
+// RollupIdFromText converts a string to a RollupId protobuf.
+func RollupIdFromText(rollup string) *primproto.RollupId {
 	hasher := sha256.New()
 	hasher.Write([]byte(rollup))
 	hash := hasher.Sum(nil)
-	return hash
+	return &primproto.RollupId{
+		Inner: hash,
+	}
 }
 
 func AddressFromPublicKey(pubkey ed25519.PublicKey) string {

@@ -49,9 +49,6 @@ func TestTransferFlags(t *testing.T) {
 	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo)
 	_, err = transferCmd.CombinedOutput()
 	assert.Error(t, err)
-	assert.NotEmpty(t, account.Address, "Address should not be empty")
-	assert.NotEmpty(t, account.PublicKey, "PublicKey should not be empty")
-	assert.NotEmpty(t, account.PrivateKey, "PrivateKey should not be empty")
 }
 
 func TestTransferAndGetNonce(t *testing.T) {

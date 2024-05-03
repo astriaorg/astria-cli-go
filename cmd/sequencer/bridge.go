@@ -19,13 +19,14 @@ var initBridgeCmd = &cobra.Command{
 
 func init() {
 	sequencerCmd.AddCommand(initBridgeCmd)
-	initBridgeCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens")
-	initBridgeCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
 	initBridgeCmd.Flags().Bool("json", false, "Output bridge account as JSON")
+	initBridgeCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
 
-	transferCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
-	transferCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
-	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	initBridgeCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
+	initBridgeCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
+	initBridgeCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens")
+	initBridgeCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	initBridgeCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 
 }
 

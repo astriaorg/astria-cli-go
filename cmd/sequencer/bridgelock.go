@@ -18,13 +18,15 @@ var bridgeLockCmd = &cobra.Command{
 
 func init() {
 	sequencerCmd.AddCommand(bridgeLockCmd)
-	bridgeLockCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens")
-	bridgeLockCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to lock tokens")
-	bridgeLockCmd.Flags().Bool("json", false, "Output bridge lock transaction as JSON")
 
-	transferCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
-	transferCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
-	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	bridgeLockCmd.Flags().Bool("json", false, "Output bridge account as JSON")
+	bridgeLockCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+
+	bridgeLockCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
+	bridgeLockCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
+	bridgeLockCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens")
+	bridgeLockCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	bridgeLockCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 }
 
 func bridgeLockCmdHandler(cmd *cobra.Command, args []string) {
