@@ -104,13 +104,21 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 		// cometbft
+		cometRCOpts := processrunner.ReadyCheckerOpts{
+			CallBackName:  "CometBFT rpc server is OK",
+			Callback:      getCometbftOKCallback(envPath),
+			RetryCount:    10,
+			RetryInterval: 100 * time.Millisecond,
+			HaltIfFailed:  false,
+		}
+		cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
 		cometDataPath := filepath.Join(dataDir, ".cometbft")
 		cometOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Comet BFT",
 			BinPath:    cometbftPath,
 			EnvPath:    envPath,
 			Args:       []string{"node", "--home", cometDataPath},
-			ReadyCheck: nil,
+			ReadyCheck: &cometReadinessCheck,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
@@ -248,31 +256,72 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 // endpoint. Being able to connect to the gRPC server is a requirement for both
 // the Conductor and Composer services.
 func getSequencerOKCallback(envPath string) func() bool {
-	return func() bool {
-		// Get the sequencer gRPC address from the environment
-		seqEnv := processrunner.GetEnvironment(envPath)
-		var seqGRPCAddr string
-		for _, envVar := range seqEnv {
-			if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
-				seqGRPCAddr = strings.Split(envVar, "=")[1]
-				break
-			}
+	// Get the sequencer gRPC address from the environment
+	seqEnv := processrunner.GetEnvironment(envPath)
+	var seqGRPCAddr string
+	for _, envVar := range seqEnv {
+		if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
+			seqGRPCAddr = strings.Split(envVar, "=")[1]
+			break
 		}
+	}
+	seqGRPCHealthURL := "http://" + seqGRPCAddr + "/health"
 
+	// Return the anonymous callback function
+	return func() bool {
 		// Make the HTTP request
-		resp, err := http.Get("http://" + seqGRPCAddr + "/health")
+		seqResp, err := http.Get(seqGRPCHealthURL)
 		if err != nil {
 			log.WithError(err).Debug("Startup callback check to sequencer gRPC /health did not succeed")
 			return false
 		}
-		defer resp.Body.Close()
+		defer seqResp.Body.Close()
 
 		// Check status code
-		if resp.StatusCode == 200 {
+		if seqResp.StatusCode == 200 {
 			log.Debug("Sequencer gRPC server started")
 			return true
+		} else {
+			log.Debugf("Sequencer gRPC status code: %d", seqResp.StatusCode)
+			return false
 		}
+	}
+}
 
-		return false
+// getCometbftOKCallback builds an anonymous function for use in a ProcessRunner
+// ReadyChecker callback. The anonymous function checks if the rpc server that
+// is started by Cometbft is OK by making an HTTP request to the health
+// endpoint. Being able to connect to the rpc server is a requirement for both
+// the Conductor and Composer services.
+func getCometbftOKCallback(envPath string) func() bool {
+	// Get the CometBFT rpc address from the environment
+	seqEnv := processrunner.GetEnvironment(envPath)
+	var seqRPCAddr string
+	for _, envVar := range seqEnv {
+		if strings.HasPrefix(envVar, "ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL") {
+			seqRPCAddr = strings.Split(envVar, "=")[1]
+			break
+		}
+	}
+	cometbftRPCHealthURL := seqRPCAddr + "/health"
+
+	// Return the anonymous callback function
+	return func() bool {
+		// Make the HTTP request
+		cometbftResp, err := http.Get(cometbftRPCHealthURL)
+		if err != nil {
+			log.WithError(err).Debug("Startup callback check to CometBFT rpc /health did not succeed")
+			return false
+		}
+		defer cometbftResp.Body.Close()
+
+		// Check status code
+		if cometbftResp.StatusCode == 200 {
+			log.Debug("CometBFT rpc server started")
+			return true
+		} else {
+			log.Debugf("CometBFT rpc status code: %d", cometbftResp.StatusCode)
+			return false
+		}
 	}
 }
