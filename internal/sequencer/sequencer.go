@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 	"github.com/astriaorg/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
@@ -168,12 +167,11 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 
 	// create signer
-	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
+	from, err := privateKeyFromText(opts.FromKey)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
 		return &TransferResponse{}, err
 	}
-	from := ed25519.NewKeyFromSeed(privateKeyBytes)
 	signer := client.NewSigner(from)
 
 	// create transaction
@@ -182,14 +180,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		log.WithError(err).Error("Error converting amount to Uint128 proto")
 		return &TransferResponse{}, err
 	}
-	opts.ToAddress = strip0xPrefix(opts.ToAddress)
-	toBytes, err := hex.DecodeString(opts.ToAddress)
+
+	to, err := addressFromText(opts.ToAddress)
 	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
-		return &TransferResponse{}, err
-	}
-	to := &primproto.Address{
-		Inner: toBytes,
+		log.WithError(err).Errorf("Error decoding 'to' address %v", opts.ToAddress)
 	}
 	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
 	fromAddr := signer.Address()
@@ -210,8 +204,8 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 					TransferAction: &txproto.TransferAction{
 						To:         to,
 						Amount:     amount,
-						AssetId:    AssetIdFromDenom("nria"),
-						FeeAssetId: AssetIdFromDenom("nria"),
+						AssetId:    assetIdFromDenom("nria"),
+						FeeAssetId: assetIdFromDenom("nria"),
 					},
 				},
 			},
@@ -251,7 +245,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rollupID := RollupIdFromText(opts.RollupID)
+	rollupID := rollupIdFromText(opts.RollupID)
 
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
@@ -263,12 +257,11 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 
 	// create signer
-	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
+	from, err := privateKeyFromText(opts.FromKey)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
 		return &InitBridgeResponse{}, err
 	}
-	from := ed25519.NewKeyFromSeed(privateKeyBytes)
 	signer := client.NewSigner(from)
 
 	// Get current address nonce
@@ -286,8 +279,8 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
 						RollupId:   rollupID,
-						AssetId:    AssetIdFromDenom("nria"),
-						FeeAssetId: AssetIdFromDenom("nria"),
+						AssetId:    assetIdFromDenom("nria"),
+						FeeAssetId: assetIdFromDenom("nria"),
 					},
 				},
 			},
@@ -322,6 +315,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 
 }
 
+// BridgeLock locks tokens on the source chain and initiates a cross-chain transfer to the destination chain.
 func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -336,12 +330,11 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 
 	// create signer
-	privateKeyBytes, err := hex.DecodeString(opts.FromKey)
+	from, err := privateKeyFromText(opts.FromKey)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
 		return &BridgeLockResponse{}, err
 	}
-	from := ed25519.NewKeyFromSeed(privateKeyBytes)
 	signer := client.NewSigner(from)
 
 	// Get current address nonce
@@ -358,10 +351,9 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		log.WithError(err).Error("Error converting amount to Uint128 proto")
 		return &BridgeLockResponse{}, err
 	}
-	opts.ToAddress = strip0xPrefix(opts.ToAddress)
-	toBytes, err := hex.DecodeString(opts.ToAddress)
-	to := &primproto.Address{
-		Inner: toBytes,
+	to, err := addressFromText(opts.ToAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding 'to' address %v", opts.ToAddress)
 	}
 
 	if err != nil {
@@ -376,8 +368,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      to,
 						Amount:                  amount,
-						AssetId:                 AssetIdFromDenom("nria"),
-						FeeAssetId:              AssetIdFromDenom("nria"),
+						AssetId:                 assetIdFromDenom("nria"),
+						FeeAssetId:              assetIdFromDenom("nria"),
 						DestinationChainAddress: opts.DestinationChain,
 					},
 				},

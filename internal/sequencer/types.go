@@ -21,7 +21,7 @@ type Account struct {
 func NewAccountFromPrivKey(privkey ed25519.PrivateKey) *Account {
 	pub := privkey.Public().(ed25519.PublicKey)
 	return &Account{
-		Address:    AddressFromPublicKey(pub),
+		Address:    addressFromPublicKey(pub),
 		PublicKey:  pub,
 		PrivateKey: privkey,
 	}
