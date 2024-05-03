@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// bridgeLockCmd represents the `bridge lock` command
 var bridgeLockCmd = &cobra.Command{
 	Use:    "bridge lock [address] [amount] [destination-chain-address]",
 	Short:  "Locks tokens on the bridge account",
