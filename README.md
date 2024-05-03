@@ -27,13 +27,20 @@ the Astria stack and interact with the Sequencer.
 | `dev`                     | Root command for cli development functionality.                                     |
 | `dev init`                | Downloads binaries and initializes the local environment.                           |
 | `dev run`                 | Runs a minimal, local Astria stack.                                                 |
-| `dev clean`               | Deletes the local data for the Astria stack.                                        |
-| `dev clean all`           | Deletes the local data, downloaded binaries, and config files for the Astria stack. |
+| `dev reset`               | The root command for resetting the local development instance data.                 |
+| `dev reset config`        | Reset config files.                                                                 |
+| `dev reset env`           | Reset environment variable files.                                                   |
+| `dev reset state`         | Reset Sequencer state.                                                              |
+| `dev purge binaries`      | Delete all binaries for a given instance.                                           |
+| `dev purge all`           | Delete all data for a given instance.                                               |
 | `sequencer balances`      | Get the balances of an account on the Sequencer.                                    |
 | `sequencer blockheight`   | Get the current block height of the Sequencer.                                      |
 | `sequencer createaccount` | Generate an account for the Sequencer.                                              |
 | `sequencer nonce`         | Get the current nonce for an account.                                               |
-| `sequencer transfer`      | Get the current block height of the Sequencer.                                      |
+| `sequencer transfer`      | Make a transfer on the Sequencer.                                      |
+
+> NOTE: Running a `dev purge` command requires you to run `dev init` afterwards to
+> reinitialize the deleted data.
 
 ## Installation
 
@@ -183,11 +190,10 @@ If additional configuration is required, you can update the `.env` files in
 
 ## Instances
 
-The `dev init`, `dev run`, and `dev clean` commands all have an optional
-`--instance` flag. The value of this flag will be used as the directory name
-where the rollup data will be stored. Now you can run many rollups while keeping
-their configs and state data separate. If no value is provided, `default` is
-used, i.e. `~/.astria/default`.
+The `dev` commands all have an optional `--instance` flag. The value of this
+flag will be used as the directory name where the rollup data will be stored.
+Now you can run many rollups while keeping their configs and state data
+separate. If no value is provided, `default` is used, i.e. `~/.astria/default`.
 
 For example, if you run:
 

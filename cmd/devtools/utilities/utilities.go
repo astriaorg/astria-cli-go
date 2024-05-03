@@ -1,28 +1,37 @@
-package devtools
+package utilities
 
 import (
-	"fmt"
+	"io"
 	"os"
-	"regexp"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// IsInstanceNameValidOrPanic checks if the instance name is valid and panics if it's not.
-func IsInstanceNameValidOrPanic(instance string) {
-	re, err := regexp.Compile(`^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`)
+// copyFile copies the contents of the src file to dst.
+// If dst does not exist, it will be created, and if it does, it will be overwritten.
+func CopyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
 	if err != nil {
-		log.WithError(err).Error("Error compiling regex")
-		panic(err)
+		return err
 	}
-	if !re.MatchString(instance) {
-		log.Errorf("Invalid instance name: %s", instance)
-		err := fmt.Errorf(`
-Invalid instance name: '%s'. Instance names must be lowercase, alphanumeric, 
-and may contain dashes. It can't begin or end with a dash. No repeating dashes.
-`, instance)
-		panic(err)
+	defer sourceFile.Close()
+
+	// Open the destination file for writing.
+	// Create the file if it does not exist, truncate it if it does.
+	destFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
 	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Ensure that any writes made to the destination file are committed to stable storage.
+	err = destFile.Sync()
+	return err
 }
 
 // PathExists checks if the file or binary for the input path is a regular file

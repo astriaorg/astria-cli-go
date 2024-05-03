@@ -1,6 +1,6 @@
 //go:build darwin && amd64
 
-package devtools
+package config
 
 type Binary struct {
 	Name string
