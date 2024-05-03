@@ -37,6 +37,23 @@ func TestCreateaccount(t *testing.T) {
 	assert.NotEmpty(t, account.PrivateKey, "PrivateKey should not be empty")
 }
 
+func TestTransferFlags(t *testing.T) {
+	// test that we get error when too many flags passed in
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	secondKey := fmt.Sprintf("--keyfile=/fake/file")
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey)
+	_, err := transferCmd.CombinedOutput()
+	assert.Error(t, err)
+
+	// test that we get error when no type of key passed in
+	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo)
+	_, err = transferCmd.CombinedOutput()
+	assert.Error(t, err)
+	assert.NotEmpty(t, account.Address, "Address should not be empty")
+	assert.NotEmpty(t, account.PublicKey, "PublicKey should not be empty")
+	assert.NotEmpty(t, account.PrivateKey, "PrivateKey should not be empty")
+}
+
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json")

@@ -6,9 +6,18 @@ import (
 	"encoding/hex"
 	"time"
 
-	sqproto "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/sequencer/v1"
+	log "github.com/sirupsen/logrus"
+
+	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
+	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+
 	"github.com/astriaorg/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	// DefaultSequencerNetworkId is the default network id for the sequencer.
+	DefaultSequencerNetworkId = "astria-dusk-5"
 )
 
 // CreateAccount creates a new account for the sequencer.
@@ -177,10 +186,13 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		return &TransferResponse{}, err
 	}
 	opts.ToAddress = strip0xPrefix(opts.ToAddress)
-	to, err := hex.DecodeString(opts.ToAddress)
+	toBytes, err := hex.DecodeString(opts.ToAddress)
 	if err != nil {
 		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
 		return &TransferResponse{}, err
+	}
+	to := &primproto.Address{
+		Inner: toBytes,
 	}
 	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
 	fromAddr := signer.Address()
@@ -190,12 +202,15 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		return &TransferResponse{}, err
 	}
 	log.Debugf("Nonce: %v", nonce)
-	tx := &sqproto.UnsignedTransaction{
-		Nonce: nonce,
-		Actions: []*sqproto.Action{
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: DefaultSequencerNetworkId,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
 			{
-				Value: &sqproto.Action_TransferAction{
-					TransferAction: &sqproto.TransferAction{
+				Value: &txproto.Action_TransferAction{
+					TransferAction: &txproto.TransferAction{
 						To:         to,
 						Amount:     amount,
 						AssetId:    AssetIdFromDenom("nria"),

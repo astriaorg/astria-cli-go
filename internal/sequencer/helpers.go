@@ -9,12 +9,13 @@ import (
 	"regexp"
 	"strings"
 
-	primitivev1 "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/primitive/v1"
+	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
+
 	log "github.com/sirupsen/logrus"
 )
 
 // convertToUint128 converts a string to a Uint128 protobuf
-func convertToUint128(numStr string) (*primitivev1.Uint128, error) {
+func convertToUint128(numStr string) (*primproto.Uint128, error) {
 	bigInt := new(big.Int)
 
 	// convert the string to a big.Int
@@ -35,7 +36,7 @@ func convertToUint128(numStr string) (*primitivev1.Uint128, error) {
 	lo := bigInt.Uint64()
 	// shift the big.Int to the right by 64 bits and convert to uint64
 	hi := bigInt.Rsh(bigInt, 64).Uint64()
-	uint128 := &primitivev1.Uint128{
+	uint128 := &primproto.Uint128{
 		Lo: lo,
 		Hi: hi,
 	}
