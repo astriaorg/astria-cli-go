@@ -37,7 +37,7 @@ the Astria stack and interact with the Sequencer.
 | `sequencer blockheight`   | Get the current block height of the Sequencer.                                      |
 | `sequencer createaccount` | Generate an account for the Sequencer.                                              |
 | `sequencer nonce`         | Get the current nonce for an account.                                               |
-| `sequencer transfer`      | Get the current block height of the Sequencer.                                      |
+| `sequencer transfer`      | Make a transfer on the Sequencer.                                      |
 
 > NOTE: Running a `dev purge` command requires you to run `dev init` afterwards to
 > reinitialize the deleted data.
