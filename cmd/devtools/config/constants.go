@@ -1,4 +1,4 @@
-package devtools
+package config
 
 const (
 	DataDirName         = "data"

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/astria/astria-cli-go/cmd/devtools/config"
+
 	"github.com/astria/astria-cli-go/cmd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -21,7 +23,7 @@ var purgeCmd = &cobra.Command{
 func init() {
 	// top level command
 	devCmd.AddCommand(purgeCmd)
-	purgeCmd.PersistentFlags().StringP("instance", "i", DefaultInstanceName, "Choose the target instance for resetting.")
+	purgeCmd.PersistentFlags().StringP("instance", "i", config.DefaultInstanceName, "Choose the target instance for resetting.")
 
 	// subcommands
 	purgeCmd.AddCommand(purgeBinariesCmd)
@@ -39,14 +41,14 @@ var purgeBinariesCmd = &cobra.Command{
 func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	binDir := filepath.Join(homePath, ".astria", instance, BinariesDirName)
+	binDir := filepath.Join(homePath, ".astria", instance, config.BinariesDirName)
 
 	log.Infof("Deleting binaries for instance '%s'", instance)
 
@@ -74,7 +76,7 @@ var purgeAllCmd = &cobra.Command{
 func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {

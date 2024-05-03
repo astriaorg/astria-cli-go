@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/astria/astria-cli-go/cmd/devtools/config"
+
 	"github.com/astria/astria-cli-go/cmd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -21,7 +23,7 @@ var resetCmd = &cobra.Command{
 func init() {
 	// top level command
 	devCmd.AddCommand(resetCmd)
-	resetCmd.PersistentFlags().StringP("instance", "i", DefaultInstanceName, "Choose the target instance for purging.")
+	resetCmd.PersistentFlags().StringP("instance", "i", config.DefaultInstanceName, "Choose the target instance for purging.")
 
 	// subcommands
 	resetCmd.AddCommand(resetConfigCmd)
@@ -46,30 +48,30 @@ var resetConfigCmd = &cobra.Command{
 func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	localConfigDir := filepath.Join(homePath, ".astria", instance, LocalConfigDirName)
+	localConfigDir := filepath.Join(homePath, ".astria", instance, config.LocalConfigDirName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
 	// Remove the config files
-	err = os.Remove(filepath.Join(localConfigDir, DefaultCometbftGenesisFilename))
+	err = os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftGenesisFilename))
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
 	}
-	err = os.Remove(filepath.Join(localConfigDir, DefaultCometbftValidatorFilename))
+	err = os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftValidatorFilename))
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
 	}
 
-	recreateCometbftAndSequencerGenesisData(localConfigDir)
+	config.RecreateCometbftAndSequencerGenesisData(localConfigDir)
 
 	log.Infof("Successfully reset config files for instance '%s'", instance)
 }
@@ -86,7 +88,7 @@ var resetEnvCmd = &cobra.Command{
 func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -94,8 +96,8 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 		panic(err)
 	}
 	instanceDir := filepath.Join(homePath, ".astria", instance)
-	localConfigDir := filepath.Join(instanceDir, LocalConfigDirName)
-	remoteConfigDir := filepath.Join(instanceDir, RemoteConfigDirName)
+	localConfigDir := filepath.Join(instanceDir, config.LocalConfigDirName)
+	remoteConfigDir := filepath.Join(instanceDir, config.RemoteConfigDirName)
 
 	// Check if we are resetting the local or remote environment files
 	isLocal, _ := c.Flags().GetBool("local")
@@ -112,7 +114,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		recreateLocalEnvFile(instanceDir, localConfigDir)
+		config.RecreateLocalEnvFile(instanceDir, localConfigDir)
 		log.Infof("Successfully reset local environment file for instance '%s'", instance)
 
 	} else if isRemote {
@@ -126,7 +128,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		recreateRemoteEnvFile(instanceDir, remoteConfigDir)
+		config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
 		log.Infof("Successfully reset remote environment file for instance '%s'", instance)
 
 	} else {
@@ -142,7 +144,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		recreateLocalEnvFile(instanceDir, localConfigDir)
+		config.RecreateLocalEnvFile(instanceDir, localConfigDir)
 
 		_, err = os.Stat(remoteEnvPath)
 		if err == nil {
@@ -152,7 +154,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		recreateRemoteEnvFile(instanceDir, remoteConfigDir)
+		config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
 		log.Infof("Successfully reset environment files for instance '%s'", instance)
 	}
 }
@@ -169,7 +171,7 @@ var resetStateCmd = &cobra.Command{
 func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -177,7 +179,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 		panic(err)
 	}
 	instanceDir := filepath.Join(homePath, ".astria", instance)
-	dataDir := filepath.Join(instanceDir, DataDirName)
+	dataDir := filepath.Join(instanceDir, config.DataDirName)
 
 	log.Infof("Resetting state for instance '%s'", instance)
 
@@ -188,7 +190,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 		return
 	}
 	cmd.CreateDirOrPanic(dataDir)
-	initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.LocalConfigDirName)
 
 	log.Infof("Successfully reset state for instance '%s'", instance)
 }

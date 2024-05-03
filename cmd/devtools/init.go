@@ -3,17 +3,14 @@ package devtools
 import (
 	"archive/tar"
 	"compress/gzip"
-	"embed"
-	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/cmd/devtools/config"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -30,13 +27,13 @@ var initCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
+	initCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
 }
 
 func runInitialization(c *cobra.Command, args []string) {
 	// Get the instance name from the -i flag or use the default
 	instance := c.Flag("instance").Value.String()
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -50,178 +47,31 @@ func runInitialization(c *cobra.Command, args []string) {
 	log.Info("Creating new instance in:", instanceDir)
 
 	// create the local config and env files
-	localConfigPath := filepath.Join(instanceDir, LocalConfigDirName)
+	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)
 	cmd.CreateDirOrPanic(localConfigPath)
-	recreateLocalEnvFile(instanceDir, localConfigPath)
-	recreateCometbftAndSequencerGenesisData(localConfigPath)
+	config.RecreateLocalEnvFile(instanceDir, localConfigPath)
+	config.RecreateCometbftAndSequencerGenesisData(localConfigPath)
 
 	// create the remote env file
-	remoteConfigPath := filepath.Join(instanceDir, RemoteConfigDirName)
+	remoteConfigPath := filepath.Join(instanceDir, config.RemoteConfigDirName)
 	cmd.CreateDirOrPanic(remoteConfigPath)
-	recreateRemoteEnvFile(instanceDir, remoteConfigPath)
+	config.RecreateRemoteEnvFile(instanceDir, remoteConfigPath)
 
 	// create the local bin directory for downloaded binaries
-	localBinPath := filepath.Join(instanceDir, BinariesDirName)
+	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
 	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
 	cmd.CreateDirOrPanic(localBinPath)
-	for _, bin := range Binaries {
+	for _, bin := range config.Binaries {
 		downloadAndUnpack(bin.Url, bin.Name, localBinPath)
 	}
 
 	// create the data directory for cometbft and sequencer
-	dataPath := filepath.Join(instanceDir, DataDirName)
+	dataPath := filepath.Join(instanceDir, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
 
-	initCometbft(instanceDir, DataDirName, BinariesDirName, LocalConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.LocalConfigDirName)
 
 	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
-
-}
-
-//go:embed config/genesis.json
-var embeddedCometbftGenesisFile embed.FS
-
-//go:embed config/priv_validator_key.json
-var embeddedCometbftValidatorFile embed.FS
-
-func recreateCometbftAndSequencerGenesisData(path string) {
-	// Read the content from the embedded file
-	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "config/genesis.json")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-		panic(err)
-	}
-	// Read the content from the embedded file
-	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, "config/priv_validator_key.json")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-		panic(err)
-	}
-
-	// Specify the path for the new file
-	newGenesisPath := filepath.Join(path, "genesis.json")
-	newValidatorPath := filepath.Join(path, "priv_validator_key.json")
-
-	_, err = os.Stat(newGenesisPath)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", newGenesisPath)
-	} else {
-		// Create a new file
-		newGenesisFile, err := os.Create(newGenesisPath)
-		if err != nil {
-			log.Fatalf("failed to create new file: %v", err)
-			panic(err)
-		}
-		defer newGenesisFile.Close()
-
-		// Write the data to the new file
-		_, err = newGenesisFile.Write(genesisData)
-		if err != nil {
-			log.Fatalf("failed to write data to new file: %v", err)
-			panic(err)
-		}
-		log.Infof("New Cometbft Genesis file created successfully: %s\n", newGenesisPath)
-
-	}
-
-	_, err = os.Stat(newValidatorPath)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", newValidatorPath)
-	} else {
-		newValidatorFile, err := os.Create(newValidatorPath)
-		if err != nil {
-			log.Fatalf("failed to create new file: %v", err)
-			panic(err)
-		}
-		defer newValidatorFile.Close()
-
-		_, err = newValidatorFile.Write(validatorData)
-		if err != nil {
-			log.Fatalf("failed to write data to new file: %v", err)
-			panic(err)
-		}
-		log.Infof("New Cometbft Validator file created successfully: %s\n", newValidatorPath)
-
-	}
-}
-
-//go:embed config/local.env.example
-var embeddedLocalEnvironmentFile embed.FS
-
-// TODO: add error handling
-func recreateLocalEnvFile(instancDir string, path string) {
-	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedLocalEnvironmentFile, "config/local.env.example")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-		panic(err)
-	}
-
-	// Convert data to a string and replace "~" with the user's home directory
-	content := strings.ReplaceAll(string(data), "~", instancDir)
-
-	// Specify the path for the new file
-	newPath := filepath.Join(path, ".env")
-
-	// check if the local .env file already exists
-	_, err = os.Stat(newPath)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", newPath)
-		return
-	}
-
-	// Create a new file
-	newFile, err := os.Create(newPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-		panic(err)
-	}
-	defer newFile.Close()
-
-	// Write the data to the new file
-	_, err = newFile.WriteString(content)
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-		panic(err)
-	}
-	log.Infof("Local .env file created successfully: %s\n", newPath)
-}
-
-//go:embed config/remote.env.example
-var embeddedRemoteEnvironmentFile embed.FS
-
-func recreateRemoteEnvFile(instancDir string, path string) {
-	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedRemoteEnvironmentFile, "config/remote.env.example")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-		panic(err)
-	}
-
-	// Specify the path for the new file
-	newPath := filepath.Join(path, ".env")
-
-	_, err = os.Stat(newPath)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", newPath)
-		return
-	}
-
-	// Create a new file
-	newFile, err := os.Create(newPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-		panic(err)
-	}
-	defer newFile.Close()
-
-	// Write the data to the new file
-	_, err = newFile.WriteString(string(data))
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-		panic(err)
-	}
-	log.Infof("Remote .env file created successfully: %s\n", newPath)
 
 }
 
@@ -292,7 +142,6 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 	}
 }
 
-// TODO: add error handling
 func downloadAndUnpack(url string, packageName string, placePath string) {
 	// Check if the file already exists
 	if _, err := os.Stat(filepath.Join(placePath, packageName)); err == nil {
@@ -326,126 +175,4 @@ func downloadAndUnpack(url string, packageName string, placePath string) {
 		panic(err)
 	}
 	log.Infof("%s downloaded and extracted successfully.\n", packageName)
-}
-
-func initCometbft(defaultDir string, dataDirName string, binDirName string, configDirName string) {
-	log.Info("Initializing CometBFT for running local sequencer:")
-	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
-
-	// verify that cometbft was downloaded and extracted to the correct location
-	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
-	if !PathExists(cometbftCmdPath) {
-		log.Error("Error: cometbft binary not found here", cometbftCmdPath)
-		log.Error("\tCannot continue with initialization.")
-		return
-	}
-
-	initCmdArgs := []string{"init", "--home", cometbftDataPath}
-	initCmd := exec.Command(cometbftCmdPath, initCmdArgs...)
-
-	log.Info("Running:", initCmd)
-
-	_, err := initCmd.CombinedOutput()
-	if err != nil {
-		log.Error("Error executing command", initCmd, ":", err)
-		return
-	} else {
-		log.Info("\tSuccess")
-	}
-
-	// copy the initialized genesis.json to the .cometbft directory
-	initGenesisJsonPath := filepath.Join(defaultDir, configDirName, DefaultCometbftGenesisFilename)
-	endGenesisJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft", "config", DefaultCometbftGenesisFilename)
-	err = copyFile(initGenesisJsonPath, endGenesisJsonPath)
-	if err != nil {
-		log.WithError(err).Error("Error copying CometBFT genesis.json file")
-		return
-	}
-	log.Info("Copied genesis.json to", endGenesisJsonPath)
-
-	// copy the initialized priv_validator_key.json to the .cometbft directory
-	initPrivValidatorJsonPath := filepath.Join(defaultDir, configDirName, DefaultCometbftValidatorFilename)
-	endPrivValidatorJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft", "config", DefaultCometbftValidatorFilename)
-	err = copyFile(initPrivValidatorJsonPath, endPrivValidatorJsonPath)
-	if err != nil {
-		log.WithError(err).Error("Error copying CometBFT priv_validator_key.json file")
-		return
-	}
-	log.Info("Copied priv_validator_key.json to", endPrivValidatorJsonPath)
-
-	// update the cometbft config.toml file to have the proper block time
-	cometbftConfigPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/config.toml")
-	oldValue := `timeout_commit = "1s"`
-	newValue := `timeout_commit = "2s"`
-
-	if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
-		log.Error("Error updating the file:", cometbftConfigPath, ":", err)
-		return
-	} else {
-		log.Info("Successfully updated", cometbftConfigPath)
-	}
-}
-
-// replaceInFile replaces oldValue with newValue in the file at filename.
-// it is used here to update the block time in the cometbft config.toml file.
-func replaceInFile(filename, oldValue, newValue string) error {
-	// Read the original file.
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return fmt.Errorf("failed to read the file: %w", err)
-	}
-
-	// Perform the replacement.
-	modifiedContent := strings.ReplaceAll(string(content), oldValue, newValue)
-
-	// Write the modified content to a new temporary file.
-	tmpFilename := filename + ".tmp"
-	if err := os.WriteFile(tmpFilename, []byte(modifiedContent), 0666); err != nil {
-		return fmt.Errorf("failed to write to temporary file: %w", err)
-	}
-
-	// Rename the original file to filename.bak.
-	backupFilename := filename + ".bak"
-	if err := os.Rename(filename, backupFilename); err != nil {
-		return fmt.Errorf("failed to rename original file to backup: %w", err)
-	}
-
-	// Rename the temporary file to the original file name.
-	if err := os.Rename(tmpFilename, filename); err != nil {
-		// Attempt to restore the original file if renaming fails.
-		err := os.Rename(backupFilename, filename)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("failed to rename temporary file to original: %w", err)
-	}
-
-	return nil
-}
-
-// copyFile copies the contents of the src file to dst.
-// If dst does not exist, it will be created, and if it does, it will be overwritten.
-func copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sourceFile.Close()
-
-	// Open the destination file for writing.
-	// Create the file if it does not exist, truncate it if it does.
-	destFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, sourceFile)
-	if err != nil {
-		return err
-	}
-
-	// Ensure that any writes made to the destination file are committed to stable storage.
-	err = destFile.Sync()
-	return err
 }

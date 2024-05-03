@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/astria/astria-cli-go/cmd/devtools/config"
+	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
+
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"
 	"github.com/astria/astria-cli-go/internal/ui"
@@ -32,7 +35,7 @@ var runCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(runCmd)
-	runCmd.Flags().StringP("instance", "i", DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
+	runCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
 	runCmd.Flags().BoolVarP(&isRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
 	runCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
 	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
@@ -58,7 +61,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	// get instance name and check if it's valid
 	instance := c.Flag("instance").Value.String()
-	IsInstanceNameValidOrPanic(instance)
+	config.IsInstanceNameValidOrPanic(instance)
 
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
@@ -69,9 +72,9 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	isLocalSequencer := isLocalSequencer()
 	if isLocalSequencer {
 		log.Debug("Running local sequencer")
-		confDir := filepath.Join(astriaDir, instance, LocalConfigDirName)
-		dataDir := filepath.Join(astriaDir, instance, DataDirName)
-		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
+		confDir := filepath.Join(astriaDir, instance, config.LocalConfigDirName)
+		dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
+		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
 
@@ -154,8 +157,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		runners = []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
 	} else {
 		log.Debug("Running remote sequencer")
-		confDir := filepath.Join(astriaDir, instance, RemoteConfigDirName)
-		binDir := filepath.Join(astriaDir, instance, BinariesDirName)
+		confDir := filepath.Join(astriaDir, instance, config.RemoteConfigDirName)
+		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 		// env path
 		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
 
@@ -227,7 +230,7 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 	flag := c.Flags().Lookup(flagName)
 	if flag != nil && flag.Changed {
 		path := flag.Value.String()
-		if PathExists(path) {
+		if util.PathExists(path) {
 			log.Info(fmt.Sprintf("Override path provided for %s binary: %s", flagName, path))
 			return path
 		} else {
