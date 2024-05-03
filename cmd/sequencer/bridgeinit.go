@@ -21,10 +21,11 @@ func init() {
 	sequencerCmd.AddCommand(bridgeInitCmd)
 	bridgeInitCmd.Flags().Bool("json", false, "Output bridge account as JSON")
 	bridgeInitCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+	
+	bridgeInitCmd.Flags().String("keyfile", "", "Path to secure keyfile for the bridge account.")
+	bridgeInitCmd.Flags().String("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
+	bridgeInitCmd.Flags().String("privkey", "", "The private key of the bridge account.")
 
-	bridgeInitCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
-	bridgeInitCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
-	bridgeInitCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens")
 	bridgeInitCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
 	bridgeInitCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 

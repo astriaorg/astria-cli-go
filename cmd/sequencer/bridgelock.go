@@ -22,9 +22,9 @@ func init() {
 	bridgeLockCmd.Flags().Bool("json", false, "Output bridge account as JSON")
 	bridgeLockCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
 
-	bridgeLockCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
-	bridgeLockCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
-	bridgeLockCmd.Flags().String("privkey", "", "The private key of the account from which to transfer tokens")
+	bridgeLockCmd.Flags().String("keyfile", "", "Path to secure keyfile for the bridge account.")
+	bridgeLockCmd.Flags().String("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
+	bridgeLockCmd.Flags().String("privkey", "", "The private key of the bridge account.")
 	bridgeLockCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
 	bridgeLockCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 }
