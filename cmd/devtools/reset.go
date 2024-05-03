@@ -21,7 +21,7 @@ var resetCmd = &cobra.Command{
 func init() {
 	// top level command
 	devCmd.AddCommand(resetCmd)
-	resetCmd.PersistentFlags().StringP("instance", "i", DefaultInstanceName, "Choose the target instance for resetting.")
+	resetCmd.PersistentFlags().StringP("instance", "i", DefaultInstanceName, "Choose the target instance for purging.")
 
 	// subcommands
 	resetCmd.AddCommand(resetConfigCmd)
@@ -37,8 +37,8 @@ func init() {
 // resetConfigCmd represents the 'reset config' command
 var resetConfigCmd = &cobra.Command{
 	Use:    "config",
-	Short:  "Reset the Cometbft config files.",
-	Long:   "Reset the Cometbft config files. This will return the config files to their default state as though initially created.",
+	Short:  "Reset config files.",
+	Long:   "Reset config files. This will return the config files to their default state as though initially created.",
 	PreRun: cmd.SetLogLevel,
 	Run:    resetConfigCmdHandler,
 }
@@ -77,8 +77,8 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 // resetEnvCmd represents the 'reset env' command
 var resetEnvCmd = &cobra.Command{
 	Use:    "env",
-	Short:  "Reset the environment files.",
-	Long:   `Reset the environtment files. By default this will revert all environment files to their default state as though initially created. To select a specific environment file to reset, use the --local or --remote flags.`,
+	Short:  "Reset environment variable files.",
+	Long:   `Reset environment variable files. By default this will revert all environment files to their default state as though initially created. To select a specific environment file to reset, use the --local or --remote flags.`,
 	PreRun: cmd.SetLogLevel,
 	Run:    resetEnvCmdHandler,
 }
@@ -160,8 +160,8 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 // resetStateCmd represents the 'reset state' command
 var resetStateCmd = &cobra.Command{
 	Use:    "state",
-	Short:  "Reset the seqeuencer state.",
-	Long:   "Reset the seqeuencer state. This will reset both the sequencer and Cometbft data to their initial state.",
+	Short:  "Reset Sequencer state.",
+	Long:   "Reset Sequencer state. This will reset both the sequencer and Cometbft data to their initial state.",
 	PreRun: cmd.SetLogLevel,
 	Run:    resetStateCmdHandler,
 }

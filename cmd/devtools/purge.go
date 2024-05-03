@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// resetCmd represents the root reset command
+// purgeCmd represents the root purge command
 var purgeCmd = &cobra.Command{
 	Use:    "purge",
 	Short:  "The root command for purging the local development instance data.",
@@ -32,7 +32,6 @@ func init() {
 var purgeBinariesCmd = &cobra.Command{
 	Use:    "binaries",
 	Short:  "Delete all binaries for a given instance.",
-	Long:   "Delete all binaries for a given instance.",
 	PreRun: cmd.SetLogLevel,
 	Run:    purgeBinariesCmdHandler,
 }
@@ -66,8 +65,8 @@ func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 // purgeAllCmd represents the 'purge all' command
 var purgeAllCmd = &cobra.Command{
 	Use:    "all",
-	Short:  "Delete the entire instance.",
-	Long:   "Delete the entire instance directory. This will remove all data, binaries, and configuration files for the specified instance.",
+	Short:  "Delete all data for a given instance.",
+	Long:   "Delete all data for a given instance. This will remove all data, binaries, and configuration files for the specified instance.",
 	PreRun: cmd.SetLogLevel,
 	Run:    purgeAllCmdHandler,
 }
