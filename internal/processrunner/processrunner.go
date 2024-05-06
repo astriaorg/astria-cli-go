@@ -45,9 +45,11 @@ type processRunner struct {
 }
 
 type NewProcessRunnerOpts struct {
-	Title      string
-	BinPath    string
-	EnvPath    string
+	Title   string
+	BinPath string
+	EnvPath string
+	// ConfigPath string
+	// add OverrideFlags
 	Args       []string
 	ReadyCheck *ReadyChecker
 }

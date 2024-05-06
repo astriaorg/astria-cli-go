@@ -10,6 +10,7 @@ import (
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/cmd/devtools/config"
+	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
 
 	log "github.com/sirupsen/logrus"
 
@@ -56,6 +57,9 @@ func runInitialization(c *cobra.Command, args []string) {
 	remoteConfigPath := filepath.Join(instanceDir, config.RemoteConfigDirName)
 	cmd.CreateDirOrPanic(remoteConfigPath)
 	config.RecreateRemoteEnvFile(instanceDir, remoteConfigPath)
+
+	networksConfigPath := filepath.Join(defaultDir, instance, util.DefualtNetworksConfigName)
+	util.CreateDefaultNetworksConfig(networksConfigPath)
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
