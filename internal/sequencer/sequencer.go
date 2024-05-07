@@ -16,7 +16,8 @@ import (
 
 const (
 	// DefaultSequencerNetworkId is the default network id for the sequencer.
-	DefaultSequencerNetworkId = "astria-dusk-5"
+	// DefaultSequencerNetworkId = "astria-dusk-5"
+	DefaultSequencerNetworkId = "sequencer-test-chain-0"
 )
 
 // CreateAccount creates a new account for the sequencer.

@@ -29,12 +29,17 @@ var initCmd = &cobra.Command{
 func init() {
 	devCmd.AddCommand(initCmd)
 	initCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
+	initCmd.Flags().String("local-network-name", "sequencer-test-chain-0", "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
+
 }
 
 func runInitialization(c *cobra.Command, args []string) {
 	// Get the instance name from the -i flag or use the default
 	instance := c.Flag("instance").Value.String()
 	config.IsInstanceNameValidOrPanic(instance)
+
+	localNetworkName := c.Flag("local-network-name").Value.String()
+	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -47,19 +52,21 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	log.Info("Creating new instance in:", instanceDir)
 
+	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
+	cmd.CreateDirOrPanic(instanceDir)
+	util.CreateDefaultNetworksConfig(networksConfigPath)
+
 	// create the local config and env files
 	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)
+
 	cmd.CreateDirOrPanic(localConfigPath)
 	config.RecreateLocalEnvFile(instanceDir, localConfigPath)
-	config.RecreateCometbftAndSequencerGenesisData(localConfigPath)
+	config.RecreateCometbftAndSequencerGenesisData(localConfigPath, localNetworkName)
 
 	// create the remote env file
 	remoteConfigPath := filepath.Join(instanceDir, config.RemoteConfigDirName)
 	cmd.CreateDirOrPanic(remoteConfigPath)
 	config.RecreateRemoteEnvFile(instanceDir, remoteConfigPath)
-
-	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
-	util.CreateDefaultNetworksConfig(networksConfigPath)
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)

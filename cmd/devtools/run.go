@@ -18,12 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// boolean flags
-var (
-	isRunLocal  bool
-	isRunRemote bool
-)
-
 // runCmd represents the run command
 var runCmd = &cobra.Command{
 	Use:    "run",
@@ -36,9 +30,7 @@ var runCmd = &cobra.Command{
 func init() {
 	devCmd.AddCommand(runCmd)
 	runCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
-	runCmd.Flags().BoolVarP(&isRunLocal, "local", "l", false, "Run the Astria stack using a locally running sequencer.")
-	runCmd.Flags().BoolVarP(&isRunRemote, "remote", "r", false, "Run the Astria stack using a remote sequencer.")
-	runCmd.MarkFlagsMutuallyExclusive("local", "remote")
+	runCmd.Flags().String("network", "local", "Provide an override path to a specific environment file.")
 
 	runCmd.Flags().String("environment-path", "", "Provide an override path to a specific environment file.")
 	runCmd.Flags().String("conductor-path", "", "Provide an override path to a specific conductor binary.")
@@ -62,20 +54,20 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// get instance name and check if it's valid
 	instance := c.Flag("instance").Value.String()
 	config.IsInstanceNameValidOrPanic(instance)
+	network := c.Flag("network").Value.String()
 
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
-	// util.CreateDefaultNetworksConfig(networksConfigPath)
 	networkConfig := util.LoadNetworksConfig(networksConfigPath)
-	networkOverrides := networkConfig.Networks.Local.GetEnvOverride()
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
 
-	// check if running local or remote sequencer.
-	isLocalSequencer := isLocalSequencer()
-	if isLocalSequencer {
+	// setup services based on network config
+	switch network {
+	case "local":
+		networkOverrides := networkConfig.Networks.Local.GetEnvOverrides()
 
 		log.Debug("Running local sequencer")
 		confDir := filepath.Join(astriaDir, instance, config.LocalConfigDirName)
@@ -173,7 +165,17 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		}
 
 		runners = []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
-	} else {
+
+	case "dusk", "dawn", "mainnet":
+		var networkOverrides []string
+		if network == "dusk" {
+			networkOverrides = networkConfig.Networks.Dusk.GetEnvOverrides()
+		} else if network == "dawn" {
+			networkOverrides = networkConfig.Networks.Dawn.GetEnvOverrides()
+		} else {
+			networkOverrides = networkConfig.Networks.Mainnet.GetEnvOverrides()
+		}
+
 		log.Debug("Running remote sequencer")
 		confDir := filepath.Join(astriaDir, instance, config.RemoteConfigDirName)
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
@@ -218,30 +220,16 @@ func runCmdHandler(c *cobra.Command, args []string) {
 			log.WithError(err).Error("Error running conductor")
 		}
 		runners = []processrunner.ProcessRunner{compRunner, condRunner}
+
+	default:
+		log.Fatalf("Invalid network provided: %s", network)
+		log.Fatalf("Valid networks are: local, dusk, dawn, mainnet")
+		panic("Invalid network provided")
 	}
 
 	// create and start ui app
 	app := ui.NewApp(runners)
 	app.Start()
-}
-
-// isLocalSequencer returns true if we should run the local sequencer
-func isLocalSequencer() bool {
-	switch {
-	case !isRunLocal && !isRunRemote:
-		log.Debug("No --local or --remote flag provided. Defaulting to --local.")
-		return true
-	case isRunLocal:
-		log.Debug("--local flag provided. Running local sequencer.")
-		return true
-	case isRunRemote:
-		log.Debug("--remote flag provided. Connecting to remote sequencer.")
-		return false
-	default:
-		// this should never happen
-		log.Debug("Unknown run configuration found. Defaulting to --local.")
-		return true
-	}
 }
 
 // getFlagPathOrPanic gets the override path from the flag. It returns the default

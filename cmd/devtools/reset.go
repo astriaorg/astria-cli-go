@@ -28,6 +28,7 @@ func init() {
 
 	// subcommands
 	resetCmd.AddCommand(resetConfigCmd)
+	resetConfigCmd.Flags().String("local-network-name", "sequencer-test-chain-0", "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
 	resetCmd.AddCommand(resetEnvCmd)
 	resetCmd.AddCommand(resetStateCmd)
 
@@ -50,6 +51,9 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
 	config.IsInstanceNameValidOrPanic(instance)
+
+	localNetworkName := c.Flag("local-network-name").Value.String()
+	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -78,7 +82,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 		return
 	}
 
-	config.RecreateCometbftAndSequencerGenesisData(localConfigDir)
+	config.RecreateCometbftAndSequencerGenesisData(localConfigDir, localNetworkName)
 	util.CreateDefaultNetworksConfig(networksConfigPath)
 
 	log.Infof("Successfully reset config files for instance '%s'", instance)

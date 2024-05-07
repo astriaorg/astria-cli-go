@@ -17,11 +17,10 @@ type NetworksConfig struct {
 
 // Networks is the struct that holds the configuration for all individual Astria networks.
 type Networks struct {
-	Local Network `mapstructure:"local" toml:"local"`
-	Dusk  Network `mapstructure:"dusk" toml:"dusk"`
-	// TODO - uncomment when networks are ready
-	// Dawn    Network `mapstructure:"dawn" toml:"dawn"`
-	// Mainnet Network `mapstructure:"mainnet" toml:"mainnet"`
+	Local   Network `mapstructure:"local" toml:"local"`
+	Dusk    Network `mapstructure:"dusk" toml:"dusk"`
+	Dawn    Network `mapstructure:"dawn" toml:"dawn"`
+	Mainnet Network `mapstructure:"mainnet" toml:"mainnet"`
 }
 
 // Network is the struct that holds the configuration for an individual Astria network.
@@ -49,19 +48,18 @@ func defaultNetworksConfig() NetworksConfig {
 				SequencerRPC:     "https://rpc.sequencer.dusk-5.devnet.astria.org/",
 				RollupName:       "",
 			},
-			// TODO - uncomment when networks are ready
-			// Dawn: Network{
-			// 	SequencerChainId: "astria-dawn-0",
-			// 	SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
-			// 	SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
-			// 	RollupName:       "",
-			// },
-			// Mainnet: Network{
-			// 	SequencerChainId: "astria",
-			// 	SequencerGRPC:    "https://grpc.sequencer.astria.org/",
-			// 	SequencerRPC:     "https://rpc.sequencer.astria.org/",
-			// 	RollupName:       "",
-			// },
+			Dawn: Network{
+				SequencerChainId: "astria-dawn-0",
+				SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
+				RollupName:       "",
+			},
+			Mainnet: Network{
+				SequencerChainId: "astria",
+				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.astria.org/",
+				RollupName:       "",
+			},
 		},
 	}
 	return config
@@ -125,9 +123,9 @@ func CreateDefaultNetworksConfig(path string) {
 
 }
 
-// GetEnvOverride returns a slice of environment variables that can be used to
+// GetEnvOverrides returns a slice of environment variables that can be used to
 // override the default environment variables for the network configuration.
-func (n Network) GetEnvOverride() []string {
+func (n Network) GetEnvOverrides() []string {
 	return []string{
 		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
 		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,

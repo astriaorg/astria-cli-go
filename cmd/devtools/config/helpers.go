@@ -2,6 +2,7 @@ package config
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -25,6 +26,26 @@ func IsInstanceNameValidOrPanic(instance string) {
 	if !re.MatchString(instance) {
 		log.Errorf("Invalid instance name: %s", instance)
 		err := fmt.Errorf("invalid instance name: '%s'. Instance names must be lowercase, alphanumeric, and may contain dashes. It can't begin or end with a dash. No repeating dashes", instance)
+		panic(err)
+	}
+}
+
+// IsSequencerChainIdValidOrPanic checks if the instance name is valid and panics if it's not.
+func IsSequencerChainIdValidOrPanic(id string) {
+	if len(id) < 1 || len(id) > 50 {
+		log.Errorf("Invalid sequencer chain id: %s", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must be within the range [1,50], can contain lowercase and uppercase letter, numerical digits, and the characters '-', '_', and '.'", id)
+		panic(err)
+	}
+
+	re, err := regexp.Compile(`^[a-zA-Z0-9\-_\.]+$`)
+	if err != nil {
+		log.WithError(err).Error("Error compiling regex")
+		panic(err)
+	}
+	if !re.MatchString(id) {
+		log.Errorf("Invalid sequencer chain id: %s", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must be within the range [1,50], can contain lowercase and uppercase letter, numerical digits, and the characters '-', '_', and '.'", id)
 		panic(err)
 	}
 }
@@ -117,13 +138,25 @@ var embeddedCometbftGenesisFile embed.FS
 var embeddedCometbftValidatorFile embed.FS
 
 // RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json and priv_validator_key.json file at the specified path.
-func RecreateCometbftAndSequencerGenesisData(path string) {
+func RecreateCometbftAndSequencerGenesisData(path, localNetworkName string) {
 	// Read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 		panic(err)
 	}
+	// Unmarshal JSON into a map to update sequencer chain id
+	var data map[string]interface{}
+	if err := json.Unmarshal(genesisData, &data); err != nil {
+		log.Fatalf("Error unmarshaling JSON: %s", err)
+	}
+	// update chain id and convert back to bytes
+	data["chain_id"] = localNetworkName
+	genesisData, err = json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		log.Fatalf("Error marshaling updated data to JSON: %s", err)
+	}
+
 	// Read the content from the embedded file
 	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, "priv_validator_key.json")
 	if err != nil {
