@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/astria/astria-cli-go/cmd/devtools/config"
+	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
 
 	"github.com/astria/astria-cli-go/cmd"
 	log "github.com/sirupsen/logrus"
@@ -56,6 +57,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 		panic(err)
 	}
 	localConfigDir := filepath.Join(homePath, ".astria", instance, config.LocalConfigDirName)
+	networksConfigPath := filepath.Join(homePath, ".astria", instance, config.DefualtNetworksConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
@@ -70,8 +72,14 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 		fmt.Println("Error removing file:", err)
 		return
 	}
+	err = os.Remove(networksConfigPath)
+	if err != nil {
+		fmt.Println("Error removing file:", err)
+		return
+	}
 
 	config.RecreateCometbftAndSequencerGenesisData(localConfigDir)
+	util.CreateDefaultNetworksConfig(networksConfigPath)
 
 	log.Infof("Successfully reset config files for instance '%s'", instance)
 }

@@ -58,7 +58,7 @@ func runInitialization(c *cobra.Command, args []string) {
 	cmd.CreateDirOrPanic(remoteConfigPath)
 	config.RecreateRemoteEnvFile(instanceDir, remoteConfigPath)
 
-	networksConfigPath := filepath.Join(defaultDir, instance, util.DefualtNetworksConfigName)
+	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
 	util.CreateDefaultNetworksConfig(networksConfigPath)
 
 	// create the local bin directory for downloaded binaries

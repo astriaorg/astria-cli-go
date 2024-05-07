@@ -2,15 +2,13 @@ package utilities
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 )
-
-const DefualtNetworksConfigName = "networks-config.toml"
 
 // NetworksConfig is the struct that holds all Astria network configurations.
 type NetworksConfig struct {
@@ -19,10 +17,11 @@ type NetworksConfig struct {
 
 // Networks is the struct that holds the configuration for all individual Astria networks.
 type Networks struct {
-	Local   Network `mapstructure:"local" toml:"local"`
-	Dusk    Network `mapstructure:"dusk" toml:"dusk"`
-	Dawn    Network `mapstructure:"dawn" toml:"dawn"`
-	Mainnet Network `mapstructure:"mainnet" toml:"mainnet"`
+	Local Network `mapstructure:"local" toml:"local"`
+	Dusk  Network `mapstructure:"dusk" toml:"dusk"`
+	// TODO - uncomment when networks are ready
+	// Dawn    Network `mapstructure:"dawn" toml:"dawn"`
+	// Mainnet Network `mapstructure:"mainnet" toml:"mainnet"`
 }
 
 // Network is the struct that holds the configuration for an individual Astria network.
@@ -40,7 +39,7 @@ func defaultNetworksConfig() NetworksConfig {
 	config := NetworksConfig{
 		Networks: Networks{
 			Local: Network{
-				SequencerChainId: "local-test-sequencer",
+				SequencerChainId: "sequencer-test-chain-0",
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
 				DefaultDenom:     "nria",
@@ -53,54 +52,66 @@ func defaultNetworksConfig() NetworksConfig {
 				DefaultDenom:     "nria",
 				RollupName:       "",
 			},
-			Dawn: Network{
-				SequencerChainId: "astria-dawn-0",
-				SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
-				DefaultDenom:     "ibc/channel0/utia",
-				RollupName:       "",
-			},
-			Mainnet: Network{
-				SequencerChainId: "astria",
-				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.astria.org/",
-				DefaultDenom:     "ibc/channel0/utia",
-				RollupName:       "",
-			},
+			// TODO - uncomment when networks are ready
+			// Dawn: Network{
+			// 	SequencerChainId: "astria-dawn-0",
+			// 	SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
+			// 	SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
+			// 	DefaultDenom:     "ibc/channel0/utia",
+			// 	RollupName:       "",
+			// },
+			// Mainnet: Network{
+			// 	SequencerChainId: "astria",
+			// 	SequencerGRPC:    "https://grpc.sequencer.astria.org/",
+			// 	SequencerRPC:     "https://rpc.sequencer.astria.org/",
+			// 	DefaultDenom:     "ibc/channel0/utia",
+			// 	RollupName:       "",
+			// },
 		},
 	}
 	return config
 }
 
-// LoadNetworksConfig loads the NetworksConfig from the given path.
+// LoadNetworksConfig loads the NetworksConfig from the given path. If the file
+// cannot be loaded or parsed, the function will panic.
 func LoadNetworksConfig(path string) NetworksConfig {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Error reading config file, %s", err)
+		panic(err)
 	}
 
 	var config NetworksConfig
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Fatalf("Unable to decode into struct, %v", err)
+		panic(err)
 	}
 
-	// Marshal into JSON with indentation for printing
-	jsonData, err := json.MarshalIndent(config, "", "  ")
+	// Marshal into JSON for printing
+	jsonData, err := json.Marshal(config)
 	if err != nil {
 		log.Fatalf("Error marshaling to JSON: %v", err)
+		panic(err)
 	}
 
 	// Print the JSON
-	fmt.Println("Loaded Networks Configuration:")
-	fmt.Println(string(jsonData))
+	log.Debugf("Loaded Networks Configuration: %s", string(jsonData))
 
 	return config
 }
 
 // CreateDefaultNetworksConfig creates a default networks configuration file at
-// the given path, populating the file with the network defaults.
+// the given path, populating the file with the network defaults. It will skip
+// initialization if the file already exists. It will panic if the file cannot
+// be created or written to.
 func CreateDefaultNetworksConfig(path string) {
+
+	_, err := os.Stat(path)
+	if err == nil {
+		log.Infof("%s already exists. Skipping initialization.\n", path)
+		return
+	}
 	// Create an instance of the Config struct with some data
 	config := defaultNetworksConfig()
 

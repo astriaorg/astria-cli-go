@@ -9,6 +9,7 @@ require (
 	github.com/astriaorg/go-sequencer-client v0.3.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/joho/godotenv v1.5.1
+	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
 	github.com/rivo/tview v0.0.0-20240501114654-1f4d5e8f881d
 	github.com/sirupsen/logrus v1.9.3
@@ -76,7 +77,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
-	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/petermattis/goid v0.0.0-20240503122002-4b96552b8156 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect

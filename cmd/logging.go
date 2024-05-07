@@ -53,5 +53,5 @@ func CreateUILog(destDir string) {
 		DisableColors: true, // Disable ANSI color codes
 		FullTimestamp: true,
 	})
-	log.Debug("New log file created successfully:", logPath)
+	log.Debug("New log file created successfully: ", logPath)
 }

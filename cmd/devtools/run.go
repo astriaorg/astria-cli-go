@@ -65,7 +65,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
-	networksConfigPath := filepath.Join(astriaDir, instance, util.DefualtNetworksConfigName)
+	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	// util.CreateDefaultNetworksConfig(networksConfigPath)
 	_ = util.LoadNetworksConfig(networksConfigPath)
 
