@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/astria/astria-cli-go/internal/safebuffer"
@@ -45,13 +46,12 @@ type processRunner struct {
 }
 
 type NewProcessRunnerOpts struct {
-	Title   string
-	BinPath string
-	EnvPath string
-	// ConfigPath string
-	// add OverrideFlags
-	Args       []string
-	ReadyCheck *ReadyChecker
+	Title        string
+	BinPath      string
+	EnvPath      string
+	EnvOverrides []string
+	Args         []string
+	ReadyCheck   *ReadyChecker
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -65,6 +65,11 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	} else {
 		env = os.Environ()
 	}
+
+	if opts.EnvOverrides != nil {
+		env = applyEnvOverrides(env, opts.EnvOverrides)
+	}
+
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = env
@@ -242,4 +247,28 @@ func (pr *processRunner) GetInfo() string {
 // GetEnvironment returns the environment variables for the process.
 func (pr *processRunner) GetEnvironment() []string {
 	return pr.env
+}
+
+// applyEnvOverrides updates the environment variable with the overrides environment variables.
+func applyEnvOverrides(env []string, overrides []string) []string {
+	// create a map of the environment variables
+	envMap := make(map[string]string)
+	for _, e := range env {
+		kv := strings.SplitN(e, "=", 2)
+		envMap[kv[0]] = kv[1]
+	}
+
+	// apply the overrides
+	for _, e := range overrides {
+		kv := strings.SplitN(e, "=", 2)
+		envMap[kv[0]] = kv[1]
+	}
+
+	// convert the map back to a slice
+	var newEnv []string
+	for k, v := range envMap {
+		newEnv = append(newEnv, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	return newEnv
 }

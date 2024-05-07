@@ -29,7 +29,6 @@ type Network struct {
 	SequencerChainId string `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
 	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
 	SequencerRPC     string `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
-	DefaultDenom     string `mapstructure:"default_denom" toml:"default_denom"`
 	RollupName       string `mapstructure:"rollup_name" toml:"rollup_name"`
 }
 
@@ -42,14 +41,12 @@ func defaultNetworksConfig() NetworksConfig {
 				SequencerChainId: "sequencer-test-chain-0",
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
-				DefaultDenom:     "nria",
 				RollupName:       "local-rollup",
 			},
 			Dusk: Network{
 				SequencerChainId: "astria-dusk-5",
 				SequencerGRPC:    "https://grpc.sequencer.dusk-5.devnet.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dusk-5.devnet.astria.org/",
-				DefaultDenom:     "nria",
 				RollupName:       "",
 			},
 			// TODO - uncomment when networks are ready
@@ -57,14 +54,12 @@ func defaultNetworksConfig() NetworksConfig {
 			// 	SequencerChainId: "astria-dawn-0",
 			// 	SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
 			// 	SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
-			// 	DefaultDenom:     "ibc/channel0/utia",
 			// 	RollupName:       "",
 			// },
 			// Mainnet: Network{
 			// 	SequencerChainId: "astria",
 			// 	SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 			// 	SequencerRPC:     "https://rpc.sequencer.astria.org/",
-			// 	DefaultDenom:     "ibc/channel0/utia",
 			// 	RollupName:       "",
 			// },
 		},
@@ -125,5 +120,19 @@ func CreateDefaultNetworksConfig(path string) {
 	// Encode the struct to TOML and write to the file
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
+	}
+	log.Infof("New network config file created successfully: %s\n", path)
+
+}
+
+// GetEnvOverride returns a slice of environment variables that can be used to
+// override the default environment variables for the network configuration.
+func (n Network) GetEnvOverride() []string {
+	return []string{
+		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
+		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
+		"ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL=" + n.SequencerRPC,
+		"ASTRIA_COMPOSER_SEQUENCER_URL=" + n.SequencerRPC,
+		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::ws://127.0.0.1:8546",
 	}
 }

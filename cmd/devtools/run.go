@@ -67,7 +67,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	// util.CreateDefaultNetworksConfig(networksConfigPath)
-	_ = util.LoadNetworksConfig(networksConfigPath)
+	networkConfig := util.LoadNetworksConfig(networksConfigPath)
+	networkOverrides := networkConfig.Networks.Local.GetEnvOverride()
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
@@ -75,6 +76,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// check if running local or remote sequencer.
 	isLocalSequencer := isLocalSequencer()
 	if isLocalSequencer {
+
 		log.Debug("Running local sequencer")
 		confDir := filepath.Join(astriaDir, instance, config.LocalConfigDirName)
 		dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
@@ -99,11 +101,12 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		}
 		seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
 		seqOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Sequencer",
-			BinPath:    sequencerPath,
-			EnvPath:    envPath,
-			Args:       nil,
-			ReadyCheck: &seqReadinessCheck,
+			Title:        "Sequencer",
+			BinPath:      sequencerPath,
+			EnvPath:      envPath,
+			EnvOverrides: networkOverrides,
+			Args:         nil,
+			ReadyCheck:   &seqReadinessCheck,
 		}
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
@@ -118,31 +121,34 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
 		cometDataPath := filepath.Join(dataDir, ".cometbft")
 		cometOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Comet BFT",
-			BinPath:    cometbftPath,
-			EnvPath:    envPath,
-			Args:       []string{"node", "--home", cometDataPath},
-			ReadyCheck: &cometReadinessCheck,
+			Title:        "Comet BFT",
+			BinPath:      cometbftPath,
+			EnvPath:      envPath,
+			EnvOverrides: nil,
+			Args:         []string{"node", "--home", cometDataPath},
+			ReadyCheck:   &cometReadinessCheck,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Composer",
-			BinPath:    composerPath,
-			EnvPath:    envPath,
-			Args:       nil,
-			ReadyCheck: nil,
+			Title:        "Composer",
+			BinPath:      composerPath,
+			EnvPath:      envPath,
+			EnvOverrides: networkOverrides,
+			Args:         nil,
+			ReadyCheck:   nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Conductor",
-			BinPath:    conductorPath,
-			EnvPath:    envPath,
-			Args:       nil,
-			ReadyCheck: nil,
+			Title:        "Conductor",
+			BinPath:      conductorPath,
+			EnvPath:      envPath,
+			EnvOverrides: networkOverrides,
+			Args:         nil,
+			ReadyCheck:   nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -180,21 +186,23 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Composer",
-			BinPath:    composerPath,
-			EnvPath:    envPath,
-			Args:       nil,
-			ReadyCheck: nil,
+			Title:        "Composer",
+			BinPath:      composerPath,
+			EnvPath:      envPath,
+			EnvOverrides: networkOverrides,
+			Args:         nil,
+			ReadyCheck:   nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Conductor",
-			BinPath:    conductorPath,
-			EnvPath:    envPath,
-			Args:       nil,
-			ReadyCheck: nil,
+			Title:        "Conductor",
+			BinPath:      conductorPath,
+			EnvPath:      envPath,
+			EnvOverrides: networkOverrides,
+			Args:         nil,
+			ReadyCheck:   nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
