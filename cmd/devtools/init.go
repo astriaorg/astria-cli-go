@@ -10,7 +10,6 @@ import (
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/cmd/devtools/config"
-	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
 
 	log "github.com/sirupsen/logrus"
 
@@ -56,7 +55,7 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
 	cmd.CreateDirOrPanic(instanceDir)
-	util.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
 
 	// create the local config and env files
 	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)

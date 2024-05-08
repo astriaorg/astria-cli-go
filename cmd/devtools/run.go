@@ -59,7 +59,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
-	networkConfig := util.LoadNetworksConfig(networksConfigPath)
+	networkConfig := config.LoadNetworksConfig(networksConfigPath)
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner

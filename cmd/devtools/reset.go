@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/astria/astria-cli-go/cmd/devtools/config"
-	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
 
 	"github.com/astria/astria-cli-go/cmd"
 	log "github.com/sirupsen/logrus"
@@ -86,7 +85,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	config.RecreateCometbftAndSequencerGenesisData(localConfigDir, localNetworkName, localDefaultDenom)
-	util.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
 
 	log.Infof("Successfully reset config files for instance '%s'", instance)
 }
