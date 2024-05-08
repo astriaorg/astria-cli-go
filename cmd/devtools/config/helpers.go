@@ -33,8 +33,8 @@ func IsInstanceNameValidOrPanic(instance string) {
 // IsSequencerChainIdValidOrPanic checks if the instance name is valid and panics if it's not.
 func IsSequencerChainIdValidOrPanic(id string) {
 	if len(id) < 1 || len(id) > 50 {
-		log.Errorf("Invalid sequencer chain id: %s", id)
-		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must be within the range [1,50], can contain lowercase and uppercase letter, numerical digits, and the characters '-', '_', and '.'", id)
+		log.Errorf("Invalid sequencer chain id length: %s", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must be within the range [1,50]", id)
 		panic(err)
 	}
 
@@ -45,7 +45,7 @@ func IsSequencerChainIdValidOrPanic(id string) {
 	}
 	if !re.MatchString(id) {
 		log.Errorf("Invalid sequencer chain id: %s", id)
-		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must be within the range [1,50], can contain lowercase and uppercase letter, numerical digits, and the characters '-', '_', and '.'", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must contain lowercase and uppercase letter, numerical digits, and the characters '-', '_', and '.'", id)
 		panic(err)
 	}
 }

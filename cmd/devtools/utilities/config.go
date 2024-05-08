@@ -40,7 +40,7 @@ func defaultNetworksConfig() NetworksConfig {
 				SequencerChainId: "sequencer-test-chain-0",
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
-				RollupName:       "local-rollup",
+				RollupName:       "astria-test-chain",
 			},
 			Dusk: Network{
 				SequencerChainId: "astria-dusk-5",
