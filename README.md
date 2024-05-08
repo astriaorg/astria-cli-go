@@ -156,9 +156,9 @@ Sequencer:
 astria-go dev run --network dusk
 ```
 
-When using the `--network` flag to target a remote sequencer, the cli will handle configuration of the components
-running on your local machine, but you will need to create an account on the
-remote sequencer. More details can be
+When using the `--network` flag to target a remote sequencer, the cli will
+handle configuration of the components running on your local machine, but you
+will need to create an account on the remote sequencer. More details can be
 [found here](https://docs.astria.org/developer/tutorials/1-using-astria-go-cli#setup-and-run-the-local-astria-components-to-communicate-with-the-remote-sequencer).
 
 ### Run Custom Binaries
