@@ -97,6 +97,8 @@ configuration files, and initializes CometBFT.
 
 The following files are generated:
 
+* In `~/.astria/<instance>`
+  * A `networks-config.toml` easily configuring different target networks
 * In `~/.astria/<instance>/config-local`:
   * A `.env` file for local configuration
   * `genesis.json` for the sequencer genesis
@@ -142,7 +144,7 @@ dependencies.
 
 > NOTE: Running a local Sequencer is the default behavior of `dev run` command.
 > Thus, `astria-go dev run` is effectively an alias of
-> `astria-go dev run --local`.
+> `astria-go dev run --network local`.
 
 #### Run Against a Remote Sequencer
 
@@ -150,10 +152,11 @@ If you want to run Composer and Conductor locally against a remote Astria
 Sequencer:
 
 ```bash
-astria-go dev run --remote
+# Run against the Astria Dusk dev net 
+astria-go dev run --network dusk
 ```
 
-Using the `--remote` flag, the cli will handle configuration of the components
+When using the `--network` flag to target a remote sequencer, the cli will handle configuration of the components
 running on your local machine, but you will need to create an account on the
 remote sequencer. More details can be
 [found here](https://docs.astria.org/developer/tutorials/1-using-astria-go-cli#setup-and-run-the-local-astria-components-to-communicate-with-the-remote-sequencer).
@@ -168,7 +171,7 @@ cli to run your locally compiled Conductor with the other components using the
 `--conductor-path` flag:
 
 ```bash
-astria-go dev run --local \
+astria-go dev run --network local \
   --conductor-path <absolute path to the Astria mono repo>/target/debug/astria-conductor
 ```
 
@@ -177,7 +180,7 @@ binaries, while using a locally built version of the Conductor binary. You can
 swap out some or all binaries for the Astria stack with their appropriate flags:
 
 ```bash
-astria-go dev run --local \
+astria-go dev run --network local \
   --sequencer-path <sequencer bin path> \
   --cometbft-path <cometbft bin path> \
   --composer-path <composer bin path> \
