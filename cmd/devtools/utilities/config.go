@@ -29,11 +29,12 @@ type Network struct {
 	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
 	SequencerRPC     string `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
 	RollupName       string `mapstructure:"rollup_name" toml:"rollup_name"`
+	DefaultDenom     string `mapstructure:"default_denom" toml:"default_denom"`
 }
 
-// defaultNetworksConfig returns a NetworksConfig struct populated with all
+// DefaultNetworksConfig returns a NetworksConfig struct populated with all
 // network defaults.
-func defaultNetworksConfig() NetworksConfig {
+func DefaultNetworksConfig() NetworksConfig {
 	config := NetworksConfig{
 		Networks: Networks{
 			Local: Network{
@@ -41,24 +42,28 @@ func defaultNetworksConfig() NetworksConfig {
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
 				RollupName:       "astria-test-chain",
+				DefaultDenom:     "nria",
 			},
 			Dusk: Network{
 				SequencerChainId: "astria-dusk-5",
 				SequencerGRPC:    "https://grpc.sequencer.dusk-5.devnet.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dusk-5.devnet.astria.org/",
 				RollupName:       "",
+				DefaultDenom:     "nria",
 			},
 			Dawn: Network{
 				SequencerChainId: "astria-dawn-0",
 				SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
 				RollupName:       "",
+				DefaultDenom:     "ibc/channel0/utia",
 			},
 			Mainnet: Network{
 				SequencerChainId: "astria",
 				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.astria.org/",
 				RollupName:       "",
+				DefaultDenom:     "ibc/channel0/utia",
 			},
 		},
 	}
@@ -94,11 +99,12 @@ func LoadNetworksConfig(path string) NetworksConfig {
 	return config
 }
 
-// CreateDefaultNetworksConfig creates a default networks configuration file at
-// the given path, populating the file with the network defaults. It will skip
-// initialization if the file already exists. It will panic if the file cannot
-// be created or written to.
-func CreateDefaultNetworksConfig(path string) {
+// CreateNetworksConfig creates a networks configuration file at
+// the given path, populating the file with the network defaults, and overriding
+// the default local denom and local sequencer network chain id .
+// It will skip initialization if the file already exists. It will panic if the
+// file cannot be created or written to.
+func CreateNetworksConfig(path, localSequencerChainId, localDefaultDenom string) {
 
 	_, err := os.Stat(path)
 	if err == nil {
@@ -106,7 +112,9 @@ func CreateDefaultNetworksConfig(path string) {
 		return
 	}
 	// Create an instance of the Config struct with some data
-	config := defaultNetworksConfig()
+	config := DefaultNetworksConfig()
+	config.Networks.Local.DefaultDenom = localDefaultDenom
+	config.Networks.Local.SequencerChainId = localSequencerChainId
 
 	// Open a file for writing
 	file, err := os.Create(path)
@@ -120,7 +128,6 @@ func CreateDefaultNetworksConfig(path string) {
 		panic(err)
 	}
 	log.Infof("New network config file created successfully: %s\n", path)
-
 }
 
 // GetEnvOverrides returns a slice of environment variables that can be used to

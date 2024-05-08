@@ -29,8 +29,8 @@ var initCmd = &cobra.Command{
 func init() {
 	devCmd.AddCommand(initCmd)
 	initCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
-	initCmd.Flags().String("local-network-name", "sequencer-test-chain-0", "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-
+	initCmd.Flags().String("local-network-name", "sequencer-test-chain-0", "Set the network name for the local instance. This is used to set the chain ID in the CometBFT genesis.json file.")
+	initCmd.Flags().String("local-default-denom", "nria", "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
 }
 
 func runInitialization(c *cobra.Command, args []string) {
@@ -40,6 +40,8 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	localNetworkName := c.Flag("local-network-name").Value.String()
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
+
+	localDefaultDenom := c.Flag("local-default-denom").Value.String()
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -54,14 +56,14 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
 	cmd.CreateDirOrPanic(instanceDir)
-	util.CreateDefaultNetworksConfig(networksConfigPath)
+	util.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
 
 	// create the local config and env files
 	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)
 
 	cmd.CreateDirOrPanic(localConfigPath)
 	config.RecreateLocalEnvFile(instanceDir, localConfigPath)
-	config.RecreateCometbftAndSequencerGenesisData(localConfigPath, localNetworkName)
+	config.RecreateCometbftAndSequencerGenesisData(localConfigPath, localNetworkName, localDefaultDenom)
 
 	// create the remote env file
 	remoteConfigPath := filepath.Join(instanceDir, config.RemoteConfigDirName)

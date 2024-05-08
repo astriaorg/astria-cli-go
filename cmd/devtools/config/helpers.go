@@ -137,8 +137,11 @@ var embeddedCometbftGenesisFile embed.FS
 //go:embed priv_validator_key.json
 var embeddedCometbftValidatorFile embed.FS
 
-// RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json and priv_validator_key.json file at the specified path.
-func RecreateCometbftAndSequencerGenesisData(path, localNetworkName string) {
+// RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json
+// and priv_validator_key.json file at the specified path. It uses the local
+// network name and local default denomination to update the chain id and
+// default denom for the local sequencer network.
+func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localDefaultDenom string) {
 	// Read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
@@ -150,8 +153,15 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName string) {
 	if err := json.Unmarshal(genesisData, &data); err != nil {
 		log.Fatalf("Error unmarshaling JSON: %s", err)
 	}
-	// update chain id and convert back to bytes
+	// update chain id and default denom and convert back to bytes
 	data["chain_id"] = localNetworkName
+	if appState, ok := data["app_state"].(map[string]interface{}); ok {
+		appState["native_asset_base_denomination"] = localDefaultDenom
+		appState["allowed_fee_assets"] = []interface{}{localDefaultDenom}
+		data["app_state"] = appState
+	} else {
+		log.Println("Error: Expected map[string]interface{} for 'app_state'")
+	}
 	genesisData, err = json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Fatalf("Error marshaling updated data to JSON: %s", err)
