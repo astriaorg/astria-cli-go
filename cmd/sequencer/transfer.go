@@ -21,6 +21,7 @@ func init() {
 
 	transferCmd.Flags().Bool("json", false, "Output in JSON format.")
 	transferCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
+	transferCmd.Flags().String("chain-id", DefaultSequencerNetworkId, "The chain ID of the sequencer.")
 
 	transferCmd.Flags().String("keyfile", "", "Path to secure keyfile for sender.")
 	transferCmd.Flags().String("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
@@ -35,6 +36,7 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 	amount := args[0]
 	to := args[1]
 	url := cmd.Flag("url").Value.String()
+	chainId := cmd.Flag("chain-id").Value.String()
 
 	priv, err := GetPrivateKeyFromFlags(cmd)
 	if err != nil {
@@ -43,10 +45,11 @@ func transferCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	opts := sequencer.TransferOpts{
-		SequencerURL: url,
-		FromKey:      priv,
-		ToAddress:    to,
-		Amount:       amount,
+		SequencerURL:     url,
+		FromKey:          priv,
+		ToAddress:        to,
+		Amount:           amount,
+		SequencerChainId: chainId,
 	}
 	tx, err := sequencer.Transfer(opts)
 	if err != nil {

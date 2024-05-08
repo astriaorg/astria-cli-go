@@ -204,7 +204,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	log.Debugf("Nonce: %v", nonce)
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: DefaultSequencerNetworkId,
+			ChainId: opts.SequencerChainId,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{

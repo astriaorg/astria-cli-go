@@ -94,7 +94,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	// transfer
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key)
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--chain-id", "sequencer-test-chain-0")
 	transferOutput, err := transferCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
