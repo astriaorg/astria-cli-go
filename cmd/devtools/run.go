@@ -60,6 +60,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	networkConfig := config.LoadNetworksConfig(networksConfigPath)
+	serviceLogLevel := cmd.GetServicesLogLevel()
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
@@ -84,6 +85,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		log.Debugf("Using binaries from %s", binDir)
 
 		// sequencer
+		seqEnvOverrides := append(networkOverrides, "ASTRIA_SEQUENCER_LOG=\"astria_sequencer="+serviceLogLevel+"\"")
 		seqRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "Sequencer gRPC server is OK",
 			Callback:      getSequencerOKCallback(envPath),
@@ -96,7 +98,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 			Title:        "Sequencer",
 			BinPath:      sequencerPath,
 			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
+			EnvOverrides: seqEnvOverrides,
 			Args:         nil,
 			ReadyCheck:   &seqReadinessCheck,
 		}
@@ -117,28 +119,30 @@ func runCmdHandler(c *cobra.Command, args []string) {
 			BinPath:      cometbftPath,
 			EnvPath:      envPath,
 			EnvOverrides: nil,
-			Args:         []string{"node", "--home", cometDataPath},
+			Args:         []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
 			ReadyCheck:   &cometReadinessCheck,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
 		// composer
+		composerEnvOverrides := append(networkOverrides, "ASTRIA_COMPOSER_LOG=\"astria_composer="+serviceLogLevel+"\"")
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:        "Composer",
 			BinPath:      composerPath,
 			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
+			EnvOverrides: composerEnvOverrides,
 			Args:         nil,
 			ReadyCheck:   nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
+		conductorEnvOverrides := append(networkOverrides, "ASTRIA_CONDUCTOR_LOG=\"astria_conductor="+serviceLogLevel+"\"")
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:        "Conductor",
 			BinPath:      conductorPath,
 			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
+			EnvOverrides: conductorEnvOverrides,
 			Args:         nil,
 			ReadyCheck:   nil,
 		}
@@ -187,22 +191,24 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerPath := getFlagPathOrPanic(c, "composer-path", filepath.Join(binDir, "astria-composer"))
 
 		// composer
+		composerEnvOverrides := append(networkOverrides, "ASTRIA_COMPOSER_LOG=\"astria_composer="+serviceLogLevel+"\"")
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:        "Composer",
 			BinPath:      composerPath,
 			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
+			EnvOverrides: composerEnvOverrides,
 			Args:         nil,
 			ReadyCheck:   nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
+		conductorEnvOverrides := append(networkOverrides, "ASTRIA_CONDUCTOR_LOG=\"astria_conductor="+serviceLogLevel+"\"")
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:        "Conductor",
 			BinPath:      conductorPath,
 			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
+			EnvOverrides: conductorEnvOverrides,
 			Args:         nil,
 			ReadyCheck:   nil,
 		}

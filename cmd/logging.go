@@ -9,18 +9,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var logLevel string
+var cliLogLevel string
+var serviceLogLevel string
 
-const DefaultLogLevel = log.InfoLevel
+const DefaultCliLogLevel = log.InfoLevel
 
 func init() {
 	// default log level
-	log.SetLevel(DefaultLogLevel)
+	log.SetLevel(DefaultCliLogLevel)
 }
 
 // SetLogLevel sets the log level based on the flag passed in
 func SetLogLevel(cmd *cobra.Command, args []string) {
-	lowercased := strings.ToLower(logLevel)
+	lowercased := strings.ToLower(cliLogLevel)
 	switch lowercased {
 	case "debug":
 		log.SetLevel(log.DebugLevel)
@@ -35,7 +36,7 @@ func SetLogLevel(cmd *cobra.Command, args []string) {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	default:
-		log.SetLevel(DefaultLogLevel)
+		log.SetLevel(DefaultCliLogLevel)
 	}
 }
 
@@ -54,4 +55,9 @@ func CreateUILog(destDir string) {
 		FullTimestamp: true,
 	})
 	log.Debug("New log file created successfully: ", logPath)
+}
+
+// GetCliLogLevel returns the specified log level for the services.
+func GetServicesLogLevel() string {
+	return serviceLogLevel
 }
