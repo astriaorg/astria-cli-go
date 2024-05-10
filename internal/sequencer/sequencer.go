@@ -13,7 +13,8 @@ import (
 
 const (
 	// DefaultSequencerNetworkId is the default network id for the sequencer.
-	DefaultSequencerNetworkId = "astria-dusk-5"
+	//DefaultSequencerNetworkId = "astria-dusk-5"
+	DefaultSequencerNetworkId = "astria"
 )
 
 // CreateAccount creates a new account for the sequencer.
@@ -246,6 +247,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	defer cancel()
 
 	rollupID := rollupIdFromText(opts.RollupID)
+	log.Debug("rollup id :", rollupID)
 
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
@@ -274,6 +276,10 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 
 	// build transaction
 	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: DefaultSequencerNetworkId,
+			Nonce:   nonce,
+		},
 		Actions: []*txproto.Action{
 			{
 				Value: &txproto.Action_InitBridgeAccountAction{
@@ -362,6 +368,10 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 
 	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: DefaultSequencerNetworkId,
+			Nonce:   nonce,
+		},
 		Actions: []*txproto.Action{
 			{
 				Value: &txproto.Action_BridgeLockAction{

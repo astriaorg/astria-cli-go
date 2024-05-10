@@ -138,13 +138,13 @@ func (nr *NonceResponse) TableRows() [][]string {
 	}
 }
 
-// InitbridgeOpts are the options for the InitBridge function.
+// InitBridgeOpts are the options for the InitBridge function.
 type InitBridgeOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// fromKey is the private key of the sender
 	FromKey string
-	// RollupID is the ID of the rollup to creatte the bridge account for
+	// RollupID is the ID of the rollup to create the bridge account for
 	RollupID string
 }
 type InitBridgeResponse struct {
