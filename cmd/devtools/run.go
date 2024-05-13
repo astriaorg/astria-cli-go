@@ -40,6 +40,7 @@ func init() {
 }
 
 func runCmdHandler(c *cobra.Command, args []string) {
+
 	ctx := c.Context()
 
 	homePath, err := os.UserHomeDir()
@@ -56,10 +57,26 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	config.IsInstanceNameValidOrPanic(instance)
 	network := c.Flag("network").Value.String()
 
+	baseConfigPath := filepath.Join(astriaDir, instance, config.DefualtBaseConfigName)
+	baseConfig := config.LoadBaseConfig(baseConfigPath)
+	baseConfigEnvVars := config.ConvertStructToEnvArray(baseConfig)
+	// envArray := config.ConvertStructToEnvArray(baseConfig)
+	// for _, envVar := range envArray {
+	// 	fmt.Println(envVar)
+	// }
+
+	// return
+
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	networkConfig := config.LoadNetworksConfig(networksConfigPath)
+	serviceLogLevel := cmd.GetServicesLogLevel()
+
+	var serviceLogLevelOverrides []string
+	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_SEQUENCER_LOG=\"astria_sequencer="+serviceLogLevel+"\"")
+	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_COMPOSER_LOG=\"astria_composer="+serviceLogLevel+"\"")
+	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_CONDUCTOR_LOG=\"astria_conductor="+serviceLogLevel+"\"")
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
@@ -68,6 +85,12 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	switch network {
 	case "local":
 		networkOverrides := networkConfig.Networks.Local.GetEnvOverrides()
+		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
+		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
+
+		for _, envVar := range networkOverrides {
+			fmt.Println(envVar)
+		}
 
 		log.Debug("Running local sequencer")
 		confDir := filepath.Join(astriaDir, instance, config.LocalConfigDirName)
@@ -117,7 +140,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 			BinPath:      cometbftPath,
 			EnvPath:      envPath,
 			EnvOverrides: nil,
-			Args:         []string{"node", "--home", cometDataPath},
+			Args:         []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
 			ReadyCheck:   &cometReadinessCheck,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
@@ -175,6 +198,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		} else {
 			networkOverrides = networkConfig.Networks.Mainnet.GetEnvOverrides()
 		}
+		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
+		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
 
 		log.Debug("Running remote sequencer")
 		confDir := filepath.Join(astriaDir, instance, config.RemoteConfigDirName)

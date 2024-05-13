@@ -56,6 +56,8 @@ func runInitialization(c *cobra.Command, args []string) {
 	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
 	cmd.CreateDirOrPanic(instanceDir)
 	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	baseConfigPath := filepath.Join(instanceDir, "base-config.toml")
+	config.CreateBaseConfig(baseConfigPath, instance)
 
 	// create the local config and env files
 	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)

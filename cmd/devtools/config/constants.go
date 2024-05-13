@@ -10,4 +10,5 @@ const (
 	DefaultCometbftGenesisFilename   = "genesis.json"
 	DefaultCometbftValidatorFilename = "priv_validator_key.json"
 	DefualtNetworksConfigName        = "networks-config.toml"
+	DefualtBaseConfigName            = "base-config.toml"
 )
