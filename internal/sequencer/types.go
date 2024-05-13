@@ -146,6 +146,12 @@ type InitBridgeOpts struct {
 	FromKey string
 	// RollupID is the ID of the rollup to create the bridge account for
 	RollupID string
+	// ChainID is the ID of the sequencer chain to create the bridge account for
+	ChainID string
+	// AssetID is the name of the asset to bridge
+	AssetId string
+	// FeeAssetID is the name of the fee asset to use for the bridge
+	FeeAssetID string
 }
 type InitBridgeResponse struct {
 	RollupID string `json:"rollupID"`

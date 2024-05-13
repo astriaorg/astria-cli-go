@@ -83,11 +83,9 @@ func assetIdFromDenom(denom string) []byte {
 
 // rollupIdFromText converts a string to a RollupId protobuf.
 func rollupIdFromText(rollup string) *primproto.RollupId {
-	hasher := sha256.New()
-	hasher.Write([]byte(rollup))
-	hash := hasher.Sum(nil)
+	hash := sha256.Sum256([]byte(rollup))
 	return &primproto.RollupId{
-		Inner: hash,
+		Inner: hash[:],
 	}
 }
 

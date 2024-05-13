@@ -26,6 +26,10 @@ func init() {
 	sequencerCmd.AddCommand(bridgeCmd)
 
 	bridgeCmd.AddCommand(bridgeInitCmd)
+	bridgeInitCmd.Flags().String("chain-id", DefaultSequencerChainID, "The chain id of the sequencer")
+	bridgeInitCmd.Flags().String("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge")
+	bridgeInitCmd.Flags().String("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees")
+
 	bridgeInitCmd.Flags().Bool("json", false, "Output bridge account as JSON")
 	bridgeInitCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
 
@@ -48,7 +52,11 @@ func init() {
 
 func bridgeInitCmdHandler(cmd *cobra.Command, args []string) {
 	url := cmd.Flag("url").Value.String()
-	rollupId := args[0]
+	rollupID := args[0]
+	chainID := cmd.Flag("chain-id").Value.String()
+	assetID := cmd.Flag("asset-id").Value.String()
+	feeAssetID := cmd.Flag("fee-asset-id").Value.String()
+
 	printJSON := cmd.Flag("json").Value.String() == "true"
 	priv, err := GetPrivateKeyFromFlags(cmd)
 	if err != nil {
@@ -58,7 +66,10 @@ func bridgeInitCmdHandler(cmd *cobra.Command, args []string) {
 	opts := sequencer.InitBridgeOpts{
 		SequencerURL: url,
 		FromKey:      priv,
-		RollupID:     rollupId,
+		RollupID:     rollupID,
+		ChainID:      chainID,
+		AssetId:      assetID,
+		FeeAssetID:   feeAssetID,
 	}
 	bridgeAccount, err := sequencer.InitBridgeAccount(opts)
 	if err != nil {
