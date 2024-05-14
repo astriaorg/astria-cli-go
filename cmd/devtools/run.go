@@ -84,7 +84,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// setup services based on network config
 	switch network {
 	case "local":
-		networkOverrides := networkConfig.Networks.Local.GetEnvOverrides()
+		networkOverrides := networkConfig.Local.GetEnvOverrides()
 		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
 		config.LogConfig(networkOverrides)
@@ -193,11 +193,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	case "dusk", "dawn", "mainnet":
 		var networkOverrides []string
 		if network == "dusk" {
-			networkOverrides = networkConfig.Networks.Dusk.GetEnvOverrides()
+			networkOverrides = networkConfig.Dusk.GetEnvOverrides()
 		} else if network == "dawn" {
-			networkOverrides = networkConfig.Networks.Dawn.GetEnvOverrides()
+			networkOverrides = networkConfig.Dawn.GetEnvOverrides()
 		} else {
-			networkOverrides = networkConfig.Networks.Mainnet.GetEnvOverrides()
+			networkOverrides = networkConfig.Mainnet.GetEnvOverrides()
 		}
 		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)

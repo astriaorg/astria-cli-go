@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
@@ -377,6 +378,7 @@ func MergeConfig(initialConfig, overrideConfig []string) []string {
 	for key, value := range mergedMap {
 		result = append(result, key+"="+value)
 	}
+	sort.Strings(result)
 
 	return result
 }
