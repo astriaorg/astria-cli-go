@@ -87,6 +87,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		networkOverrides := networkConfig.Networks.Local.GetEnvOverrides()
 		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
+		config.LogConfig(networkOverrides)
 
 		for _, envVar := range networkOverrides {
 			fmt.Println(envVar)
@@ -200,6 +201,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		}
 		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
+		config.LogConfig(networkOverrides)
 
 		log.Debug("Running remote sequencer")
 		confDir := filepath.Join(astriaDir, instance, config.RemoteConfigDirName)

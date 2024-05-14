@@ -380,3 +380,11 @@ func MergeConfig(initialConfig, overrideConfig []string) []string {
 
 	return result
 }
+
+// LogConfig logs the configuration to the cli log file.
+func LogConfig(config []string) {
+	log.Debug("Configuration:")
+	for _, item := range config {
+		log.Debug(item)
+	}
+}
