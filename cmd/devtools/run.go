@@ -60,12 +60,6 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	baseConfigPath := filepath.Join(astriaDir, instance, config.DefualtBaseConfigName)
 	baseConfig := config.LoadBaseConfig(baseConfigPath)
 	baseConfigEnvVars := config.ConvertStructToEnvArray(baseConfig)
-	// envArray := config.ConvertStructToEnvArray(baseConfig)
-	// for _, envVar := range envArray {
-	// 	fmt.Println(envVar)
-	// }
-
-	// return
 
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
@@ -89,16 +83,9 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
 		config.LogConfig(networkOverrides)
 
-		for _, envVar := range networkOverrides {
-			fmt.Println(envVar)
-		}
-
 		log.Debug("Running local sequencer")
-		confDir := filepath.Join(astriaDir, instance, config.LocalConfigDirName)
 		dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
-		// env path
-		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -110,26 +97,25 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		// sequencer
 		seqRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "Sequencer gRPC server is OK",
-			Callback:      getSequencerOKCallback(envPath),
+			Callback:      getSequencerOKCallback(networkOverrides),
 			RetryCount:    10,
 			RetryInterval: 100 * time.Millisecond,
 			HaltIfFailed:  false,
 		}
 		seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
 		seqOpts := processrunner.NewProcessRunnerOpts{
-			Title:        "Sequencer",
-			BinPath:      sequencerPath,
-			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
-			Args:         nil,
-			ReadyCheck:   &seqReadinessCheck,
+			Title:      "Sequencer",
+			BinPath:    sequencerPath,
+			Config:     networkOverrides,
+			Args:       nil,
+			ReadyCheck: &seqReadinessCheck,
 		}
 		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
 
 		// cometbft
 		cometRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "CometBFT rpc server is OK",
-			Callback:      getCometbftOKCallback(envPath),
+			Callback:      getCometbftOKCallback(networkOverrides),
 			RetryCount:    10,
 			RetryInterval: 100 * time.Millisecond,
 			HaltIfFailed:  false,
@@ -137,34 +123,31 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
 		cometDataPath := filepath.Join(dataDir, ".cometbft")
 		cometOpts := processrunner.NewProcessRunnerOpts{
-			Title:        "Comet BFT",
-			BinPath:      cometbftPath,
-			EnvPath:      envPath,
-			EnvOverrides: nil,
-			Args:         []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
-			ReadyCheck:   &cometReadinessCheck,
+			Title:      "Comet BFT",
+			BinPath:    cometbftPath,
+			Config:     networkOverrides,
+			Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
+			ReadyCheck: &cometReadinessCheck,
 		}
 		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:        "Composer",
-			BinPath:      composerPath,
-			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
-			Args:         nil,
-			ReadyCheck:   nil,
+			Title:      "Composer",
+			BinPath:    composerPath,
+			Config:     networkOverrides,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:        "Conductor",
-			BinPath:      conductorPath,
-			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
-			Args:         nil,
-			ReadyCheck:   nil,
+			Title:      "Conductor",
+			BinPath:    conductorPath,
+			Config:     networkOverrides,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -204,10 +187,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		config.LogConfig(networkOverrides)
 
 		log.Debug("Running remote sequencer")
-		confDir := filepath.Join(astriaDir, instance, config.RemoteConfigDirName)
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
-		// env path
-		envPath := getFlagPathOrPanic(c, "environment-path", filepath.Join(confDir, ".env"))
 
 		// get the binary paths
 		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
@@ -215,23 +195,21 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:        "Composer",
-			BinPath:      composerPath,
-			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
-			Args:         nil,
-			ReadyCheck:   nil,
+			Title:      "Composer",
+			BinPath:    composerPath,
+			Config:     networkOverrides,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
 
 		// conductor
 		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:        "Conductor",
-			BinPath:      conductorPath,
-			EnvPath:      envPath,
-			EnvOverrides: networkOverrides,
-			Args:         nil,
-			ReadyCheck:   nil,
+			Title:      "Conductor",
+			BinPath:    conductorPath,
+			Config:     networkOverrides,
+			Args:       nil,
+			ReadyCheck: nil,
 		}
 		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
 
@@ -282,11 +260,11 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 // is started by the sequencer is OK by making an HTTP request to the health
 // endpoint. Being able to connect to the gRPC server is a requirement for both
 // the Conductor and Composer services.
-func getSequencerOKCallback(envPath string) func() bool {
+func getSequencerOKCallback(config []string) func() bool {
 	// Get the sequencer gRPC address from the environment
-	seqEnv := processrunner.GetEnvironment(envPath)
+	// seqEnv := processrunner.GetEnvironment(envPath)
 	var seqGRPCAddr string
-	for _, envVar := range seqEnv {
+	for _, envVar := range config {
 		if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
 			seqGRPCAddr = strings.Split(envVar, "=")[1]
 			break
@@ -320,11 +298,11 @@ func getSequencerOKCallback(envPath string) func() bool {
 // is started by Cometbft is OK by making an HTTP request to the health
 // endpoint. Being able to connect to the rpc server is a requirement for both
 // the Conductor and Composer services.
-func getCometbftOKCallback(envPath string) func() bool {
+func getCometbftOKCallback(config []string) func() bool {
 	// Get the CometBFT rpc address from the environment
-	seqEnv := processrunner.GetEnvironment(envPath)
+	// seqEnv := processrunner.GetEnvironment(envPath)
 	var seqRPCAddr string
-	for _, envVar := range seqEnv {
+	for _, envVar := range config {
 		if strings.HasPrefix(envVar, "ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL") {
 			seqRPCAddr = strings.Split(envVar, "=")[1]
 			break

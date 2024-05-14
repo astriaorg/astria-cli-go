@@ -128,7 +128,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		config.RecreateLocalEnvFile(instanceDir, localConfigDir)
+		// config.RecreateLocalEnvFile(instanceDir, localConfigDir)
 		log.Infof("Successfully reset local environment file for instance '%s'", instance)
 
 	} else if isRemote {
@@ -142,7 +142,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
+		// config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
 		log.Infof("Successfully reset remote environment file for instance '%s'", instance)
 
 	} else {
@@ -158,7 +158,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		config.RecreateLocalEnvFile(instanceDir, localConfigDir)
+		// config.RecreateLocalEnvFile(instanceDir, localConfigDir)
 
 		_, err = os.Stat(remoteEnvPath)
 		if err == nil {
@@ -168,7 +168,7 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 				return
 			}
 		}
-		config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
+		// config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
 		log.Infof("Successfully reset environment files for instance '%s'", instance)
 	}
 }

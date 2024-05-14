@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 
 	"github.com/astria/astria-cli-go/internal/safebuffer"
@@ -46,12 +44,11 @@ type processRunner struct {
 }
 
 type NewProcessRunnerOpts struct {
-	Title        string
-	BinPath      string
-	EnvPath      string
-	EnvOverrides []string
-	Args         []string
-	ReadyCheck   *ReadyChecker
+	Title      string
+	BinPath    string
+	Config     []string
+	Args       []string
+	ReadyCheck *ReadyChecker
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -59,20 +56,9 @@ type NewProcessRunnerOpts struct {
 // environment. If no envPath is provided, it uses the current environment using
 // os.Environ().
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
-	var env []string
-	if opts.EnvPath != "" {
-		env = GetEnvironment(opts.EnvPath)
-	} else {
-		env = os.Environ()
-	}
-
-	if opts.EnvOverrides != nil {
-		env = applyEnvOverrides(env, opts.EnvOverrides)
-	}
-
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
-	cmd.Env = env
+	cmd.Env = opts.Config
 	return &processRunner{
 		ctx:          ctx,
 		cmd:          cmd,
@@ -80,7 +66,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		didStart:     make(chan bool),
 		outputBuf:    &safebuffer.SafeBuffer{},
 		opts:         opts,
-		env:          env,
+		env:          opts.Config,
 		readyChecker: opts.ReadyCheck,
 	}
 }
@@ -240,35 +226,11 @@ func (pr *processRunner) GetInfo() string {
 	}
 	output := ""
 	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.opts.BinPath + "\n"
-	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
+	// output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
 	return output
 }
 
 // GetEnvironment returns the environment variables for the process.
 func (pr *processRunner) GetEnvironment() []string {
 	return pr.env
-}
-
-// applyEnvOverrides updates the environment variable with the overrides environment variables.
-func applyEnvOverrides(env []string, overrides []string) []string {
-	// create a map of the environment variables
-	envMap := make(map[string]string)
-	for _, e := range env {
-		kv := strings.SplitN(e, "=", 2)
-		envMap[kv[0]] = kv[1]
-	}
-
-	// apply the overrides
-	for _, e := range overrides {
-		kv := strings.SplitN(e, "=", 2)
-		envMap[kv[0]] = kv[1]
-	}
-
-	// convert the map back to a slice
-	var newEnv []string
-	for k, v := range envMap {
-		newEnv = append(newEnv, fmt.Sprintf("%s=%s", k, v))
-	}
-
-	return newEnv
 }

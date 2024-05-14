@@ -63,13 +63,7 @@ func runInitialization(c *cobra.Command, args []string) {
 	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)
 
 	cmd.CreateDirOrPanic(localConfigPath)
-	config.RecreateLocalEnvFile(instanceDir, localConfigPath)
 	config.RecreateCometbftAndSequencerGenesisData(localConfigPath, localNetworkName, localDefaultDenom)
-
-	// create the remote env file
-	remoteConfigPath := filepath.Join(instanceDir, config.RemoteConfigDirName)
-	cmd.CreateDirOrPanic(remoteConfigPath)
-	config.RecreateRemoteEnvFile(instanceDir, remoteConfigPath)
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
@@ -82,7 +76,6 @@ func runInitialization(c *cobra.Command, args []string) {
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
-
 	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.LocalConfigDirName)
 
 	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
