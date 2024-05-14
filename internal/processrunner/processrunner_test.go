@@ -119,7 +119,6 @@ func TestProcessRunnerRestart(t *testing.T) {
 		Title:   "Test",
 		BinPath: "/bin/sleep",
 		Args:    []string{"1"},
-		EnvPath: "",
 	}
 
 	pr := NewProcessRunner(ctx, opts)
@@ -157,14 +156,13 @@ func TestProcessRunnerInfo(t *testing.T) {
 		Title:   "TestPR",
 		BinPath: "/bin/sleep",
 		Args:    []string{"1"},
-		EnvPath: "",
 	}
 	pr := NewProcessRunner(ctx, opts)
 
 	// get the info text
 	infoText := pr.GetInfo()
 	// set the exact expected output (including spaces for alignment)
-	expectedOutput := " TestPR binary path: /bin/sleep\n Environment path:   \n"
+	expectedOutput := " TestPR binary path: /bin/sleep\n"
 
 	assert.Equal(t, expectedOutput, infoText, "Info text should match expected output")
 }

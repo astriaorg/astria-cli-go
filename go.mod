@@ -8,7 +8,6 @@ require (
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/go-sequencer-client v0.3.0
 	github.com/gdamore/tcell/v2 v2.7.4
-	github.com/joho/godotenv v1.5.1
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
 	github.com/rivo/tview v0.0.0-20240501114654-1f4d5e8f881d
