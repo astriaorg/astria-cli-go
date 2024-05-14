@@ -1,14 +1,12 @@
 package config
 
 const (
-	DataDirName         = "data"
-	DefaultInstanceName = "default"
-	BinariesDirName     = "bin"
-	LocalConfigDirName  = "config-local"
-	RemoteConfigDirName = "config-remote"
-
+	BinariesDirName                  = "bin"
+	DataDirName                      = "data"
+	DefualtBaseConfigName            = "base-config.toml"
 	DefaultCometbftGenesisFilename   = "genesis.json"
 	DefaultCometbftValidatorFilename = "priv_validator_key.json"
+	DefaultConfigDirName             = "config"
 	DefualtNetworksConfigName        = "networks-config.toml"
-	DefualtBaseConfigName            = "base-config.toml"
+	DefaultInstanceName              = "default"
 )

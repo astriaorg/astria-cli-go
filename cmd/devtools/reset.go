@@ -29,13 +29,8 @@ func init() {
 	resetCmd.AddCommand(resetConfigCmd)
 	resetConfigCmd.Flags().String("local-network-name", "sequencer-test-chain-0", "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
 	resetConfigCmd.Flags().String("local-default-denom", "nria", "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
-	resetCmd.AddCommand(resetEnvCmd)
+	resetCmd.AddCommand(resetServicesCmd)
 	resetCmd.AddCommand(resetStateCmd)
-
-	// flags for resetting specific env files
-	resetEnvCmd.Flags().Bool("local", false, "Reset the local environment file.")
-	resetEnvCmd.Flags().Bool("remote", false, "Reset the remote environment file.")
-	resetEnvCmd.MarkFlagsMutuallyExclusive("local", "remote")
 }
 
 // resetConfigCmd represents the 'reset config' command
@@ -62,7 +57,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	localConfigDir := filepath.Join(homePath, ".astria", instance, config.LocalConfigDirName)
+	localConfigDir := filepath.Join(homePath, ".astria", instance, config.DefaultConfigDirName)
 	networksConfigPath := filepath.Join(homePath, ".astria", instance, config.DefualtNetworksConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
@@ -87,19 +82,24 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	config.RecreateCometbftAndSequencerGenesisData(localConfigDir, localNetworkName, localDefaultDenom)
 	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
 
+	// cmd.CreateDirOrPanic(instanceDir)
+	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	baseConfigPath := filepath.Join(instance, "base-config.toml")
+	config.CreateBaseConfig(baseConfigPath, instance)
+
 	log.Infof("Successfully reset config files for instance '%s'", instance)
 }
 
-// resetEnvCmd represents the 'reset env' command
-var resetEnvCmd = &cobra.Command{
-	Use:    "env",
-	Short:  "Reset environment variable files.",
-	Long:   `Reset environment variable files. By default this will revert all environment files to their default state as though initially created. To select a specific environment file to reset, use the --local or --remote flags.`,
+// resetServicesCmd represents the 'reset services' command
+var resetServicesCmd = &cobra.Command{
+	Use:    "services",
+	Short:  "Reset the config for services run by the cli.",
+	Long:   `Reset the config for services run by the cli. This command only reset the base-config.toml and networks-config.toml files.`,
 	PreRun: cmd.SetLogLevel,
-	Run:    resetEnvCmdHandler,
+	Run:    resetServicesCmdHandler,
 }
 
-func resetEnvCmdHandler(c *cobra.Command, _ []string) {
+func resetServicesCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
 	instance, _ := c.Parent().PersistentFlags().GetString("instance")
 	config.IsInstanceNameValidOrPanic(instance)
@@ -109,68 +109,75 @@ func resetEnvCmdHandler(c *cobra.Command, _ []string) {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	instanceDir := filepath.Join(homePath, ".astria", instance)
-	localConfigDir := filepath.Join(instanceDir, config.LocalConfigDirName)
-	remoteConfigDir := filepath.Join(instanceDir, config.RemoteConfigDirName)
+	defaultDir := filepath.Join(homePath, ".astria")
+	instanceDir := filepath.Join(defaultDir, instance)
+	// configDir := filepath.Join(instanceDir, config.ConfigDirName)
+	// remoteConfigDir := filepath.Join(instanceDir, config.RemoteConfigDirName)
+	// networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
+
+	cmd.CreateDirOrPanic(instanceDir)
+	// config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	baseConfigPath := filepath.Join(instanceDir, "base-config.toml")
+	config.CreateBaseConfig(baseConfigPath, instance)
 
 	// Check if we are resetting the local or remote environment files
-	isLocal, _ := c.Flags().GetBool("local")
-	isRemote, _ := c.Flags().GetBool("remote")
+	// isLocal, _ := c.Flags().GetBool("local")
+	// isRemote, _ := c.Flags().GetBool("remote")
 
-	if isLocal {
-		localEnvPath := filepath.Join(localConfigDir, ".env")
-		log.Infof("Resetting local environment file for instance '%s'", instance)
-		_, err = os.Stat(localEnvPath)
-		if err == nil {
-			err = os.Remove(localEnvPath)
-			if err != nil {
-				fmt.Println("Error removing file:", err)
-				return
-			}
-		}
-		// config.RecreateLocalEnvFile(instanceDir, localConfigDir)
-		log.Infof("Successfully reset local environment file for instance '%s'", instance)
+	// if isLocal {
+	// 	localEnvPath := filepath.Join(localConfigDir, ".env")
+	// 	log.Infof("Resetting local environment file for instance '%s'", instance)
+	// 	_, err = os.Stat(localEnvPath)
+	// 	if err == nil {
+	// 		err = os.Remove(localEnvPath)
+	// 		if err != nil {
+	// 			fmt.Println("Error removing file:", err)
+	// 			return
+	// 		}
+	// 	}
+	// 	// config.RecreateLocalEnvFile(instanceDir, localConfigDir)
+	// 	log.Infof("Successfully reset local environment file for instance '%s'", instance)
 
-	} else if isRemote {
-		remoteEnvPath := filepath.Join(remoteConfigDir, ".env")
-		log.Infof("Resetting remote environment file for instance '%s'", instance)
-		_, err = os.Stat(remoteEnvPath)
-		if err == nil {
-			err = os.Remove(remoteEnvPath)
-			if err != nil {
-				fmt.Println("Error removing file:", err)
-				return
-			}
-		}
-		// config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
-		log.Infof("Successfully reset remote environment file for instance '%s'", instance)
+	// } else if isRemote {
+	// 	remoteEnvPath := filepath.Join(remoteConfigDir, ".env")
+	// 	log.Infof("Resetting remote environment file for instance '%s'", instance)
+	// 	_, err = os.Stat(remoteEnvPath)
+	// 	if err == nil {
+	// 		err = os.Remove(remoteEnvPath)
+	// 		if err != nil {
+	// 			fmt.Println("Error removing file:", err)
+	// 			return
+	// 		}
+	// 	}
+	// 	// config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
+	// 	log.Infof("Successfully reset remote environment file for instance '%s'", instance)
 
-	} else {
-		localEnvPath := filepath.Join(localConfigDir, ".env")
-		remoteEnvPath := filepath.Join(remoteConfigDir, ".env")
+	// } else {
+	// 	localEnvPath := filepath.Join(localConfigDir, ".env")
+	// 	remoteEnvPath := filepath.Join(remoteConfigDir, ".env")
 
-		log.Infof("Resetting all environment files for instance '%s'", instance)
-		_, err = os.Stat(localEnvPath)
-		if err == nil {
-			err = os.Remove(localEnvPath)
-			if err != nil {
-				fmt.Println("Error removing file:", err)
-				return
-			}
-		}
-		// config.RecreateLocalEnvFile(instanceDir, localConfigDir)
+	// 	log.Infof("Resetting all environment files for instance '%s'", instance)
+	// 	_, err = os.Stat(localEnvPath)
+	// 	if err == nil {
+	// 		err = os.Remove(localEnvPath)
+	// 		if err != nil {
+	// 			fmt.Println("Error removing file:", err)
+	// 			return
+	// 		}
+	// 	}
+	// 	// config.RecreateLocalEnvFile(instanceDir, localConfigDir)
 
-		_, err = os.Stat(remoteEnvPath)
-		if err == nil {
-			err = os.Remove(remoteEnvPath)
-			if err != nil {
-				fmt.Println("Error removing file:", err)
-				return
-			}
-		}
-		// config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
-		log.Infof("Successfully reset environment files for instance '%s'", instance)
-	}
+	// 	_, err = os.Stat(remoteEnvPath)
+	// 	if err == nil {
+	// 		err = os.Remove(remoteEnvPath)
+	// 		if err != nil {
+	// 			fmt.Println("Error removing file:", err)
+	// 			return
+	// 		}
+	// 	}
+	// 	// config.RecreateRemoteEnvFile(instanceDir, remoteConfigDir)
+	// 	log.Infof("Successfully reset environment files for instance '%s'", instance)
+	// }
 }
 
 // resetStateCmd represents the 'reset state' command
@@ -204,7 +211,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 		return
 	}
 	cmd.CreateDirOrPanic(dataDir)
-	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.LocalConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.DefaultConfigDirName)
 
 	log.Infof("Successfully reset state for instance '%s'", instance)
 }
