@@ -85,10 +85,10 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	log.Infof("Successfully reset config files for instance '%s'", instance)
 }
 
-// resetNetworksCmd represents the 'reset services' command
+// resetNetworksCmd represents the 'reset networks' command
 var resetNetworksCmd = &cobra.Command{
 	Use:    "networks",
-	Short:  "Reset the networks config for the cli.",
+	Short:  "Reset the networks config.",
 	Long:   `Reset the networks config for the cli. This command only resets the networks-config.toml file. No other config files are affected.`,
 	PreRun: cmd.SetLogLevel,
 	Run:    resetNetworksCmdHandler,
