@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// blockheightCmd represents the get-blockheight command
+// blockheightCmd represents the blockheight command
 var blockheightCmd = &cobra.Command{
 	Use:    "blockheight",
 	Short:  "Retrieves the latest blockheight from the sequencer.",

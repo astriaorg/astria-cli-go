@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// convertToUint128 converts a string to a Uint128 protobuf
+// convertToUint128 converts a string to an Uint128 protobuf
 func convertToUint128(numStr string) (*primproto.Uint128, error) {
 	bigInt := new(big.Int)
 
@@ -73,17 +73,51 @@ func addPortToURL(url string) string {
 	return url
 }
 
-// AssetIdFromDenom returns a hash of a denom string
-func AssetIdFromDenom(denom string) []byte {
+// assetIdFromDenom returns a hash of a denom string
+func assetIdFromDenom(denom string) []byte {
 	hasher := sha256.New()
 	hasher.Write([]byte(denom))
 	hash := hasher.Sum(nil)
 	return hash
 }
 
-func AddressFromPublicKey(pubkey ed25519.PublicKey) string {
+// rollupIdFromText converts a string to a RollupId protobuf.
+func rollupIdFromText(rollup string) *primproto.RollupId {
+	hash := sha256.Sum256([]byte(rollup))
+	return &primproto.RollupId{
+		Inner: hash[:],
+	}
+}
+
+// addressFromPublicKey converts an ed25519 public key to a hexadecimal string representation of its address.
+func addressFromPublicKey(pubkey ed25519.PublicKey) string {
 	hash := sha256.Sum256(pubkey)
 	var addr [20]byte
 	copy(addr[:], hash[:20])
 	return hex.EncodeToString(addr[:])
+}
+
+// addressFromText converts a hexadecimal string representation of an address to an Address protobuf
+// The input address string is expected to have the "0x" prefix stripped before being passed to this function.
+// If the input string is not a valid hexadecimal string, an error will be returned.
+func addressFromText(addr string) (*primproto.Address, error) {
+	addr = strip0xPrefix(addr)
+	bytes, err := hex.DecodeString(addr)
+	if err != nil {
+		return nil, err
+	}
+	return &primproto.Address{
+		Inner: bytes,
+	}, nil
+}
+
+// privateKeyFromText converts a string representation of a private key to an ed25519.PrivateKey.
+// It decodes the private key from hex string format and creates a new ed25519.PrivateKey.
+func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
+	privKeyBytes, err := hex.DecodeString(privkey)
+	if err != nil {
+		return nil, err
+	}
+	from := ed25519.NewKeyFromSeed(privKeyBytes)
+	return from, nil
 }
