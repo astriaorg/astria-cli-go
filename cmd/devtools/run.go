@@ -29,9 +29,7 @@ var runCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(runCmd)
-	runCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used as directory name in ~/.astria to enable running separate instances of the sequencer stack.")
 	runCmd.Flags().String("network", "local", "Provide an override path to a specific environment file.")
-
 	runCmd.Flags().String("environment-path", "", "Provide an override path to a specific environment file.")
 	runCmd.Flags().String("conductor-path", "", "Provide an override path to a specific conductor binary.")
 	runCmd.Flags().String("cometbft-path", "", "Provide an override path to a specific cometbft binary.")

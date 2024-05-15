@@ -23,9 +23,6 @@ var resetCmd = &cobra.Command{
 func init() {
 	// top level command
 	devCmd.AddCommand(resetCmd)
-	resetCmd.PersistentFlags().StringP("instance", "i", config.DefaultInstanceName, "Choose the target instance for purging.")
-	resetCmd.PersistentFlags().String("local-network-name", "sequencer-test-chain-0", "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	resetCmd.PersistentFlags().String("local-default-denom", "nria", "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
 
 	// subcommands
 	resetCmd.AddCommand(resetConfigCmd)
@@ -44,13 +41,13 @@ var resetConfigCmd = &cobra.Command{
 
 func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	instance, _ := c.Flags().GetString("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	localNetworkName := c.Flag("local-network-name").Value.String()
+	localNetworkName, _ := c.Flags().GetString("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := c.Flag("local-default-denom").Value.String()
+	localDefaultDenom, _ := c.Flags().GetString("local-default-denom")
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -96,7 +93,7 @@ var resetNetworksCmd = &cobra.Command{
 
 func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	instance := c.Flag("instance").Value.String()
 	config.IsInstanceNameValidOrPanic(instance)
 
 	localNetworkName := c.Flag("local-network-name").Value.String()

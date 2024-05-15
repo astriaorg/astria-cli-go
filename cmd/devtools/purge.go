@@ -23,7 +23,6 @@ var purgeCmd = &cobra.Command{
 func init() {
 	// top level command
 	devCmd.AddCommand(purgeCmd)
-	purgeCmd.PersistentFlags().StringP("instance", "i", config.DefaultInstanceName, "Choose the target instance for resetting.")
 
 	// subcommands
 	purgeCmd.AddCommand(purgeBinariesCmd)
@@ -40,7 +39,7 @@ var purgeBinariesCmd = &cobra.Command{
 
 func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	instance := c.Flag("instance").Value.String()
 	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()

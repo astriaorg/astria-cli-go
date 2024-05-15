@@ -27,9 +27,6 @@ var initCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
-	initCmd.Flags().String("local-network-name", "sequencer-test-chain-0", "Set the network name for the local instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	initCmd.Flags().String("local-default-denom", "nria", "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
 }
 
 func runInitialization(c *cobra.Command, args []string) {
