@@ -1,4 +1,4 @@
-package devtools
+package config
 
 const (
 	DataDirName         = "data"
@@ -6,4 +6,7 @@ const (
 	BinariesDirName     = "bin"
 	LocalConfigDirName  = "config-local"
 	RemoteConfigDirName = "config-remote"
+
+	DefaultCometbftGenesisFilename   = "genesis.json"
+	DefaultCometbftValidatorFilename = "priv_validator_key.json"
 )
