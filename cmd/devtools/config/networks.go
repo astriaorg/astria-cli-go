@@ -129,15 +129,15 @@ func NewBaseConfig(instanceName string) BaseConfig {
 }
 
 // Networks is the struct that holds the configuration for all individual Astria networks.
-type NetworkConfig struct {
-	Local   Network `mapstructure:"local" toml:"local"`
-	Dusk    Network `mapstructure:"dusk" toml:"dusk"`
-	Dawn    Network `mapstructure:"dawn" toml:"dawn"`
-	Mainnet Network `mapstructure:"mainnet" toml:"mainnet"`
+type NetworkConfigs struct {
+	Local   NetworkConfig `mapstructure:"local" toml:"local"`
+	Dusk    NetworkConfig `mapstructure:"dusk" toml:"dusk"`
+	Dawn    NetworkConfig `mapstructure:"dawn" toml:"dawn"`
+	Mainnet NetworkConfig `mapstructure:"mainnet" toml:"mainnet"`
 }
 
 // Network is the struct that holds the configuration for an individual Astria network.
-type Network struct {
+type NetworkConfig struct {
 	SequencerChainId string `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
 	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
 	SequencerRPC     string `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
@@ -147,30 +147,30 @@ type Network struct {
 
 // DefaultNetworksConfig returns a NetworksConfig struct populated with all
 // network defaults.
-func DefaultNetworksConfig() NetworkConfig {
-	config := NetworkConfig{
-		Local: Network{
+func DefaultNetworksConfigs() NetworkConfigs {
+	config := NetworkConfigs{
+		Local: NetworkConfig{
 			SequencerChainId: "sequencer-test-chain-0",
 			SequencerGRPC:    "http://127.0.0.1:8080",
 			SequencerRPC:     "http://127.0.0.1:26657",
 			RollupName:       "astria-test-chain",
 			DefaultDenom:     "nria",
 		},
-		Dusk: Network{
+		Dusk: NetworkConfig{
 			SequencerChainId: "astria-dusk-5",
 			SequencerGRPC:    "https://grpc.sequencer.dusk-5.devnet.astria.org/",
 			SequencerRPC:     "https://rpc.sequencer.dusk-5.devnet.astria.org/",
 			RollupName:       "",
 			DefaultDenom:     "nria",
 		},
-		Dawn: Network{
+		Dawn: NetworkConfig{
 			SequencerChainId: "astria-dawn-0",
 			SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
 			SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
 			RollupName:       "",
 			DefaultDenom:     "ibc/channel0/utia",
 		},
-		Mainnet: Network{
+		Mainnet: NetworkConfig{
 			SequencerChainId: "astria",
 			SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 			SequencerRPC:     "https://rpc.sequencer.astria.org/",
@@ -184,7 +184,7 @@ func DefaultNetworksConfig() NetworkConfig {
 
 // LoadNetworksConfig loads the NetworksConfig from the given path. If the file
 // cannot be loaded or parsed, the function will panic.
-func LoadNetworksConfig(path string) NetworkConfig {
+func LoadNetworksConfigs(path string) NetworkConfigs {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -192,7 +192,7 @@ func LoadNetworksConfig(path string) NetworkConfig {
 		panic(err)
 	}
 
-	var config NetworkConfig
+	var config NetworkConfigs
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Fatalf("Unable to decode into struct, %v", err)
 		panic(err)
@@ -214,7 +214,7 @@ func CreateNetworksConfig(path, localSequencerChainId, localDefaultDenom string)
 		return
 	}
 	// Create an instance of the Config struct with some data
-	config := DefaultNetworksConfig()
+	config := DefaultNetworksConfigs()
 	config.Local.DefaultDenom = localDefaultDenom
 	config.Local.SequencerChainId = localSequencerChainId
 
@@ -282,12 +282,13 @@ func LoadBaseConfig(path string) BaseConfig {
 
 // GetEnvOverrides returns a slice of environment variables that can be used to
 // override the default environment variables for the network configuration.
-func (n Network) GetEnvOverrides() []string {
+func (n NetworkConfig) GetEnvOverrides() []string {
 	return []string{
 		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
 		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
 		"ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL=" + n.SequencerRPC,
 		"ASTRIA_COMPOSER_SEQUENCER_URL=" + n.SequencerRPC,
+		// TODO - make ws configurable
 		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::ws://127.0.0.1:8546",
 	}
 }

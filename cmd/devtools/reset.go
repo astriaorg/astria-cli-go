@@ -40,14 +40,15 @@ var resetConfigCmd = &cobra.Command{
 }
 
 func resetConfigCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Flags().GetString("instance")
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	localNetworkName, _ := c.Flags().GetString("local-network-name")
+	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom, _ := c.Flags().GetString("local-default-denom")
+	localDefaultDenom := flagHandler.GetValue("local-default-denom")
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -92,14 +93,15 @@ var resetNetworksCmd = &cobra.Command{
 }
 
 func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance := c.Flag("instance").Value.String()
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	localNetworkName := c.Flag("local-network-name").Value.String()
+	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := c.Flag("local-default-denom").Value.String()
+	localDefaultDenom := flagHandler.GetValue("local-default-denom")
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
@@ -126,8 +128,9 @@ var resetStateCmd = &cobra.Command{
 }
 
 func resetStateCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()

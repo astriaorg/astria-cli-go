@@ -29,16 +29,17 @@ var runCmd = &cobra.Command{
 
 func init() {
 	devCmd.AddCommand(runCmd)
-	runCmd.Flags().String("network", "local", "Provide an override path to a specific environment file.")
-	runCmd.Flags().String("environment-path", "", "Provide an override path to a specific environment file.")
-	runCmd.Flags().String("conductor-path", "", "Provide an override path to a specific conductor binary.")
-	runCmd.Flags().String("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
-	runCmd.Flags().String("composer-path", "", "Provide an override path to a specific composer binary.")
-	runCmd.Flags().String("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
+
+	flagHandler := cmd.CreateCliStringFlagHandler(runCmd, cmd.EnvPrefix)
+	flagHandler.BindFlag("network", "local", "Provide an override path to a specific environment file.")
+	flagHandler.BindFlag("conductor-path", "", "Provide an override path to a specific conductor binary.")
+	flagHandler.BindFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
+	flagHandler.BindFlag("composer-path", "", "Provide an override path to a specific composer binary.")
+	flagHandler.BindFlag("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 }
 
 func runCmdHandler(c *cobra.Command, args []string) {
-
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
 	ctx := c.Context()
 
 	homePath, err := os.UserHomeDir()
@@ -50,10 +51,10 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// astriaDir is the directory where all the astria instances data is stored
 	astriaDir := filepath.Join(homePath, ".astria")
 
-	// get instance name and check if it's valid
-	instance := c.Flag("instance").Value.String()
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
-	network := c.Flag("network").Value.String()
+
+	network := flagHandler.GetValue("network")
 
 	baseConfigPath := filepath.Join(astriaDir, instance, config.DefaultConfigDirName, config.DefualtBaseConfigName)
 	baseConfig := config.LoadBaseConfig(baseConfigPath)
@@ -62,9 +63,12 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
-	networkConfig := config.LoadNetworksConfig(networksConfigPath)
+	networkConfigs := config.LoadNetworksConfigs(networksConfigPath)
 	serviceLogLevel := cmd.GetServicesLogLevel()
 
+	// update the log level for the Astria Services.
+	// The log level for Cometbft is updated via command line flags and is set
+	// in the ProcessRunnerOpts for the Cometbft ProcessRunner
 	var serviceLogLevelOverrides []string
 	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_SEQUENCER_LOG=\"astria_sequencer="+serviceLogLevel+"\"")
 	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_COMPOSER_LOG=\"astria_composer="+serviceLogLevel+"\"")
@@ -76,7 +80,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// setup services based on network config
 	switch network {
 	case "local":
-		networkOverrides := networkConfig.Local.GetEnvOverrides()
+		networkOverrides := networkConfigs.Local.GetEnvOverrides()
 		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
 		config.LogConfig(networkOverrides)
@@ -86,10 +90,10 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 
 		// get the binary paths
-		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
-		cometbftPath := getFlagPathOrPanic(c, "cometbft-path", filepath.Join(binDir, "cometbft"))
-		composerPath := getFlagPathOrPanic(c, "composer-path", filepath.Join(binDir, "astria-composer"))
-		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", filepath.Join(binDir, "astria-sequencer"))
+		conductorPath := getFlagPathOrPanic(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
+		cometbftPath := getFlagPathOrPanic(c, "cometbft-path", "cometbft", filepath.Join(binDir, "cometbft"))
+		composerPath := getFlagPathOrPanic(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
+		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", "sequencer", filepath.Join(binDir, "astria-sequencer"))
 		log.Debugf("Using binaries from %s", binDir)
 
 		// sequencer
@@ -174,11 +178,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	case "dusk", "dawn", "mainnet":
 		var networkOverrides []string
 		if network == "dusk" {
-			networkOverrides = networkConfig.Dusk.GetEnvOverrides()
+			networkOverrides = networkConfigs.Dusk.GetEnvOverrides()
 		} else if network == "dawn" {
-			networkOverrides = networkConfig.Dawn.GetEnvOverrides()
+			networkOverrides = networkConfigs.Dawn.GetEnvOverrides()
 		} else {
-			networkOverrides = networkConfig.Mainnet.GetEnvOverrides()
+			networkOverrides = networkConfigs.Mainnet.GetEnvOverrides()
 		}
 		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
 		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
@@ -188,8 +192,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 
 		// get the binary paths
-		conductorPath := getFlagPathOrPanic(c, "conductor-path", filepath.Join(binDir, "astria-conductor"))
-		composerPath := getFlagPathOrPanic(c, "composer-path", filepath.Join(binDir, "astria-composer"))
+		conductorPath := getFlagPathOrPanic(c, "conductor_bin_path", "conductor", filepath.Join(binDir, "astria-conductor"))
+		composerPath := getFlagPathOrPanic(c, "composer_bin_path", "composer", filepath.Join(binDir, "astria-composer"))
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
@@ -237,18 +241,16 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 // getFlagPathOrPanic gets the override path from the flag. It returns the default
 // value if the flag was not set, or panics if no file exists at the provided path.
-func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) string {
-	flag := c.Flags().Lookup(flagName)
-	if flag != nil && flag.Changed {
-		path := flag.Value.String()
-		if util.PathExists(path) {
-			log.Info(fmt.Sprintf("Override path provided for %s binary: %s", flagName, path))
-			return path
-		} else {
-			panic(fmt.Sprintf("Invalid input path provided for --%s flag", flagName))
-		}
+func getFlagPathOrPanic(c *cobra.Command, flag string, serviceName string, defaultValue string) string {
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	path := flagHandler.GetValue(flag)
+
+	if util.PathExists(path) && path != "" {
+		log.Info(fmt.Sprintf("Override path provided for %s binary: %s", serviceName, path))
+		return path
 	} else {
-		log.Debug(fmt.Sprintf("No path provided for %s binary. Using default path: %s", flagName, defaultValue))
+		log.Infof("Invalid input path provided for --%s flag. Using default: %s", serviceName, defaultValue)
 		return defaultValue
 	}
 }
@@ -260,7 +262,6 @@ func getFlagPathOrPanic(c *cobra.Command, flagName string, defaultValue string) 
 // the Conductor and Composer services.
 func getSequencerOKCallback(config []string) func() bool {
 	// Get the sequencer gRPC address from the environment
-	// seqEnv := processrunner.GetEnvironment(envPath)
 	var seqGRPCAddr string
 	for _, envVar := range config {
 		if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
@@ -298,7 +299,6 @@ func getSequencerOKCallback(config []string) func() bool {
 // the Conductor and Composer services.
 func getCometbftOKCallback(config []string) func() bool {
 	// Get the CometBFT rpc address from the environment
-	// seqEnv := processrunner.GetEnvironment(envPath)
 	var seqRPCAddr string
 	for _, envVar := range config {
 		if strings.HasPrefix(envVar, "ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL") {

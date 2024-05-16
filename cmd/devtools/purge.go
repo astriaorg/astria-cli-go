@@ -38,8 +38,9 @@ var purgeBinariesCmd = &cobra.Command{
 }
 
 func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance := c.Flag("instance").Value.String()
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
@@ -73,8 +74,9 @@ var purgeAllCmd = &cobra.Command{
 }
 
 func purgeAllCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()

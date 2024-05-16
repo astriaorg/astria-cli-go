@@ -52,87 +52,6 @@ func IsSequencerChainIdValidOrPanic(id string) {
 	}
 }
 
-// //go:embed local.env.example
-// var embeddedLocalEnvironmentFile embed.FS
-
-// // RecreateLocalEnvFile creates a new local .env file at the specified path.
-// func RecreateLocalEnvFile(instanceDir string, path string) {
-// 	// Read the content from the embedded file
-// 	data, err := fs.ReadFile(embeddedLocalEnvironmentFile, "local.env.example")
-// 	if err != nil {
-// 		log.Fatalf("failed to read embedded file: %v", err)
-// 		panic(err)
-// 	}
-
-// 	// Convert data to a string and replace "~" with the user's home directory
-// 	content := strings.ReplaceAll(string(data), "~", instanceDir)
-
-// 	// Specify the path for the new file
-// 	newPath := filepath.Join(path, ".env")
-
-// 	// check if the local .env file already exists
-// 	_, err = os.Stat(newPath)
-// 	if err == nil {
-// 		log.Infof("%s already exists. Skipping initialization.\n", newPath)
-// 		return
-// 	}
-
-// 	// Create a new file
-// 	newFile, err := os.Create(newPath)
-// 	if err != nil {
-// 		log.Fatalf("failed to create new file: %v", err)
-// 		panic(err)
-// 	}
-// 	defer newFile.Close()
-
-// 	// Write the data to the new file
-// 	_, err = newFile.WriteString(content)
-// 	if err != nil {
-// 		log.Fatalf("failed to write data to new file: %v", err)
-// 		panic(err)
-// 	}
-// 	log.Infof("Local .env file created successfully: %s\n", newPath)
-// }
-
-// //go:embed remote.env.example
-// var embeddedRemoteEnvironmentFile embed.FS
-
-// // RecreateRemoteEnvFile creates a new remote .env file at the specified path.
-// func RecreateRemoteEnvFile(instanceDir string, path string) {
-// 	// Read the content from the embedded file
-// 	data, err := fs.ReadFile(embeddedRemoteEnvironmentFile, "remote.env.example")
-// 	if err != nil {
-// 		log.Fatalf("failed to read embedded file: %v", err)
-// 		panic(err)
-// 	}
-
-// 	// Specify the path for the new file
-// 	newPath := filepath.Join(path, ".env")
-
-// 	_, err = os.Stat(newPath)
-// 	if err == nil {
-// 		log.Infof("%s already exists. Skipping initialization.\n", newPath)
-// 		return
-// 	}
-
-// 	// Create a new file
-// 	newFile, err := os.Create(newPath)
-// 	if err != nil {
-// 		log.Fatalf("failed to create new file: %v", err)
-// 		panic(err)
-// 	}
-// 	defer newFile.Close()
-
-// 	// Write the data to the new file
-// 	_, err = newFile.WriteString(string(data))
-// 	if err != nil {
-// 		log.Fatalf("failed to write data to new file: %v", err)
-// 		panic(err)
-// 	}
-// 	log.Infof("Remote .env file created successfully: %s\n", newPath)
-
-// }
-
 //go:embed genesis.json
 var embeddedCometbftGenesisFile embed.FS
 
@@ -352,7 +271,7 @@ func ConvertStructToEnvArray(v interface{}) []string {
 }
 
 // MergeConfig merges two slices of "key=value" strings into a single slice,
-// with the second slice overriding any duplicates from the first.
+// with the overrideConfig slice overriding any duplicates from the initialConfig.
 func MergeConfig(initialConfig, overrideConfig []string) []string {
 	mergedMap := make(map[string]string)
 

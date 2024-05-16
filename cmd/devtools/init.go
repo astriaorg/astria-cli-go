@@ -30,14 +30,15 @@ func init() {
 }
 
 func runInitialization(c *cobra.Command, args []string) {
-	// Get the instance name from the -i flag or use the default
-	instance := c.Flag("instance").Value.String()
+	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	localNetworkName := c.Flag("local-network-name").Value.String()
+	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := c.Flag("local-default-denom").Value.String()
+	localDefaultDenom := flagHandler.GetValue("local-default-denom")
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -60,10 +61,6 @@ func runInitialization(c *cobra.Command, args []string) {
 	baseConfigPath := filepath.Join(configDirPath, config.DefualtBaseConfigName)
 	config.CreateBaseConfig(baseConfigPath, instance)
 
-	// create the local config and env files
-	// configPath := filepath.Join(instanceDir, config.ConfigDirName)
-
-	// cmd.CreateDirOrPanic(configPath)
 	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDefaultDenom)
 
 	// create the local bin directory for downloaded binaries
