@@ -183,9 +183,9 @@ func DefaultNetworksConfigs() NetworkConfigs {
 	return config
 }
 
-// LoadNetworksConfig loads the NetworksConfig from the given path. If the file
+// LoadNetworksConfigsOrPanic loads the NetworksConfig from the given path. If the file
 // cannot be loaded or parsed, the function will panic.
-func LoadNetworksConfigs(path string) NetworkConfigs {
+func LoadNetworksConfigsOrPanic(path string) NetworkConfigs {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -262,9 +262,9 @@ func CreateBaseConfig(path, instance string) {
 	log.Infof("New network config file created successfully: %s\n", path)
 }
 
-// LoadBaseConfig loads the BaseConfig from the given path. If the file
+// LoadBaseConfigOrPanic loads the BaseConfig from the given path. If the file
 // cannot be loaded or parsed, the function will panic.
-func LoadBaseConfig(path string) BaseConfig {
+func LoadBaseConfigOrPanic(path string) BaseConfig {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
