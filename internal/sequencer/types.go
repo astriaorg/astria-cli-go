@@ -21,7 +21,7 @@ type Account struct {
 func NewAccountFromPrivKey(privkey ed25519.PrivateKey) *Account {
 	pub := privkey.Public().(ed25519.PublicKey)
 	return &Account{
-		Address:    AddressFromPublicKey(pub),
+		Address:    addressFromPublicKey(pub),
 		PublicKey:  pub,
 		PrivateKey: privkey,
 	}
@@ -135,6 +135,76 @@ func (nr *NonceResponse) TableHeader() []string {
 func (nr *NonceResponse) TableRows() [][]string {
 	return [][]string{
 		{nr.Address, strconv.Itoa(int(nr.Nonce))},
+	}
+}
+
+// InitBridgeOpts are the options for the InitBridge function.
+type InitBridgeOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// fromKey is the private key of the sender
+	FromKey string
+	// RollupID is the ID of the rollup to create the bridge account for
+	RollupID string
+	// ChainID is the ID of the sequencer chain to create the bridge account for
+	ChainID string
+	// AssetID is the name of the asset to bridge
+	AssetId string
+	// FeeAssetID is the name of the fee asset to use for the bridge
+	FeeAssetID string
+}
+type InitBridgeResponse struct {
+	RollupID string `json:"rollupID"`
+	Nonce    uint32 `json:"nonce"`
+	TxHash   string `json:"txHash"`
+}
+
+func (nr *InitBridgeResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(nr, "", "  ")
+}
+
+func (nr *InitBridgeResponse) TableHeader() []string {
+	return []string{"RollupId", "Nonce", "TxHash"}
+}
+
+func (nr *InitBridgeResponse) TableRows() [][]string {
+	return [][]string{
+		{nr.RollupID, strconv.Itoa(int(nr.Nonce)), nr.TxHash},
+	}
+}
+
+type BridgeLockOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// ToAddress is the address of the receiver
+	ToAddress string
+	// Amount is the amount to be locked
+	Amount string
+	// DestinationChain is the address on the destination chain
+	DestinationChain string
+}
+
+type BridgeLockResponse struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Amount string `json:"amount"`
+	Nonce  uint32 `json:"nonce"`
+	TxHash string `json:"txHash"`
+}
+
+func (nr *BridgeLockResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(nr, "", "  ")
+}
+
+func (nr *BridgeLockResponse) TableHeader() []string {
+	return []string{"From", "To", "Amount", "Nonce", "TxHash"}
+}
+
+func (nr *BridgeLockResponse) TableRows() [][]string {
+	return [][]string{
+		{nr.From, nr.To, nr.Amount, strconv.Itoa(int(nr.Nonce)), nr.TxHash},
 	}
 }
 

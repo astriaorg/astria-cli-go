@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// nonceCmd represents the get-nonce command
+// nonceCmd represents the nonce command
 var nonceCmd = &cobra.Command{
 	Use:    "nonce [address]",
 	Short:  "Retrieves and prints the nonce of an account.",
