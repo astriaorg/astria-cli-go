@@ -37,7 +37,6 @@ func init() {
 	// disabling the completion command for now
 	RootCmd.CompletionOptions.DisableDefaultCmd = true
 
-	// TODO - update flags to the new flag handler
 	RootCmd.PersistentFlags().StringVar(&cliLogLevel, "log-level", "info", "cli log level (debug, info, warn, error, fatal, panic)")
 	err := viper.BindPFlag("log_level", RootCmd.PersistentFlags().Lookup("log-level"))
 	if err != nil {

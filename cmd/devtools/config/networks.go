@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 
 	log "github.com/sirupsen/logrus"
 
@@ -281,14 +282,24 @@ func LoadBaseConfig(path string) BaseConfig {
 }
 
 // GetEnvOverrides returns a slice of environment variables that can be used to
-// override the default environment variables for the network configuration.
-func (n NetworkConfig) GetEnvOverrides() []string {
+// override the default environment variables for the network configuration. It
+// uses the BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
+func (n NetworkConfig) GetEnvOverrides(bc BaseConfig) []string {
+	rollupEndpoint := bc.Astria_composer_rollups
+	// find the ip:port from the rollup endpoint
+	pattern := `(\d+\.\d+\.\d+\.\d+:\d+)`
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		log.Error("Error compiling regex")
+		panic(err)
+	}
+	match := re.FindString(rollupEndpoint)
+
 	return []string{
 		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
 		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
 		"ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL=" + n.SequencerRPC,
 		"ASTRIA_COMPOSER_SEQUENCER_URL=" + n.SequencerRPC,
-		// TODO - make ws configurable
-		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::ws://127.0.0.1:8546",
+		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::ws://" + match,
 	}
 }
