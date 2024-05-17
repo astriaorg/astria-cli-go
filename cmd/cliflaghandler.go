@@ -38,6 +38,18 @@ func (f *CliFlagHandler) BindStringFlag(name string, defaultValue string, usage 
 	}
 }
 
+// BindStringPFlag binds a string flag to a cobra flag and viper env var handler for a
+// local command flag, and automatically creates the env var from the flag name.
+func (f *CliFlagHandler) BindStringPFlag(name string, shorthand string, defaultValue string, usage string) {
+	envSuffix := strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
+
+	f.Cmd.Flags().StringP(name, shorthand, defaultValue, usage)
+	err := viper.BindPFlag(envSuffix, f.Cmd.Flags().Lookup(name))
+	if err != nil {
+		log.Fatalf("Error binding string flag: %s", err)
+	}
+}
+
 // BindBoolFlag binds a boolean flag to a cobra flag and viper env var handler for a
 // local command flag, and automatically creates the env var from the flag name.
 func (f *CliFlagHandler) BindBoolFlag(name string, defaultValue bool, usage string) {

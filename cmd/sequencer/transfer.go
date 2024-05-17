@@ -21,8 +21,8 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(transferCmd, cmd.EnvPrefix)
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
-	flagHandler.BindStringFlag("url", DefaultSequencerURL, "The URL of the sequencer.")
-	flagHandler.BindStringFlag("chain-id", DefaultSequencerNetworkId, "The chain ID of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerNetworkId, "The chain ID of the sequencer.")
 	flagHandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flagHandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
@@ -34,8 +34,8 @@ func init() {
 func transferCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
-	url := flagHandler.GetValue("url")
-	chainId := flagHandler.GetValue("chain-id")
+	url := flagHandler.GetValue("sequencer-url")
+	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	amount := args[0]
 	to := args[1]

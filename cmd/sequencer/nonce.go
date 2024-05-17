@@ -22,13 +22,13 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(nonceCmd, cmd.EnvPrefix)
 
-	flagHandler.BindStringFlag("url", DefaultSequencerURL, "The URL of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
 }
 
 func nonceCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	url := flagHandler.GetValue("url")
+	url := flagHandler.GetValue("sequencer-url")
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	address := args[0]

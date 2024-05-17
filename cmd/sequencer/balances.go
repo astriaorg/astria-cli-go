@@ -22,7 +22,7 @@ func init() {
 	sequencerCmd.AddCommand(balancesCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(balancesCmd, cmd.EnvPrefix)
-	flagHandler.BindStringFlag("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 
 	viper.RegisterAlias("balance", "balances")
@@ -30,7 +30,7 @@ func init() {
 
 func balancesCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	url := flagHandler.GetValue("url")
+	url := flagHandler.GetValue("sequencer-url")
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	address := args[0]
