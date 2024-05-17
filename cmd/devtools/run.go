@@ -31,11 +31,11 @@ func init() {
 	devCmd.AddCommand(runCmd)
 
 	flagHandler := cmd.CreateCliStringFlagHandler(runCmd, cmd.EnvPrefix)
-	flagHandler.BindFlag("network", "local", "Provide an override path to a specific environment file.")
-	flagHandler.BindFlag("conductor-path", "", "Provide an override path to a specific conductor binary.")
-	flagHandler.BindFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
-	flagHandler.BindFlag("composer-path", "", "Provide an override path to a specific composer binary.")
-	flagHandler.BindFlag("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
+	flagHandler.BindStringFlag("network", "local", "Provide an override path to a specific environment file.")
+	flagHandler.BindStringFlag("conductor-path", "", "Provide an override path to a specific conductor binary.")
+	flagHandler.BindStringFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
+	flagHandler.BindStringFlag("composer-path", "", "Provide an override path to a specific composer binary.")
+	flagHandler.BindStringFlag("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 }
 
 func runCmdHandler(c *cobra.Command, args []string) {
@@ -66,7 +66,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	networkConfigs := config.LoadNetworksConfigs(networksConfigPath)
 	serviceLogLevel := cmd.GetServicesLogLevel()
 
-	// update the log level for the Astria Services.
+	// update the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set
 	// in the ProcessRunnerOpts for the Cometbft ProcessRunner
 	var serviceLogLevelOverrides []string
@@ -90,10 +90,10 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 
 		// get the binary paths
-		conductorPath := getFlagPathOrPanic(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
-		cometbftPath := getFlagPathOrPanic(c, "cometbft-path", "cometbft", filepath.Join(binDir, "cometbft"))
-		composerPath := getFlagPathOrPanic(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
-		sequencerPath := getFlagPathOrPanic(c, "sequencer-path", "sequencer", filepath.Join(binDir, "astria-sequencer"))
+		conductorPath := getFlagPath(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
+		cometbftPath := getFlagPath(c, "cometbft-path", "cometbft", filepath.Join(binDir, "cometbft"))
+		composerPath := getFlagPath(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
+		sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", filepath.Join(binDir, "astria-sequencer"))
 		log.Debugf("Using binaries from %s", binDir)
 
 		// sequencer
@@ -192,8 +192,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 
 		// get the binary paths
-		conductorPath := getFlagPathOrPanic(c, "conductor_bin_path", "conductor", filepath.Join(binDir, "astria-conductor"))
-		composerPath := getFlagPathOrPanic(c, "composer_bin_path", "composer", filepath.Join(binDir, "astria-composer"))
+		conductorPath := getFlagPath(c, "conductor_bin_path", "conductor", filepath.Join(binDir, "astria-conductor"))
+		composerPath := getFlagPath(c, "composer_bin_path", "composer", filepath.Join(binDir, "astria-composer"))
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{
@@ -239,18 +239,18 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	app.Start()
 }
 
-// getFlagPathOrPanic gets the override path from the flag. It returns the default
-// value if the flag was not set, or panics if no file exists at the provided path.
-func getFlagPathOrPanic(c *cobra.Command, flag string, serviceName string, defaultValue string) string {
+// getFlagPath gets the override path from the flag. It returns the default
+// value if the flag was not set.
+func getFlagPath(c *cobra.Command, flag string, serviceName string, defaultValue string) string {
 	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
 
 	path := flagHandler.GetValue(flag)
 
 	if util.PathExists(path) && path != "" {
-		log.Info(fmt.Sprintf("Override path provided for %s binary: %s", serviceName, path))
+		log.Info(fmt.Sprintf("getFlagPath: Override path provided for %s binary: %s", serviceName, path))
 		return path
 	} else {
-		log.Infof("Invalid input path provided for --%s flag. Using default: %s", serviceName, defaultValue)
+		log.Info(fmt.Sprintf("getFlagPath: Invalid input path provided for --%s flag. Using default: %s", flag, defaultValue))
 		return defaultValue
 	}
 }

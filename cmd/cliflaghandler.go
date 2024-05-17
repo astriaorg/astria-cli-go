@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -24,15 +25,27 @@ func CreateCliStringFlagHandler(c *cobra.Command, envPrefix string) *CliStringFl
 	}
 }
 
-// BindFlag binds a string flag to a cobra flag and viper env var handler for a
+// BindStringFlag binds a string flag to a cobra flag and viper env var handler for a
 // local command flag, and automatically creates the env var from the flag name.
-func (f *CliStringFlagHandler) BindFlag(name string, defaultValue string, usage string) {
+func (f *CliStringFlagHandler) BindStringFlag(name string, defaultValue string, usage string) {
 	envSuffix := strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
 
 	f.Cmd.Flags().String(name, defaultValue, usage)
 	err := viper.BindPFlag(envSuffix, f.Cmd.Flags().Lookup(name))
 	if err != nil {
-		log.Fatalf("Error binding flag: %s", err)
+		log.Fatalf("Error binding string flag: %s", err)
+	}
+}
+
+// BindBoolFlag binds a boolean flag to a cobra flag and viper env var handler for a
+// local command flag, and automatically creates the env var from the flag name.
+func (f *CliStringFlagHandler) BindBoolFlag(name string, defaultValue bool, usage string) {
+	envSuffix := strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
+
+	f.Cmd.Flags().Bool(name, defaultValue, usage)
+	err := viper.BindPFlag(envSuffix, f.Cmd.Flags().Lookup(name))
+	if err != nil {
+		log.Fatalf("Error binding bool flag: %s", err)
 	}
 }
 
@@ -45,7 +58,7 @@ func (f *CliStringFlagHandler) BindPersistentFlag(name string, defaultValue stri
 	f.Cmd.PersistentFlags().String(name, defaultValue, usage)
 	err := viper.BindPFlag(envSuffix, f.Cmd.PersistentFlags().Lookup(name))
 	if err != nil {
-		log.Fatalf("Error binding flag: %s", err)
+		log.Fatalf("Error binding persistent flag: %s", err)
 	}
 }
 
@@ -56,13 +69,15 @@ func (f *CliStringFlagHandler) getEnvVar(flagName string) string {
 	return fullEnvVar
 }
 
-// GetValue returns the value of a flag and logs the source of the value.
+// GetValue returns the value of a flag and logs the source of the value. It
+// will panic if the flag does not exist.
 func (f *CliStringFlagHandler) GetValue(flagName string) string {
 	envSuffix := strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
 	value := viper.GetString(envSuffix)
 	exists := f.Cmd.Flag(flagName)
 	if exists == nil {
-		log.Debugf("Flag '%s' doesn't exist. Has it been bound?", flagName)
+		log.Errorf("Flag '%s' doesn't exist. Has it been bound?", flagName)
+		panic(fmt.Sprintf("getValue: flag doesn't exist: %s", flagName))
 	}
 
 	if f.Cmd.Flag(flagName).Changed {
