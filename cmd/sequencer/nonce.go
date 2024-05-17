@@ -19,14 +19,19 @@ var nonceCmd = &cobra.Command{
 
 func init() {
 	sequencerCmd.AddCommand(nonceCmd)
-	nonceCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer.")
-	nonceCmd.Flags().Bool("json", false, "Output in JSON format.")
+
+	flagHandler := cmd.CreateCliFlagHandler(nonceCmd, cmd.EnvPrefix)
+
+	flagHandler.BindStringFlag("url", DefaultSequencerURL, "The URL of the sequencer.")
+	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
 }
 
-func nonceCmdHandler(cmd *cobra.Command, args []string) {
+func nonceCmdHandler(c *cobra.Command, args []string) {
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	url := flagHandler.GetValue("url")
+	printJSON := flagHandler.GetValue("json") == "true"
+
 	address := args[0]
-	url := cmd.Flag("url").Value.String()
-	printJSON := cmd.Flag("json").Value.String() == "true"
 
 	nonce, err := sequencer.GetNonce(address, url)
 	if err != nil {

@@ -30,7 +30,7 @@ var runCmd = &cobra.Command{
 func init() {
 	devCmd.AddCommand(runCmd)
 
-	flagHandler := cmd.CreateCliStringFlagHandler(runCmd, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(runCmd, cmd.EnvPrefix)
 	flagHandler.BindStringFlag("network", "local", "Provide an override path to a specific environment file.")
 	flagHandler.BindStringFlag("conductor-path", "", "Provide an override path to a specific conductor binary.")
 	flagHandler.BindStringFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
@@ -39,7 +39,7 @@ func init() {
 }
 
 func runCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	ctx := c.Context()
 
 	homePath, err := os.UserHomeDir()
@@ -242,7 +242,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 // getFlagPath gets the override path from the flag. It returns the default
 // value if the flag was not set.
 func getFlagPath(c *cobra.Command, flag string, serviceName string, defaultValue string) string {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	path := flagHandler.GetValue(flag)
 

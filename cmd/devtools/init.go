@@ -30,7 +30,7 @@ func init() {
 }
 
 func runInitialization(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)

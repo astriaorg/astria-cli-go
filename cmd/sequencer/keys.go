@@ -7,6 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	sequencerCmd.AddCommand(setKeyCmd)
+	sequencerCmd.AddCommand(getKeyCmd)
+}
+
 var setKeyCmd = &cobra.Command{
 	Use:    "setkey [address] [private key]",
 	Short:  "Set private key for an address in system keyring.",
@@ -41,9 +46,4 @@ func getKeyCmdHandler(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	log.Infof("value: %s", val)
-}
-
-func init() {
-	sequencerCmd.AddCommand(setKeyCmd)
-	sequencerCmd.AddCommand(getKeyCmd)
 }

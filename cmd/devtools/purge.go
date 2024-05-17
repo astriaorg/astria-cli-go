@@ -38,7 +38,7 @@ var purgeBinariesCmd = &cobra.Command{
 }
 
 func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
@@ -74,7 +74,7 @@ var purgeAllCmd = &cobra.Command{
 }
 
 func purgeAllCmdHandler(c *cobra.Command, _ []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)

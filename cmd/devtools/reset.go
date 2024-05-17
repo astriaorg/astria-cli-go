@@ -40,7 +40,7 @@ var resetConfigCmd = &cobra.Command{
 }
 
 func resetConfigCmdHandler(c *cobra.Command, _ []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
@@ -93,7 +93,7 @@ var resetNetworksCmd = &cobra.Command{
 }
 
 func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
@@ -128,7 +128,7 @@ var resetStateCmd = &cobra.Command{
 }
 
 func resetStateCmdHandler(c *cobra.Command, _ []string) {
-	flagHandler := cmd.CreateCliStringFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
