@@ -326,6 +326,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	log.Debugf("BridgeLockOpts: %v", opts)
+
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
@@ -359,17 +361,12 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 	to, err := addressFromText(opts.ToAddress)
 	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'to' address %v", opts.ToAddress)
-	}
-
-	if err != nil {
 		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
 		return &BridgeLockResponse{}, err
 	}
-
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: DefaultSequencerNetworkId,
+			ChainId: opts.ChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
@@ -378,14 +375,15 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      to,
 						Amount:                  amount,
-						AssetId:                 assetIdFromDenom("transfer/channel-0/utia"),
-						FeeAssetId:              assetIdFromDenom("nria"),
-						DestinationChainAddress: opts.DestinationChain,
+						AssetId:                 assetIdFromDenom(opts.AssetId),
+						FeeAssetId:              assetIdFromDenom(opts.FeeAssetID),
+						DestinationChainAddress: opts.DestinationChainAddress,
 					},
 				},
 			},
 		},
 	}
+
 	// sign transaction
 	signed, err := signer.SignTransaction(tx)
 	if err != nil {

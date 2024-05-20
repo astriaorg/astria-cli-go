@@ -180,10 +180,16 @@ type BridgeLockOpts struct {
 	FromKey string
 	// ToAddress is the address of the receiver
 	ToAddress string
+	// ChainID is the ID of the sequencer chain to create the bridge account for
+	ChainID string
+	// AssetID is the name of the asset to lock
+	AssetId string
+	// FeeAssetID is the name of the fee asset to use for the bridge
+	FeeAssetID string
 	// Amount is the amount to be locked
 	Amount string
-	// DestinationChain is the address on the destination chain
-	DestinationChain string
+	// DestinationChainAddress is the address on the destination chain
+	DestinationChainAddress string
 }
 
 type BridgeLockResponse struct {
