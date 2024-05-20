@@ -3,10 +3,10 @@ module github.com/astria/astria-cli-go
 go 1.22.2
 
 require (
-	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.1-20240509190721-3b485903c868.1
-	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240509190724-3422acd899d1.1
+	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.1-20240517150107-e54d335d6779.1
+	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240517150110-b4ffcca70a25.1
 	github.com/99designs/keyring v1.2.2
-	github.com/astriaorg/go-sequencer-client v0.3.0
+	github.com/astriaorg/go-sequencer-client v0.4.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/pterm/pterm v0.12.79
@@ -21,7 +21,7 @@ require (
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.9 // indirect
-	atomicgo.dev/schedule v0.1.0 // indirect
+	atomicgo.dev/schedule v0.1.0 // indirect; indirectbuf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.1-20240517150107-e54d335d6779.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
