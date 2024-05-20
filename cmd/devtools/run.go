@@ -69,10 +69,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// update the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set
 	// in the ProcessRunnerOpts for the Cometbft ProcessRunner
-	var serviceLogLevelOverrides []string
-	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_SEQUENCER_LOG=\"astria_sequencer="+serviceLogLevel+"\"")
-	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_COMPOSER_LOG=\"astria_composer="+serviceLogLevel+"\"")
-	serviceLogLevelOverrides = append(serviceLogLevelOverrides, "ASTRIA_CONDUCTOR_LOG=\"astria_conductor="+serviceLogLevel+"\"")
+	serviceLogLevelOverrides := []string{
+		"ASTRIA_SEQUENCER_LOG=\"astria_sequencer=" + serviceLogLevel + "\"",
+		"ASTRIA_COMPOSER_LOG=\"astria_composer=" + serviceLogLevel + "\"",
+		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
+	}
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner

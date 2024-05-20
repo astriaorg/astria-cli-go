@@ -11,14 +11,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-// CliStringFlagHandler is a struct that handles the binding and retrieval of
-// string flag values.
+// CliFlagHandler is a struct that handles the binding of flags and the retrieval of the flag's string value
 type CliFlagHandler struct {
 	Cmd       *cobra.Command
 	EnvPrefix string
 }
 
-// CreateCliStringFlagHandler creates a new CliStringFlagHandler.
+// CreateCliFlagHandler creates a new CliFlagHandler.
 func CreateCliFlagHandler(c *cobra.Command, envPrefix string) *CliFlagHandler {
 	return &CliFlagHandler{
 		Cmd:       c,
@@ -82,8 +81,8 @@ func (f *CliFlagHandler) getEnvVar(flagName string) string {
 	return fullEnvVar
 }
 
-// GetValue returns the value of a flag and logs the source of the value. It
-// will panic if the flag does not exist or if the flag cannot be read.
+// GetValue returns the value of a flag as a string and logs the source of the
+// value. It will panic if the flag does not exist or if the flag cannot be read.
 func (f *CliFlagHandler) GetValue(flagName string) string {
 	envSuffix := strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
 	// confirm the flag exists

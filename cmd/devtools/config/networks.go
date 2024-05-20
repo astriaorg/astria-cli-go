@@ -12,7 +12,7 @@ import (
 )
 
 type BaseConfig struct {
-	// condtuctor
+	// conductor
 	Astria_conductor_celestia_block_time_ms     int    `mapstructure:"astria_conductor_celestia_block_time_ms" toml:"astria_conductor_celestia_block_time_ms"`
 	Astria_conductor_celestia_bearer_token      string `mapstructure:"astria_conductor_celestia_bearer_token" toml:"astria_conductor_celestia_bearer_token"`
 	Astria_conductor_celestia_node_http_url     string `mapstructure:"astria_conductor_celestia_node_http_url" toml:"astria_conductor_celestia_node_http_url"`
@@ -129,7 +129,7 @@ func NewBaseConfig(instanceName string) BaseConfig {
 	}
 }
 
-// Networks is the struct that holds the configuration for all individual Astria networks.
+// NetworkConfigs is the struct that holds the configuration for all individual Astria networks.
 type NetworkConfigs struct {
 	Local   NetworkConfig `mapstructure:"local" toml:"local"`
 	Dusk    NetworkConfig `mapstructure:"dusk" toml:"dusk"`
@@ -137,7 +137,7 @@ type NetworkConfigs struct {
 	Mainnet NetworkConfig `mapstructure:"mainnet" toml:"mainnet"`
 }
 
-// Network is the struct that holds the configuration for an individual Astria network.
+// NetworkConfig is the struct that holds the configuration for an individual Astria network.
 type NetworkConfig struct {
 	SequencerChainId string `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
 	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
@@ -233,7 +233,7 @@ func CreateNetworksConfig(path, localSequencerChainId, localDefaultDenom string)
 	log.Infof("New network config file created successfully: %s\n", path)
 }
 
-// CreateNetworksConfig creates a networks configuration file at
+// CreateBaseConfig creates a networks configuration file at
 // the given path, populating the file with the network defaults, and overriding
 // the default local denom and local sequencer network chain id .
 // It will skip initialization if the file already exists. It will panic if the

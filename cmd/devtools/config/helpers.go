@@ -47,7 +47,7 @@ func IsSequencerChainIdValidOrPanic(id string) {
 	}
 	if !re.MatchString(id) {
 		log.Errorf("Invalid sequencer chain id: %s", id)
-		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must contain lowercase and uppercase letter, numerical digits, and the characters '-', '_', and '.'", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId can only contain lowercase and uppercase letters, numerical digits, and the characters '-', '_', and '.'", id)
 		panic(err)
 	}
 }
@@ -238,7 +238,7 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	return nil
 }
 
-// CreateNetworksConfig creates a []string of "key=value" pairs out of a struct.
+// ConvertStructToEnvArray creates a []string of "key=value" pairs out of a struct.
 // The variable name will become the env var key and that variable's value will
 // be the value. It only works on non-nested structs.
 func ConvertStructToEnvArray(v interface{}) []string {
