@@ -9,7 +9,7 @@ import (
 )
 
 var transferCmd = &cobra.Command{
-	Use:    "transfer [amount] [to]",
+	Use:    "transfer [amount] [to] [--keyfile | --keyring-address | --privkey]",
 	Short:  "Transfer tokens from one account to another.",
 	Args:   cobra.ExactArgs(2),
 	PreRun: cmd.SetLogLevel,
