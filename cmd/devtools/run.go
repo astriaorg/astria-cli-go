@@ -110,7 +110,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		seqOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Sequencer",
 			BinPath:    sequencerPath,
-			Config:     networkOverrides,
+			Env:        networkOverrides,
 			Args:       nil,
 			ReadyCheck: &seqReadinessCheck,
 		}
@@ -129,7 +129,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		cometOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Comet BFT",
 			BinPath:    cometbftPath,
-			Config:     networkOverrides,
+			Env:        networkOverrides,
 			Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
 			ReadyCheck: &cometReadinessCheck,
 		}
@@ -139,7 +139,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Composer",
 			BinPath:    composerPath,
-			Config:     networkOverrides,
+			Env:        networkOverrides,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -149,7 +149,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Conductor",
 			BinPath:    conductorPath,
-			Config:     networkOverrides,
+			Env:        networkOverrides,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -201,7 +201,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Composer",
 			BinPath:    composerPath,
-			Config:     networkOverrides,
+			Env:        networkOverrides,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -211,7 +211,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Conductor",
 			BinPath:    conductorPath,
-			Config:     networkOverrides,
+			Env:        networkOverrides,
 			Args:       nil,
 			ReadyCheck: nil,
 		}

@@ -46,7 +46,7 @@ type processRunner struct {
 type NewProcessRunnerOpts struct {
 	Title      string
 	BinPath    string
-	Config     []string
+	Env        []string
 	Args       []string
 	ReadyCheck *ReadyChecker
 }
@@ -57,7 +57,7 @@ type NewProcessRunnerOpts struct {
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
-	cmd.Env = opts.Config
+	cmd.Env = opts.Env
 	return &processRunner{
 		ctx:          ctx,
 		cmd:          cmd,
@@ -65,7 +65,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		didStart:     make(chan bool),
 		outputBuf:    &safebuffer.SafeBuffer{},
 		opts:         opts,
-		env:          opts.Config,
+		env:          opts.Env,
 		readyChecker: opts.ReadyCheck,
 	}
 }
