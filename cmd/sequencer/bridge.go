@@ -28,7 +28,7 @@ and is the only actor authorized to transfer out of this account.`,
 func bridgeInitCmdHandler(cmd *cobra.Command, args []string) {
 	url := cmd.Flag("url").Value.String()
 	rollupID := args[0]
-	chainID := cmd.Flag("chain-id").Value.String()
+	sequencerChainID := cmd.Flag("sequencer-chain-id").Value.String()
 	assetID := cmd.Flag("asset-id").Value.String()
 	feeAssetID := cmd.Flag("fee-asset-id").Value.String()
 
@@ -39,12 +39,12 @@ func bridgeInitCmdHandler(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	opts := sequencer.InitBridgeOpts{
-		SequencerURL: url,
-		FromKey:      priv,
-		RollupID:     rollupID,
-		ChainID:      chainID,
-		AssetId:      assetID,
-		FeeAssetID:   feeAssetID,
+		SequencerURL:     url,
+		FromKey:          priv,
+		RollupID:         rollupID,
+		SequencerChainID: sequencerChainID,
+		AssetId:          assetID,
+		FeeAssetID:       feeAssetID,
 	}
 	bridgeAccount, err := sequencer.InitBridgeAccount(opts)
 	if err != nil {
@@ -82,7 +82,7 @@ func bridgeLockCmdHandler(cmd *cobra.Command, args []string) {
 	amount := args[0]
 	toAddress := args[1]
 	destinationChainAddress := args[2]
-	chainID := cmd.Flag("chain-id").Value.String()
+	sequencerChainID := cmd.Flag("sequencer-chain-id").Value.String()
 	assetID := cmd.Flag("asset-id").Value.String()
 	feeAssetID := cmd.Flag("fee-asset-id").Value.String()
 	opts := sequencer.BridgeLockOpts{
@@ -91,7 +91,7 @@ func bridgeLockCmdHandler(cmd *cobra.Command, args []string) {
 		ToAddress:               toAddress,
 		Amount:                  amount,
 		DestinationChainAddress: destinationChainAddress,
-		ChainID:                 chainID,
+		SequencerChainId:        sequencerChainID,
 		AssetId:                 assetID,
 		FeeAssetID:              feeAssetID,
 	}
@@ -112,12 +112,12 @@ func init() {
 	sequencerCmd.AddCommand(bridgeCmd)
 
 	bridgeCmd.AddCommand(bridgeInitCmd)
-	bridgeInitCmd.Flags().String("chain-id", DefaultSequencerChainID, "The chain id of the sequencer")
-	bridgeInitCmd.Flags().String("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge")
-	bridgeInitCmd.Flags().String("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees")
+	bridgeInitCmd.Flags().String("sequencer-chain-id", DefaultSequencerChainID, "The chain id of the sequencer.")
+	bridgeInitCmd.Flags().String("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge.")
+	bridgeInitCmd.Flags().String("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees.")
 
-	bridgeInitCmd.Flags().Bool("json", false, "Output bridge account as JSON")
-	bridgeInitCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+	bridgeInitCmd.Flags().Bool("json", false, "Output bridge account as JSON.")
+	bridgeInitCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account.")
 
 	bridgeInitCmd.Flags().String("keyfile", "", "Path to secure keyfile for the bridge account.")
 	bridgeInitCmd.Flags().String("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
@@ -126,9 +126,9 @@ func init() {
 	bridgeInitCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 
 	bridgeCmd.AddCommand(bridgeLockCmd)
-	bridgeLockCmd.Flags().String("chain-id", DefaultSequencerChainID, "The chain id of the sequencer")
-	bridgeLockCmd.Flags().String("asset-id", DefaultBridgeAssetID, "The asset to be locked and transferred")
-	bridgeLockCmd.Flags().String("fee-asset-id", DefaultBridgeFeeAssetID, "The asset used to pay the transaction fee")
+	bridgeLockCmd.Flags().String("sequencer-chain-id", DefaultSequencerChainID, "The chain id of the sequencer.")
+	bridgeLockCmd.Flags().String("asset-id", DefaultBridgeAssetID, "The asset to be locked and transferred.")
+	bridgeLockCmd.Flags().String("fee-asset-id", DefaultBridgeFeeAssetID, "The asset used to pay the transaction fee.")
 
 	bridgeLockCmd.Flags().Bool("json", false, "Output bridge account as JSON")
 	bridgeLockCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to init bridge account")

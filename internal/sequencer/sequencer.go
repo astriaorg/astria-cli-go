@@ -277,7 +277,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// build transaction
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: opts.ChainID,
+			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
@@ -366,7 +366,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: opts.ChainID,
+			ChainId: opts.SequencerChainId,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{

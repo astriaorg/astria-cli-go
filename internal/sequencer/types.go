@@ -146,11 +146,11 @@ type InitBridgeOpts struct {
 	FromKey string
 	// RollupID is the ID of the rollup to create the bridge account for
 	RollupID string
-	// ChainID is the ID of the sequencer chain to create the bridge account for
-	ChainID string
+	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
+	SequencerChainID string
 	// AssetID is the name of the asset to bridge
 	AssetId string
-	// FeeAssetID is the name of the fee asset to use for the bridge
+	// FeeAssetID is the name of the fee asset to use for the transaction fee
 	FeeAssetID string
 }
 type InitBridgeResponse struct {
@@ -173,6 +173,7 @@ func (nr *InitBridgeResponse) TableRows() [][]string {
 	}
 }
 
+// BridgeLockOpts are the options for the BridgeLock function.
 type BridgeLockOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
@@ -180,11 +181,11 @@ type BridgeLockOpts struct {
 	FromKey string
 	// ToAddress is the address of the receiver
 	ToAddress string
-	// ChainID is the ID of the sequencer chain to create the bridge account for
-	ChainID string
+	// SequencerChainId is the ID of the sequencer chain to lock asset on
+	SequencerChainId string
 	// AssetID is the name of the asset to lock
 	AssetId string
-	// FeeAssetID is the name of the fee asset to use for the bridge
+	// FeeAssetID is the name of the asset to use for the transaction fee
 	FeeAssetID string
 	// Amount is the amount to be locked
 	Amount string
@@ -192,11 +193,17 @@ type BridgeLockOpts struct {
 	DestinationChainAddress string
 }
 
+// BridgeLockResponse is the response of the BridgeLock function.
 type BridgeLockResponse struct {
-	From   string `json:"from"`
-	To     string `json:"to"`
+	// From is the address of the sender
+	From string `json:"from"`
+	// To is the address of the receiver. For a bridge lock, this is the bridge account
+	To string `json:"to"`
+	// Amount is the amount locked
 	Amount string `json:"amount"`
-	Nonce  uint32 `json:"nonce"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// TxHash is the hash of the transaction
 	TxHash string `json:"txHash"`
 }
 
@@ -222,16 +229,21 @@ type TransferOpts struct {
 	FromKey string
 	// ToAddress is the address of the receiver
 	ToAddress string
-	// Amount is the amount to be transferred
+	// Amount is the amount to be transferred. Using string type to support huge numbers
 	Amount string
 }
 
 // TransferResponse is the response of the Transfer function.
 type TransferResponse struct {
-	From   string `json:"from"`
-	To     string `json:"to"`
-	Nonce  uint32 `json:"nonce"`
-	Amount string `json:"amount"` // NOTE - string so we can support huge numbers
+	// From is the address of the sender
+	From string `json:"from"`
+	// To is the address of the receiver
+	To string `json:"to"`
+	// Amount is the amount transferred
+	Amount string `json:"amount"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// TxHash is the hash of the transaction
 	TxHash string `json:"txHash"`
 }
 
@@ -240,7 +252,7 @@ func (tr *TransferResponse) JSON() ([]byte, error) {
 }
 
 func (tr *TransferResponse) TableHeader() []string {
-	return []string{"From", "To", "Nonce", "Amount", "TxHash"}
+	return []string{"From", "To", "Amount", "Nonce", "TxHash"}
 }
 
 func (tr *TransferResponse) TableRows() [][]string {
