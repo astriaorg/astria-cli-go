@@ -19,15 +19,6 @@ var purgeCmd = &cobra.Command{
 	Long:  `The root command for purging the local development instance data. Whenever a purge command is run, it will delete the specified data. You will need to re-initialize the instance to replace the data.`,
 }
 
-func init() {
-	// top level command
-	devCmd.AddCommand(purgeCmd)
-
-	// subcommands
-	purgeCmd.AddCommand(purgeBinariesCmd)
-	purgeCmd.AddCommand(purgeAllCmd)
-}
-
 // purgeBinariesCmd represents the 'purge binaries' command
 var purgeBinariesCmd = &cobra.Command{
 	Use:   "binaries",
@@ -93,4 +84,13 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	log.Infof("Successfully deleted instance '%s'", instance)
+}
+
+func init() {
+	// top level command
+	devCmd.AddCommand(purgeCmd)
+
+	// subcommands
+	purgeCmd.AddCommand(purgeBinariesCmd)
+	purgeCmd.AddCommand(purgeAllCmd)
 }

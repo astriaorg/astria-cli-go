@@ -21,36 +21,6 @@ var bridgeInitCmd = &cobra.Command{
 	Run:   bridgeInitCmdHandler,
 }
 
-func init() {
-	sequencerCmd.AddCommand(bridgeCmd)
-
-	bridgeCmd.AddCommand(bridgeInitCmd)
-	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
-	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
-	bifh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge")
-	bifh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees")
-
-	bifh.BindBoolFlag("json", false, "Output bridge account as JSON")
-	bifh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
-
-	bifh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
-	bifh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
-	bifh.BindStringFlag("privkey", "", "The private key of the bridge account.")
-	bridgeInitCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
-	bridgeInitCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
-
-	bridgeCmd.AddCommand(bridgeLockCmd)
-	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
-	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
-	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
-
-	blfh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
-	blfh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
-	blfh.BindStringFlag("privkey", "", "The private key of the bridge account.")
-	bridgeLockCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
-	bridgeLockCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
-}
-
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
@@ -125,4 +95,34 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 		PrintJSON: printJSON,
 	}
 	printer.Render()
+}
+
+func init() {
+	sequencerCmd.AddCommand(bridgeCmd)
+
+	bridgeCmd.AddCommand(bridgeInitCmd)
+	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
+	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
+	bifh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge")
+	bifh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees")
+
+	bifh.BindBoolFlag("json", false, "Output bridge account as JSON")
+	bifh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+
+	bifh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
+	bifh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
+	bifh.BindStringFlag("privkey", "", "The private key of the bridge account.")
+	bridgeInitCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	bridgeInitCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
+
+	bridgeCmd.AddCommand(bridgeLockCmd)
+	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
+	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
+	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+
+	blfh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
+	blfh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
+	blfh.BindStringFlag("privkey", "", "The private key of the bridge account.")
+	bridgeLockCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	bridgeLockCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 }

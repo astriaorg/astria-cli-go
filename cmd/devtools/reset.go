@@ -19,16 +19,6 @@ var resetCmd = &cobra.Command{
 	Long:  `The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run.`,
 }
 
-func init() {
-	// top level command
-	devCmd.AddCommand(resetCmd)
-
-	// subcommands
-	resetCmd.AddCommand(resetConfigCmd)
-	resetCmd.AddCommand(resetNetworksCmd)
-	resetCmd.AddCommand(resetStateCmd)
-}
-
 // resetConfigCmd represents the 'reset config' command
 var resetConfigCmd = &cobra.Command{
 	Use:   "config",
@@ -149,4 +139,14 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.DefaultConfigDirName)
 
 	log.Infof("Successfully reset state for instance '%s'", instance)
+}
+
+func init() {
+	// top level command
+	devCmd.AddCommand(resetCmd)
+
+	// subcommands
+	resetCmd.AddCommand(resetConfigCmd)
+	resetCmd.AddCommand(resetNetworksCmd)
+	resetCmd.AddCommand(resetStateCmd)
 }
