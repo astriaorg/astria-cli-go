@@ -10,11 +10,10 @@ import (
 
 // nonceCmd represents the nonce command
 var nonceCmd = &cobra.Command{
-	Use:    "nonce [address]",
-	Short:  "Retrieves and prints the nonce of an account.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: cmd.SetLogLevel,
-	Run:    nonceCmdHandler,
+	Use:   "nonce [address]",
+	Short: "Retrieves and prints the nonce of an account.",
+	Args:  cobra.ExactArgs(1),
+	Run:   nonceCmdHandler,
 }
 
 func init() {

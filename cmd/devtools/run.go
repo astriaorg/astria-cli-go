@@ -20,17 +20,17 @@ import (
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
-	Use:    "run",
-	Short:  "Run all the Astria services locally.",
-	Long:   `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
-	PreRun: cmd.SetLogLevel,
-	Run:    runCmdHandler,
+	Use:   "run",
+	Short: "Run all the Astria services locally.",
+	Long:  `Run all the Astria services locally. This will start the sequencer, cometbft, composer, and conductor.`,
+	Run:   runCmdHandler,
 }
 
 func init() {
 	devCmd.AddCommand(runCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(runCmd, cmd.EnvPrefix)
+	flagHandler.BindStringFlag("service-log-level", "info", "Set the log level for services (debug, info, error)")
 	flagHandler.BindStringFlag("network", "local", "Provide an override path to a specific environment file.")
 	flagHandler.BindStringFlag("conductor-path", "", "Provide an override path to a specific conductor binary.")
 	flagHandler.BindStringFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
@@ -54,21 +54,22 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
+	cmd.CreateUILog(filepath.Join(astriaDir, instance))
+
 	network := flagHandler.GetValue("network")
 
 	baseConfigPath := filepath.Join(astriaDir, instance, config.DefaultConfigDirName, config.DefualtBaseConfigName)
 	baseConfig := config.LoadBaseConfigOrPanic(baseConfigPath)
 	baseConfigEnvVars := config.ConvertStructToEnvArray(baseConfig)
 
-	cmd.CreateUILog(filepath.Join(astriaDir, instance))
-
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	networkConfigs := config.LoadNetworksConfigsOrPanic(networksConfigPath)
-	serviceLogLevel := cmd.GetServicesLogLevel()
 
 	// update the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set
 	// in the ProcessRunnerOpts for the Cometbft ProcessRunner
+	serviceLogLevel := flagHandler.GetValue("service-log-level")
+	ValidateServiceLogLevelOrPanic(serviceLogLevel)
 	serviceLogLevelOverrides := []string{
 		"ASTRIA_SEQUENCER_LOG=\"astria_sequencer=" + serviceLogLevel + "\"",
 		"ASTRIA_COMPOSER_LOG=\"astria_composer=" + serviceLogLevel + "\"",

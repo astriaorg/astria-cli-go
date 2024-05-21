@@ -11,11 +11,10 @@ import (
 
 // balancesCmd represents the balances command
 var balancesCmd = &cobra.Command{
-	Use:    "balances [address]",
-	Short:  "Retrieves and prints the balances of an account.",
-	Args:   cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	PreRun: cmd.SetLogLevel,
-	Run:    balancesCmdHandler,
+	Use:   "balances [address]",
+	Short: "Retrieves and prints the balances of an account.",
+	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	Run:   balancesCmdHandler,
 }
 
 func init() {

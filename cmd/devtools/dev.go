@@ -8,9 +8,8 @@ import (
 
 // devCmd represents the dev command
 var devCmd = &cobra.Command{
-	Use:    "dev",
-	Short:  "Commands for running the Astria Shared Sequencer.",
-	PreRun: cmd.SetLogLevel,
+	Use:   "dev",
+	Short: "Commands for running the Astria Shared Sequencer.",
 }
 
 func init() {

@@ -10,10 +10,9 @@ import (
 
 // blockheightCmd represents the blockheight command
 var blockheightCmd = &cobra.Command{
-	Use:    "blockheight",
-	Short:  "Retrieves the latest blockheight from the sequencer.",
-	PreRun: cmd.SetLogLevel,
-	Run:    blockheightCmdHandler,
+	Use:   "blockheight",
+	Short: "Retrieves the latest blockheight from the sequencer.",
+	Run:   blockheightCmdHandler,
 }
 
 func init() {

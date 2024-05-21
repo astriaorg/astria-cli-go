@@ -1,7 +1,6 @@
 package sequencer
 
 import (
-	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/keys"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -13,11 +12,10 @@ func init() {
 }
 
 var setKeyCmd = &cobra.Command{
-	Use:    "setkey [address] [private key]",
-	Short:  "Set private key for an address in system keyring.",
-	Args:   cobra.ExactArgs(2),
-	PreRun: cmd.SetLogLevel,
-	Run:    setKeyCmdHandler,
+	Use:   "setkey [address] [private key]",
+	Short: "Set private key for an address in system keyring.",
+	Args:  cobra.ExactArgs(2),
+	Run:   setKeyCmdHandler,
 }
 
 func setKeyCmdHandler(cmd *cobra.Command, args []string) {
@@ -31,11 +29,10 @@ func setKeyCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 var getKeyCmd = &cobra.Command{
-	Use:    "getkey [address]",
-	Short:  "Get private key for an address in system keyring.",
-	Args:   cobra.ExactArgs(1),
-	PreRun: cmd.SetLogLevel,
-	Run:    getKeyCmdHandler,
+	Use:   "getkey [address]",
+	Short: "Get private key for an address in system keyring.",
+	Args:  cobra.ExactArgs(1),
+	Run:   getKeyCmdHandler,
 }
 
 func getKeyCmdHandler(cmd *cobra.Command, args []string) {

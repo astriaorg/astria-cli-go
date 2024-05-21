@@ -14,10 +14,9 @@ import (
 
 // purgeCmd represents the root purge command
 var purgeCmd = &cobra.Command{
-	Use:    "purge",
-	Short:  "The root command for purging the local development instance data.",
-	Long:   `The root command for purging the local development instance data. Whenever a purge command is run, it will delete the specified data. You will need to re-initialize the instance to replace the data.`,
-	PreRun: cmd.SetLogLevel,
+	Use:   "purge",
+	Short: "The root command for purging the local development instance data.",
+	Long:  `The root command for purging the local development instance data. Whenever a purge command is run, it will delete the specified data. You will need to re-initialize the instance to replace the data.`,
 }
 
 func init() {
@@ -31,10 +30,9 @@ func init() {
 
 // purgeBinariesCmd represents the 'purge binaries' command
 var purgeBinariesCmd = &cobra.Command{
-	Use:    "binaries",
-	Short:  "Delete all binaries for a given instance.",
-	PreRun: cmd.SetLogLevel,
-	Run:    purgeBinariesCmdHandler,
+	Use:   "binaries",
+	Short: "Delete all binaries for a given instance.",
+	Run:   purgeBinariesCmdHandler,
 }
 
 func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
@@ -66,11 +64,10 @@ func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 
 // purgeAllCmd represents the 'purge all' command
 var purgeAllCmd = &cobra.Command{
-	Use:    "all",
-	Short:  "Delete all data for a given instance.",
-	Long:   "Delete all data for a given instance. This will remove all data, binaries, and configuration files for the specified instance.",
-	PreRun: cmd.SetLogLevel,
-	Run:    purgeAllCmdHandler,
+	Use:   "all",
+	Short: "Delete all data for a given instance.",
+	Long:  "Delete all data for a given instance. This will remove all data, binaries, and configuration files for the specified instance.",
+	Run:   purgeAllCmdHandler,
 }
 
 func purgeAllCmdHandler(c *cobra.Command, _ []string) {

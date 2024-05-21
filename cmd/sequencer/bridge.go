@@ -15,11 +15,10 @@ var bridgeCmd = &cobra.Command{
 
 // bridgeInitCmd represents the `bridge init` command
 var bridgeInitCmd = &cobra.Command{
-	Use:    "init [rollup-id]",
-	Short:  "Initialize a bridge account",
-	Args:   cobra.ExactArgs(1),
-	PreRun: cmd.SetLogLevel,
-	Run:    bridgeInitCmdHandler,
+	Use:   "init [rollup-id]",
+	Short: "Initialize a bridge account",
+	Args:  cobra.ExactArgs(1),
+	Run:   bridgeInitCmdHandler,
 }
 
 func init() {
@@ -91,11 +90,10 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 
 // bridgeLockCmd represents the `bridge lock` command
 var bridgeLockCmd = &cobra.Command{
-	Use:    "lock [address] [amount] [destination-chain-address]",
-	Short:  "Locks tokens on the bridge account",
-	Args:   cobra.ExactArgs(3),
-	PreRun: cmd.SetLogLevel,
-	Run:    bridgeLockCmdHandler,
+	Use:   "lock [address] [amount] [destination-chain-address]",
+	Short: "Locks tokens on the bridge account",
+	Args:  cobra.ExactArgs(3),
+	Run:   bridgeLockCmdHandler,
 }
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {

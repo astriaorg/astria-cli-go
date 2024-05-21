@@ -18,11 +18,10 @@ import (
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
-	Use:    "init",
-	Short:  "Initializes the local development environment.",
-	Long:   `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
-	PreRun: cmd.SetLogLevel,
-	Run:    runInitialization,
+	Use:   "init",
+	Short: "Initializes the local development environment.",
+	Long:  `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
+	Run:   runInitialization,
 }
 
 func init() {

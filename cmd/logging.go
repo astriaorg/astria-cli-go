@@ -6,12 +6,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 )
 
-// var logLevel string
 var cliLogLevel string
-var serviceLogLevel string
 
 const DefaultCliLogLevel = log.InfoLevel
 
@@ -22,7 +19,7 @@ func init() {
 }
 
 // SetLogLevel sets the log level based on the flag passed in
-func SetLogLevel(cmd *cobra.Command, args []string) {
+func SetLogLevel(cliLogLevel string) {
 	lowercased := strings.ToLower(cliLogLevel)
 	switch lowercased {
 	case "debug":
@@ -40,11 +37,6 @@ func SetLogLevel(cmd *cobra.Command, args []string) {
 	default:
 		log.SetLevel(DefaultCliLogLevel)
 	}
-}
-
-// GetCliLogLevel returns the specified log level for the services.
-func GetServicesLogLevel() string {
-	return serviceLogLevel
 }
 
 // CreateUILog creates a log file in the provided `destDir` for the UI app. It will panic if the log file cannot be created.
