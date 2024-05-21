@@ -50,7 +50,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		FromKey:          priv,
 		ToAddress:        to,
 		Amount:           amount,
-		SequencerChainId: chainId,
+		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.Transfer(opts)
 	if err != nil {

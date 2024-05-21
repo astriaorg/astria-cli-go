@@ -7,6 +7,10 @@ const (
 	DefaultCometbftGenesisFilename   = "genesis.json"
 	DefaultCometbftValidatorFilename = "priv_validator_key.json"
 	DefaultConfigDirName             = "config"
-	DefualtNetworksConfigName        = "networks-config.toml"
 	DefaultInstanceName              = "default"
+	DefaultLocalDefaultDenom         = "nria"
+	DefaultLocalNetworkName          = "sequencer-test-chain-0"
+	DefualtNetworksConfigName        = "networks-config.toml"
+	DefaultServiceLogLevel           = "info"
+	DefaultTargetNetwork             = "local"
 )

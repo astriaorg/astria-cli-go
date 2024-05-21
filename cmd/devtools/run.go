@@ -30,8 +30,8 @@ func init() {
 	devCmd.AddCommand(runCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(runCmd, cmd.EnvPrefix)
-	flagHandler.BindStringFlag("service-log-level", "info", "Set the log level for services (debug, info, error)")
-	flagHandler.BindStringFlag("network", "local", "Provide an override path to a specific environment file.")
+	flagHandler.BindStringFlag("service-log-level", config.DefaultServiceLogLevel, "Set the log level for services (debug, info, error)")
+	flagHandler.BindStringFlag("network", config.DefaultTargetNetwork, "Select the network to run the services against. Valid networks are: local, dusk, dawn, mainnet")
 	flagHandler.BindStringFlag("conductor-path", "", "Provide an override path to a specific conductor binary.")
 	flagHandler.BindStringFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
 	flagHandler.BindStringFlag("composer-path", "", "Provide an override path to a specific composer binary.")
