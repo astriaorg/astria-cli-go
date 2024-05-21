@@ -118,7 +118,7 @@ func init() {
 	bridgeCmd.AddCommand(bridgeLockCmd)
 	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
 	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
-	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer where the bridge account resides")
 
 	blfh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
 	blfh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
