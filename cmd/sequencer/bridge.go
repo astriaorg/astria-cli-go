@@ -43,7 +43,7 @@ func bridgeInitCmdHandler(cmd *cobra.Command, args []string) {
 		FromKey:          priv,
 		RollupID:         rollupID,
 		SequencerChainID: sequencerChainID,
-		AssetId:          assetID,
+		AssetID:          assetID,
 		FeeAssetID:       feeAssetID,
 	}
 	bridgeAccount, err := sequencer.InitBridgeAccount(opts)
@@ -91,8 +91,8 @@ func bridgeLockCmdHandler(cmd *cobra.Command, args []string) {
 		ToAddress:               toAddress,
 		Amount:                  amount,
 		DestinationChainAddress: destinationChainAddress,
-		SequencerChainId:        sequencerChainID,
-		AssetId:                 assetID,
+		SequencerChainID:        sequencerChainID,
+		AssetID:                 assetID,
 		FeeAssetID:              feeAssetID,
 	}
 	tx, err := sequencer.BridgeLock(opts)

@@ -149,7 +149,7 @@ type InitBridgeOpts struct {
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
-	AssetId string
+	AssetID string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
 	FeeAssetID string
 }
@@ -181,10 +181,10 @@ type BridgeLockOpts struct {
 	FromKey string
 	// ToAddress is the address of the receiver
 	ToAddress string
-	// SequencerChainId is the ID of the sequencer chain to lock asset on
-	SequencerChainId string
+	// SequencerChainID is the ID of the sequencer chain to lock asset on
+	SequencerChainID string
 	// AssetID is the name of the asset to lock
-	AssetId string
+	AssetID string
 	// FeeAssetID is the name of the asset to use for the transaction fee
 	FeeAssetID string
 	// Amount is the amount to be locked

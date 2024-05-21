@@ -285,7 +285,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
 						RollupId:   rollupID,
-						AssetId:    assetIdFromDenom(opts.AssetId),
+						AssetId:    assetIdFromDenom(opts.AssetID),
 						FeeAssetId: assetIdFromDenom(opts.FeeAssetID),
 					},
 				},
@@ -366,7 +366,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: opts.SequencerChainId,
+			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
@@ -375,7 +375,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      to,
 						Amount:                  amount,
-						AssetId:                 assetIdFromDenom(opts.AssetId),
+						AssetId:                 assetIdFromDenom(opts.AssetID),
 						FeeAssetId:              assetIdFromDenom(opts.FeeAssetID),
 						DestinationChainAddress: opts.DestinationChainAddress,
 					},
