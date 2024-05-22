@@ -194,8 +194,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 
 		// get the binary paths
-		conductorPath := getFlagPath(c, "conductor_bin_path", "conductor", filepath.Join(binDir, "astria-conductor"))
-		composerPath := getFlagPath(c, "composer_bin_path", "composer", filepath.Join(binDir, "astria-composer"))
+		conductorPath := getFlagPath(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
+		composerPath := getFlagPath(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
 
 		// composer
 		composerOpts := processrunner.NewProcessRunnerOpts{

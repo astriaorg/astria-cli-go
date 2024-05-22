@@ -97,10 +97,10 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	valueKind := reflect.TypeOf(flag.Value).Elem().Kind()
 	switch valueKind {
 	case reflect.Bool:
-		// we need to rebind the bool flag to viper when reading the value to
+		// we need to rebind the flag to viper when reading the value to
 		// ensure that it is read correctly. Otherwise, viper will always
 		// return the default value.
-		err := viper.BindPFlag(flagName, flag)
+		err := viper.BindPFlag(envSuffix, flag)
 		if err != nil {
 			log.Fatalf("getValu: Error rebinding bool flag for reading: %s", flagName)
 			panic(err)
@@ -108,6 +108,11 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 		value = fmt.Sprintf("%t", viper.GetBool(envSuffix))
 
 	case reflect.String:
+		err := viper.BindPFlag(envSuffix, flag)
+		if err != nil {
+			log.Fatalf("getValu: Error rebinding string flag for reading: %s", flagName)
+			panic(err)
+		}
 		value = viper.GetString(envSuffix)
 
 	default:
