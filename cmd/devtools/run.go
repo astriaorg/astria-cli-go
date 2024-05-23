@@ -63,7 +63,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	baseConfigEnvVars := baseConfig.ToSlice()
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
-	networkConfigs := config.LoadNetworksConfigsOrPanic(networksConfigPath)
+	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	// update the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set

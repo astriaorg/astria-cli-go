@@ -185,9 +185,9 @@ func DefaultNetworksConfigs() NetworkConfigs {
 	return config
 }
 
-// LoadNetworksConfigsOrPanic loads the NetworksConfig from the given path. If the file
+// LoadNetworkConfigsOrPanic loads the NetworksConfig from the given path. If the file
 // cannot be loaded or parsed, the function will panic.
-func LoadNetworksConfigsOrPanic(path string) NetworkConfigs {
+func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -235,9 +235,8 @@ func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) 
 	log.Infof("New network config file created successfully: %s\n", path)
 }
 
-// CreateBaseConfig creates a networks configuration file at
-// the given path, populating the file with the network defaults, and overriding
-// the default local denom and local sequencer network chain id .
+// CreateBaseConfig creates a base configuration file at
+// the given path, populating the file with the service defaults.
 // It will skip initialization if the file already exists. It will panic if the
 // file cannot be created or written to.
 func CreateBaseConfig(path, instance string) {
