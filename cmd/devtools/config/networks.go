@@ -304,10 +304,10 @@ func (b BaseConfig) ToSlice() []string {
 	return output
 }
 
-// GetEnvOverrides returns a slice of environment variables that can be used to
+// GetEndpointOverrides returns a slice of environment variables that can be used to
 // override the default environment variables for the network configuration. It
 // uses the BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
-func (n NetworkConfig) GetEnvOverrides(bc BaseConfig) []string {
+func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
 	rollupEndpoint := bc.Astria_composer_rollups
 	// find the ip:port from the rollup endpoint
 	pattern := `(\d+\.\d+\.\d+\.\d+:\d+)`
