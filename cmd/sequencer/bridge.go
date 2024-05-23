@@ -20,8 +20,8 @@ var bridgeInitCmd = &cobra.Command{
 	Long: `Initialize a bridge account for the given rollup on the chain.
 The sender of the transaction is used as the owner of the bridge account
 and is the only actor authorized to transfer out of this account.`,
-	Args:   cobra.ExactArgs(1),
-	Run:    bridgeInitCmdHandler,
+	Args: cobra.ExactArgs(1),
+	Run:  bridgeInitCmdHandler,
 }
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
@@ -66,8 +66,8 @@ var bridgeLockCmd = &cobra.Command{
 	Long: `A bridge lock is a transfer of tokens from the signing Sequencer
 account to a Sequencer bridge account. These tokens will then be
 bridged to a destination chain address if an IBC relayer is running.`,
-	Args:   cobra.ExactArgs(3),
-	Run:    bridgeLockCmdHandler,
+	Args: cobra.ExactArgs(3),
+	Run:  bridgeLockCmdHandler,
 }
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
@@ -84,9 +84,9 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	amount := args[0]
 	toAddress := args[1]
 	destinationChainAddress := args[2]
-	sequencerChainID := cmd.Flag("sequencer-chain-id").Value.String()
-	assetID := cmd.Flag("asset-id").Value.String()
-	feeAssetID := cmd.Flag("fee-asset-id").Value.String()
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	assetID := flagHandler.GetValue("asset-id")
+	feeAssetID := flagHandler.GetValue("fee-asset-id")
 	opts := sequencer.BridgeLockOpts{
 		SequencerURL:            url,
 		FromKey:                 priv,
