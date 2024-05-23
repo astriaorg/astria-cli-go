@@ -1,8 +1,11 @@
 package sequencer
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"testing"
 
+	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -90,4 +93,83 @@ func TestConvertToUint128(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAddressFromText(t *testing.T) {
+	expectedOutput := &primproto.Address{
+		Inner: []byte{0x1c, 0xc, 0x49, 0xf, 0x1b, 0x55, 0x28, 0xd8, 0x17, 0x3c, 0x5d, 0xe4, 0x6d, 0x13, 0x11, 0x60, 0xe4, 0xb2, 0xc0, 0xc3},
+	}
+
+	// Test table
+	tests := []struct {
+		name           string
+		input          string
+		expectedOutput *primproto.Address
+		expectError    bool
+	}{
+		{
+			name:           "Valid hex address",
+			input:          "0x1c0c490f1b5528d8173c5de46d131160e4b2c0c3",
+			expectedOutput: expectedOutput,
+			expectError:    false,
+		},
+		{
+			name:           "Valid hex address without '0x'",
+			input:          "1c0c490f1b5528d8173c5de46d131160e4b2c0c3",
+			expectedOutput: expectedOutput,
+			expectError:    false,
+		},
+		{
+			name:           "Invalid hex address",
+			input:          "0xXYZ",
+			expectedOutput: nil,
+			expectError:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := addressFromText(tt.input)
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("Expected an error but did not get one")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Did not expect an error but got one: %v", err)
+				}
+				assert.Equal(t, tt.expectedOutput, actual)
+			}
+		})
+	}
+}
+
+func TestRollupIdFromText(t *testing.T) {
+	rollupID := "steezeburger"
+	actual := rollupIdFromText(rollupID)
+	expected := &primproto.RollupId{
+		Inner: []uint8{0x18, 0x88, 0x7, 0x48, 0xea, 0xe, 0x3c, 0xff, 0xd1, 0xcd, 0x64, 0xc1, 0xc, 0x23, 0x59, 0x31, 0xf4, 0xce, 0x4, 0x0, 0xa5, 0xae, 0xd6, 0x9c, 0x5f, 0x15, 0x57, 0x58, 0x82, 0x29, 0x9a, 0x3d},
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestAddressFromPublicKey(t *testing.T) {
+	expected := "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
+
+	testFromPrivKey := "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
+
+	from, _ := privateKeyFromText(testFromPrivKey)
+	pub := from.Public().(ed25519.PublicKey)
+	actual := addressFromPublicKey(pub)
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestPrivateKeyFromText(t *testing.T) {
+	privkey := "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
+	bytes, _ := hex.DecodeString(privkey)
+	expected := ed25519.NewKeyFromSeed(bytes)
+	actual, err := privateKeyFromText(privkey)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }

@@ -6,21 +6,21 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 )
 
-var logLevel string
+var cliLogLevel string
 
-const DefaultLogLevel = log.InfoLevel
+const DefaultCliLogLevel = log.InfoLevel
 
 func init() {
 	// default log level
-	log.SetLevel(DefaultLogLevel)
+	log.SetLevel(DefaultCliLogLevel)
+
 }
 
 // SetLogLevel sets the log level based on the flag passed in
-func SetLogLevel(cmd *cobra.Command, args []string) {
-	lowercased := strings.ToLower(logLevel)
+func SetLogLevel(cliLogLevel string) {
+	lowercased := strings.ToLower(cliLogLevel)
 	switch lowercased {
 	case "debug":
 		log.SetLevel(log.DebugLevel)
@@ -35,7 +35,7 @@ func SetLogLevel(cmd *cobra.Command, args []string) {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	default:
-		log.SetLevel(DefaultLogLevel)
+		log.SetLevel(DefaultCliLogLevel)
 	}
 }
 
@@ -53,5 +53,5 @@ func CreateUILog(destDir string) {
 		DisableColors: true, // Disable ANSI color codes
 		FullTimestamp: true,
 	})
-	log.Debug("New log file created successfully:", logPath)
+	log.Debug("New log file created successfully: ", logPath)
 }

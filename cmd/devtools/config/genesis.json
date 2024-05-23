@@ -1,6 +1,6 @@
 {
   "genesis_time": "2024-02-21T22:23:22.87689Z",
-  "chain_id": "test-chain-Lc3lcg",
+  "chain_id": "sequencer-test-chain-0",
   "initial_height": "0",
   "consensus_params": {
     "block": {

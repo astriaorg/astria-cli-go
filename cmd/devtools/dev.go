@@ -2,6 +2,7 @@ package devtools
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/cmd/devtools/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,4 +14,7 @@ var devCmd = &cobra.Command{
 
 func init() {
 	cmd.RootCmd.AddCommand(devCmd)
+
+	flagHandler := cmd.CreateCliFlagHandler(devCmd, cmd.EnvPrefix)
+	flagHandler.BindPersistentFlag("instance", config.DefaultInstanceName, "Choose the target instance.")
 }

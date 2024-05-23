@@ -8,23 +8,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// blockheightCmd represents the get-blockheight command
+// blockheightCmd represents the blockheight command
 var blockheightCmd = &cobra.Command{
-	Use:    "blockheight",
-	Short:  "Retrieves the latest blockheight from the sequencer.",
-	PreRun: cmd.SetLogLevel,
-	Run:    blockheightCmdHandler,
+	Use:   "blockheight",
+	Short: "Retrieves the latest blockheight from the sequencer.",
+	Run:   blockheightCmdHandler,
 }
 
 func init() {
 	sequencerCmd.AddCommand(blockheightCmd)
-	blockheightCmd.Flags().String("url", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
-	blockheightCmd.Flags().Bool("json", false, "Output the sequencer blockheight in JSON format.")
+
+	flagHandler := cmd.CreateCliFlagHandler(blockheightCmd, cmd.EnvPrefix)
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 }
 
-func blockheightCmdHandler(cmd *cobra.Command, args []string) {
-	url := cmd.Flag("url").Value.String()
-	printJSON := cmd.Flag("json").Value.String() == "true"
+func blockheightCmdHandler(c *cobra.Command, args []string) {
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	url := flagHandler.GetValue("sequencer-url")
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	blockheight, err := sequencer.GetBlockheight(url)
 	if err != nil {

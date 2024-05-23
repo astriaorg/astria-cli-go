@@ -27,13 +27,20 @@ the Astria stack and interact with the Sequencer.
 | `dev`                     | Root command for cli development functionality.                                     |
 | `dev init`                | Downloads binaries and initializes the local environment.                           |
 | `dev run`                 | Runs a minimal, local Astria stack.                                                 |
-| `dev clean`               | Deletes the local data for the Astria stack.                                        |
-| `dev clean all`           | Deletes the local data, downloaded binaries, and config files for the Astria stack. |
+| `dev reset`               | The root command for resetting the local development instance data.                 |
+| `dev reset config`        | Reset config files.                                                                 |
+| `dev reset env`           | Reset environment variable files.                                                   |
+| `dev reset state`         | Reset Sequencer state.                                                              |
+| `dev purge binaries`      | Delete all binaries for a given instance.                                           |
+| `dev purge all`           | Delete all data for a given instance.                                               |
 | `sequencer balances`      | Get the balances of an account on the Sequencer.                                    |
 | `sequencer blockheight`   | Get the current block height of the Sequencer.                                      |
 | `sequencer createaccount` | Generate an account for the Sequencer.                                              |
 | `sequencer nonce`         | Get the current nonce for an account.                                               |
-| `sequencer transfer`      | Get the current block height of the Sequencer.                                      |
+| `sequencer transfer`      | Make a transfer on the Sequencer.                                      |
+
+> NOTE: Running a `dev purge` command requires you to run `dev init` afterwards to
+> reinitialize the deleted data.
 
 ## Installation
 
@@ -90,6 +97,8 @@ configuration files, and initializes CometBFT.
 
 The following files are generated:
 
+* In `~/.astria/<instance>`
+  * A `networks-config.toml` easily configuring different target networks
 * In `~/.astria/<instance>/config-local`:
   * A `.env` file for local configuration
   * `genesis.json` for the sequencer genesis
@@ -101,10 +110,10 @@ The following binaries are downloaded:
 
 | App              | Version |
 |------------------|---------|
-| Cometbft         | v0.37.4 |
-| Astria-Sequencer | v0.10.1 |
-| Astria-Conductor | v0.13.1 |
-| Astria-Composer  | v0.5.0  |
+| Cometbft         | v0.38.6 |
+| Astria-Sequencer | v0.11.0 |
+| Astria-Conductor | v0.14.0 |
+| Astria-Composer  | v0.6.0  |
 
 The `init` command will also run the initialization steps required by CometBFT,
 using the `genesis.json` and `priv_validator_key.json` files in the
@@ -135,7 +144,7 @@ dependencies.
 
 > NOTE: Running a local Sequencer is the default behavior of `dev run` command.
 > Thus, `astria-go dev run` is effectively an alias of
-> `astria-go dev run --local`.
+> `astria-go dev run --network local`.
 
 #### Run Against a Remote Sequencer
 
@@ -143,12 +152,13 @@ If you want to run Composer and Conductor locally against a remote Astria
 Sequencer:
 
 ```bash
-astria-go dev run --remote
+# Run against the Astria Dusk dev net 
+astria-go dev run --network dusk
 ```
 
-Using the `--remote` flag, the cli will handle configuration of the components
-running on your local machine, but you will need to create an account on the
-remote sequencer. More details can be
+When using the `--network` flag to target a remote sequencer, the cli will
+handle configuration of the components running on your local machine, but you
+will need to create an account on the remote sequencer. More details can be
 [found here](https://docs.astria.org/developer/tutorials/1-using-astria-go-cli#setup-and-run-the-local-astria-components-to-communicate-with-the-remote-sequencer).
 
 ### Run Custom Binaries
@@ -161,7 +171,7 @@ cli to run your locally compiled Conductor with the other components using the
 `--conductor-path` flag:
 
 ```bash
-astria-go dev run --local \
+astria-go dev run --network local \
   --conductor-path <absolute path to the Astria mono repo>/target/debug/astria-conductor
 ```
 
@@ -170,7 +180,7 @@ binaries, while using a locally built version of the Conductor binary. You can
 swap out some or all binaries for the Astria stack with their appropriate flags:
 
 ```bash
-astria-go dev run --local \
+astria-go dev run --network local \
   --sequencer-path <sequencer bin path> \
   --cometbft-path <cometbft bin path> \
   --composer-path <composer bin path> \
@@ -183,11 +193,10 @@ If additional configuration is required, you can update the `.env` files in
 
 ## Instances
 
-The `dev init`, `dev run`, and `dev clean` commands all have an optional
-`--instance` flag. The value of this flag will be used as the directory name
-where the rollup data will be stored. Now you can run many rollups while keeping
-their configs and state data separate. If no value is provided, `default` is
-used, i.e. `~/.astria/default`.
+The `dev` commands all have an optional `--instance` flag. The value of this
+flag will be used as the directory name where the rollup data will be stored.
+Now you can run many rollups while keeping their configs and state data
+separate. If no value is provided, `default` is used, i.e. `~/.astria/default`.
 
 For example, if you run:
 

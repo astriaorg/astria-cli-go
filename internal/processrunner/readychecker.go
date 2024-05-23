@@ -64,7 +64,7 @@ func (r *ReadyChecker) waitUntilReady() error {
 	}
 	complete := r.callback()
 	if !complete && r.haltIfFailed {
-		err := fmt.Errorf("ReadyChecker callback to '%s' failed to complete after %d retries. Halting.", r.callBackName, r.retryCount)
+		err := fmt.Errorf("ReadyChecker callback to '%s' failed to complete after %d retries. Halting", r.callBackName, r.retryCount)
 		panic(err)
 	}
 	return nil
