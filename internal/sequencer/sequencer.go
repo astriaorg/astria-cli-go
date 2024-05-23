@@ -11,12 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	// DefaultSequencerNetworkId is the default network id for the sequencer.
-	//DefaultSequencerNetworkId = "astria-dusk-5"
-	DefaultSequencerNetworkId = "astria"
-)
-
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
 	signer, err := client.GenerateSigner()
@@ -196,7 +190,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	log.Debugf("Nonce: %v", nonce)
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: DefaultSequencerNetworkId,
+			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{

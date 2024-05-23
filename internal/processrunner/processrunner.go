@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"syscall"
 
@@ -47,25 +46,18 @@ type processRunner struct {
 type NewProcessRunnerOpts struct {
 	Title      string
 	BinPath    string
-	EnvPath    string
+	Env        []string
 	Args       []string
 	ReadyCheck *ReadyChecker
 }
 
 // NewProcessRunner creates a new ProcessRunner.
 // It creates a new exec.Cmd with the given binPath and args, and sets the
-// environment. If no envPath is provided, it uses the current environment using
-// os.Environ().
+// environment in which the process will run.
 func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRunner {
-	var env []string
-	if opts.EnvPath != "" {
-		env = GetEnvironment(opts.EnvPath)
-	} else {
-		env = os.Environ()
-	}
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
-	cmd.Env = env
+	cmd.Env = opts.Env
 	return &processRunner{
 		ctx:          ctx,
 		cmd:          cmd,
@@ -73,7 +65,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		didStart:     make(chan bool),
 		outputBuf:    &safebuffer.SafeBuffer{},
 		opts:         opts,
-		env:          env,
+		env:          opts.Env,
 		readyChecker: opts.ReadyCheck,
 	}
 }
@@ -223,17 +215,8 @@ func (pr *processRunner) GetOutputAndClearBuf() string {
 
 // GetInfo returns the formatted binary path and environment path of the process.
 func (pr *processRunner) GetInfo() string {
-	binaryPathTitle := " " + pr.GetTitle() + " binary path:"
-	environmentPathTitle := " Environment path:"
-	var maxLen int
-	if len(binaryPathTitle) > len(environmentPathTitle) {
-		maxLen = len(binaryPathTitle)
-	} else {
-		maxLen = len(environmentPathTitle)
-	}
 	output := ""
-	output += fmt.Sprintf("%-*s", maxLen+1, binaryPathTitle) + pr.opts.BinPath + "\n"
-	output += fmt.Sprintf("%-*s", maxLen+1, environmentPathTitle) + pr.opts.EnvPath + "\n"
+	output += " " + pr.GetTitle() + " binary path: " + pr.opts.BinPath + "\n"
 	return output
 }
 
