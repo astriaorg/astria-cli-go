@@ -237,9 +237,9 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	return nil
 }
 
-// MergeConfig merges two slices of "key=value" strings into a single slice,
-// with the overrideConfig slice overriding any duplicates from the initialConfig.
-func MergeConfig(initialConfig, overrideConfig []string) []string {
+// MergeConfigs merges two or more slices of "key=value" strings into a single slice.
+// The slices are merged in order, with later slices overwriting earlier ones.
+func MergeConfigs(configs ...[]string) []string {
 	mergedMap := make(map[string]string)
 
 	// Helper function to add slices to the map
@@ -254,10 +254,9 @@ func MergeConfig(initialConfig, overrideConfig []string) []string {
 		}
 	}
 
-	// Add first slice to map
-	addSliceToMap(initialConfig)
-	// Add second slice to map, overriding any duplicates from the first
-	addSliceToMap(overrideConfig)
+	for _, config := range configs {
+		addSliceToMap(config)
+	}
 
 	// Convert the map back to a slice
 	var result []string
@@ -269,10 +268,35 @@ func MergeConfig(initialConfig, overrideConfig []string) []string {
 	return result
 }
 
-// LogConfig logs the configuration to the cli log file.
-func LogConfig(config []string) {
-	log.Debug("Configuration:")
-	for _, item := range config {
+// LogEnv logs the configuration to the cli log file.
+func LogEnv(env []string) {
+	log.Debug("Environment:")
+	for _, item := range env {
 		log.Debug(item)
 	}
+}
+
+// validateServiceLogLevelOrPanic validates the service log level and panics if
+// it is invalid. The valid log levels are: debug, info, error.
+func validateServiceLogLevelOrPanic(logLevel string) {
+	switch logLevel {
+	case "debug", "info", "error":
+		return
+	default:
+		log.WithField("service-log-level", logLevel).Fatal("Invalid service log level. Must be one of: 'debug', 'info', 'error'")
+		panic("Invalid service log level")
+	}
+
+}
+
+// GetServiceLogLevelOverrides returns a slice of strings that can be used to
+// update the log level for the Astria services.
+func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
+	validateServiceLogLevelOrPanic(serviceLogLevel)
+	serviceLogLevelOverrides := []string{
+		"ASTRIA_SEQUENCER_LOG=\"astria_sequencer=" + serviceLogLevel + "\"",
+		"ASTRIA_COMPOSER_LOG=\"astria_composer=" + serviceLogLevel + "\"",
+		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
+	}
+	return serviceLogLevelOverrides
 }

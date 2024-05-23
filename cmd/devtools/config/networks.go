@@ -304,13 +304,13 @@ func (b BaseConfig) ToSlice() []string {
 	return output
 }
 
-// GetEnvOverrides returns a slice of environment variables that can be used to
+// GetEndpointOverrides returns a slice of environment variables that can be used to
 // override the default environment variables for the network configuration. It
 // uses the BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
-func (n NetworkConfig) GetEnvOverrides(bc BaseConfig) []string {
+func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
 	rollupEndpoint := bc.Astria_composer_rollups
-	// find the ip:port from the rollup endpoint
-	pattern := `(\d+\.\d+\.\d+\.\d+:\d+)`
+	// get the rollup ws endpoint
+	pattern := `ws://(.*)`
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		log.Error("Error compiling regex")
@@ -323,6 +323,6 @@ func (n NetworkConfig) GetEnvOverrides(bc BaseConfig) []string {
 		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
 		"ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL=" + n.SequencerRPC,
 		"ASTRIA_COMPOSER_SEQUENCER_URL=" + n.SequencerRPC,
-		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::ws://" + match,
+		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::" + match,
 	}
 }

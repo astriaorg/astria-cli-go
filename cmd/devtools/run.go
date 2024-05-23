@@ -65,16 +65,10 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
-	// update the log level for the Astria Services using override env vars.
+	// get the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set
 	// in the ProcessRunnerOpts for the Cometbft ProcessRunner
 	serviceLogLevel := flagHandler.GetValue("service-log-level")
-	ValidateServiceLogLevelOrPanic(serviceLogLevel)
-	serviceLogLevelOverrides := []string{
-		"ASTRIA_SEQUENCER_LOG=\"astria_sequencer=" + serviceLogLevel + "\"",
-		"ASTRIA_COMPOSER_LOG=\"astria_composer=" + serviceLogLevel + "\"",
-		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
-	}
 
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
@@ -82,10 +76,10 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// setup services based on network config
 	switch network {
 	case "local":
-		networkOverrides := networkConfigs.Local.GetEnvOverrides(baseConfig)
-		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
-		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
-		config.LogConfig(networkOverrides)
+		networkOverrides := networkConfigs.Local.GetEndpointOverrides(baseConfig)
+		serviceLogLevelOverrides := config.GetServiceLogLevelOverrides(serviceLogLevel)
+		environment := config.MergeConfigs(baseConfigEnvVars, networkOverrides, serviceLogLevelOverrides)
+		config.LogEnv(environment)
 
 		log.Debug("Running local sequencer")
 		dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
@@ -101,7 +95,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		// sequencer
 		seqRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "Sequencer gRPC server is OK",
-			Callback:      getSequencerOKCallback(networkOverrides),
+			Callback:      getSequencerOKCallback(environment),
 			RetryCount:    10,
 			RetryInterval: 100 * time.Millisecond,
 			HaltIfFailed:  false,
@@ -110,7 +104,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		seqOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Sequencer",
 			BinPath:    sequencerPath,
-			Env:        networkOverrides,
+			Env:        environment,
 			Args:       nil,
 			ReadyCheck: &seqReadinessCheck,
 		}
@@ -119,7 +113,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		// cometbft
 		cometRCOpts := processrunner.ReadyCheckerOpts{
 			CallBackName:  "CometBFT rpc server is OK",
-			Callback:      getCometbftOKCallback(networkOverrides),
+			Callback:      getCometbftOKCallback(environment),
 			RetryCount:    10,
 			RetryInterval: 100 * time.Millisecond,
 			HaltIfFailed:  false,
@@ -129,7 +123,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		cometOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Comet BFT",
 			BinPath:    cometbftPath,
-			Env:        networkOverrides,
+			Env:        environment,
 			Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
 			ReadyCheck: &cometReadinessCheck,
 		}
@@ -139,7 +133,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Composer",
 			BinPath:    composerPath,
-			Env:        networkOverrides,
+			Env:        environment,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -149,7 +143,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Conductor",
 			BinPath:    conductorPath,
-			Env:        networkOverrides,
+			Env:        environment,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -180,15 +174,15 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	case "dusk", "dawn", "mainnet":
 		var networkOverrides []string
 		if network == "dusk" {
-			networkOverrides = networkConfigs.Dusk.GetEnvOverrides(baseConfig)
+			networkOverrides = networkConfigs.Dusk.GetEndpointOverrides(baseConfig)
 		} else if network == "dawn" {
-			networkOverrides = networkConfigs.Dawn.GetEnvOverrides(baseConfig)
+			networkOverrides = networkConfigs.Dawn.GetEndpointOverrides(baseConfig)
 		} else {
-			networkOverrides = networkConfigs.Mainnet.GetEnvOverrides(baseConfig)
+			networkOverrides = networkConfigs.Mainnet.GetEndpointOverrides(baseConfig)
 		}
-		networkOverrides = config.MergeConfig(baseConfigEnvVars, networkOverrides)
-		networkOverrides = config.MergeConfig(networkOverrides, serviceLogLevelOverrides)
-		config.LogConfig(networkOverrides)
+		serviceLogLevelOverrides := config.GetServiceLogLevelOverrides(serviceLogLevel)
+		environment := config.MergeConfigs(baseConfigEnvVars, networkOverrides, serviceLogLevelOverrides)
+		config.LogEnv(environment)
 
 		log.Debug("Running remote sequencer")
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
@@ -201,7 +195,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		composerOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Composer",
 			BinPath:    composerPath,
-			Env:        networkOverrides,
+			Env:        environment,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -211,7 +205,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		conductorOpts := processrunner.NewProcessRunnerOpts{
 			Title:      "Conductor",
 			BinPath:    conductorPath,
-			Env:        networkOverrides,
+			Env:        environment,
 			Args:       nil,
 			ReadyCheck: nil,
 		}
@@ -329,17 +323,4 @@ func getCometbftOKCallback(config []string) func() bool {
 			return false
 		}
 	}
-}
-
-// ValidateServiceLogLevelOrPanic validates the service log level and panics if
-// it is invalid. The valid log levels are: debug, info, error.
-func ValidateServiceLogLevelOrPanic(logLevel string) {
-	switch logLevel {
-	case "debug", "info", "error":
-		return
-	default:
-		log.WithField("service-log-level", logLevel).Fatal("Invalid service log level. Must be one of: 'debug', 'info', 'error'")
-		panic("Invalid service log level")
-	}
-
 }
