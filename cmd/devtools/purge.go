@@ -14,33 +14,22 @@ import (
 
 // purgeCmd represents the root purge command
 var purgeCmd = &cobra.Command{
-	Use:    "purge",
-	Short:  "The root command for purging the local development instance data.",
-	Long:   `The root command for purging the local development instance data. Whenever a purge command is run, it will delete the specified data. You will need to re-initialize the instance to replace the data.`,
-	PreRun: cmd.SetLogLevel,
-}
-
-func init() {
-	// top level command
-	devCmd.AddCommand(purgeCmd)
-	purgeCmd.PersistentFlags().StringP("instance", "i", config.DefaultInstanceName, "Choose the target instance for resetting.")
-
-	// subcommands
-	purgeCmd.AddCommand(purgeBinariesCmd)
-	purgeCmd.AddCommand(purgeAllCmd)
+	Use:   "purge",
+	Short: "The root command for purging the local development instance data.",
+	Long:  `The root command for purging the local development instance data. Whenever a purge command is run, it will delete the specified data. You will need to re-initialize the instance to replace the data.`,
 }
 
 // purgeBinariesCmd represents the 'purge binaries' command
 var purgeBinariesCmd = &cobra.Command{
-	Use:    "binaries",
-	Short:  "Delete all binaries for a given instance.",
-	PreRun: cmd.SetLogLevel,
-	Run:    purgeBinariesCmdHandler,
+	Use:   "binaries",
+	Short: "Delete all binaries for a given instance.",
+	Run:   purgeBinariesCmdHandler,
 }
 
 func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
@@ -66,16 +55,16 @@ func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 
 // purgeAllCmd represents the 'purge all' command
 var purgeAllCmd = &cobra.Command{
-	Use:    "all",
-	Short:  "Delete all data for a given instance.",
-	Long:   "Delete all data for a given instance. This will remove all data, binaries, and configuration files for the specified instance.",
-	PreRun: cmd.SetLogLevel,
-	Run:    purgeAllCmdHandler,
+	Use:   "all",
+	Short: "Delete all data for a given instance.",
+	Long:  "Delete all data for a given instance. This will remove all data, binaries, and configuration files for the specified instance.",
+	Run:   purgeAllCmdHandler,
 }
 
 func purgeAllCmdHandler(c *cobra.Command, _ []string) {
-	// Get the instance name from the -i flag or use the default
-	instance, _ := c.Parent().PersistentFlags().GetString("instance")
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
 	homePath, err := os.UserHomeDir()
@@ -95,4 +84,13 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	log.Infof("Successfully deleted instance '%s'", instance)
+}
+
+func init() {
+	// top level command
+	devCmd.AddCommand(purgeCmd)
+
+	// subcommands
+	purgeCmd.AddCommand(purgeBinariesCmd)
+	purgeCmd.AddCommand(purgeAllCmd)
 }

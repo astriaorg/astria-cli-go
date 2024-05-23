@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	// DefaultSequencerNetworkId is the default network id for the sequencer.
-	//DefaultSequencerNetworkId = "astria-dusk-5"
-	DefaultSequencerNetworkId = "astria"
+	// DefaultSequencerNetworkID is the default network id for the sequencer.
+	DefaultSequencerNetworkID = "sequencer-test-chain-0"
 )
 
 // CreateAccount creates a new account for the sequencer.
@@ -196,7 +195,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	log.Debugf("Nonce: %v", nonce)
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: DefaultSequencerNetworkId,
+			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
@@ -369,7 +368,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: DefaultSequencerNetworkId,
+			ChainId: DefaultSequencerNetworkID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{

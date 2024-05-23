@@ -18,22 +18,30 @@ import (
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
-	Use:    "init",
-	Short:  "Initializes the local development environment.",
-	Long:   `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
-	PreRun: cmd.SetLogLevel,
-	Run:    runInitialization,
+	Use:   "init",
+	Short: "Initializes the local development environment.",
+	Long:  `The init command will download the necessary binaries, create new directories for file organisation, and create an environment file for running a minimal Astria stack locally.`,
+	Run:   runInitialization,
 }
 
 func init() {
 	devCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("instance", "i", config.DefaultInstanceName, "Used to set the directory name in ~/.astria to enable running separate instances of the sequencer stack.")
+
+	flagHandler := cmd.CreateCliFlagHandler(initCmd, cmd.EnvPrefix)
+	flagHandler.BindStringFlag("local-network-name", config.DefaultLocalNetworkName, "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
+	flagHandler.BindStringFlag("local-native-denom", config.LocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
 }
 
 func runInitialization(c *cobra.Command, args []string) {
-	// Get the instance name from the -i flag or use the default
-	instance := c.Flag("instance").Value.String()
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
+
+	localNetworkName := flagHandler.GetValue("local-network-name")
+	config.IsSequencerChainIdValidOrPanic(localNetworkName)
+
+	localDefaultDenom := flagHandler.GetValue("local-native-denom")
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -45,17 +53,18 @@ func runInitialization(c *cobra.Command, args []string) {
 	instanceDir := filepath.Join(defaultDir, instance)
 
 	log.Info("Creating new instance in:", instanceDir)
+	cmd.CreateDirOrPanic(instanceDir)
 
-	// create the local config and env files
-	localConfigPath := filepath.Join(instanceDir, config.LocalConfigDirName)
-	cmd.CreateDirOrPanic(localConfigPath)
-	config.RecreateLocalEnvFile(instanceDir, localConfigPath)
-	config.RecreateCometbftAndSequencerGenesisData(localConfigPath)
+	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
+	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
 
-	// create the remote env file
-	remoteConfigPath := filepath.Join(instanceDir, config.RemoteConfigDirName)
-	cmd.CreateDirOrPanic(remoteConfigPath)
-	config.RecreateRemoteEnvFile(instanceDir, remoteConfigPath)
+	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
+	cmd.CreateDirOrPanic(configDirPath)
+
+	baseConfigPath := filepath.Join(configDirPath, config.DefualtBaseConfigName)
+	config.CreateBaseConfig(baseConfigPath, instance)
+
+	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDefaultDenom)
 
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
@@ -68,8 +77,7 @@ func runInitialization(c *cobra.Command, args []string) {
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
-
-	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.LocalConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.DefaultConfigDirName)
 
 	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
 

@@ -218,6 +218,8 @@ type TransferOpts struct {
 	ToAddress string
 	// Amount is the amount to be transferred
 	Amount string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
 }
 
 // TransferResponse is the response of the Transfer function.

@@ -2,12 +2,14 @@ package config
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
@@ -29,85 +31,24 @@ func IsInstanceNameValidOrPanic(instance string) {
 	}
 }
 
-//go:embed local.env.example
-var embeddedLocalEnvironmentFile embed.FS
-
-// RecreateLocalEnvFile creates a new local .env file at the specified path.
-func RecreateLocalEnvFile(instanceDir string, path string) {
-	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedLocalEnvironmentFile, "local.env.example")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
+// IsSequencerChainIdValidOrPanic checks if the instance name is valid and panics if it's not.
+func IsSequencerChainIdValidOrPanic(id string) {
+	if len(id) < 1 || len(id) > 50 {
+		log.Errorf("Invalid sequencer chain id length: %s", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId length must be within the range [1,50]", id)
 		panic(err)
 	}
 
-	// Convert data to a string and replace "~" with the user's home directory
-	content := strings.ReplaceAll(string(data), "~", instanceDir)
-
-	// Specify the path for the new file
-	newPath := filepath.Join(path, ".env")
-
-	// check if the local .env file already exists
-	_, err = os.Stat(newPath)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", newPath)
-		return
-	}
-
-	// Create a new file
-	newFile, err := os.Create(newPath)
+	re, err := regexp.Compile(`^[a-zA-Z0-9\-_\.]+$`)
 	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
+		log.WithError(err).Error("Error compiling regex")
 		panic(err)
 	}
-	defer newFile.Close()
-
-	// Write the data to the new file
-	_, err = newFile.WriteString(content)
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
+	if !re.MatchString(id) {
+		log.Errorf("Invalid sequencer chain id: %s", id)
+		err := fmt.Errorf("invalid sequencer chain id: '%s'. The ChainId can only contain lowercase and uppercase letters, numerical digits, and the characters '-', '_', and '.'", id)
 		panic(err)
 	}
-	log.Infof("Local .env file created successfully: %s\n", newPath)
-}
-
-//go:embed remote.env.example
-var embeddedRemoteEnvironmentFile embed.FS
-
-// RecreateRemoteEnvFile creates a new remote .env file at the specified path.
-func RecreateRemoteEnvFile(instanceDir string, path string) {
-	// Read the content from the embedded file
-	data, err := fs.ReadFile(embeddedRemoteEnvironmentFile, "remote.env.example")
-	if err != nil {
-		log.Fatalf("failed to read embedded file: %v", err)
-		panic(err)
-	}
-
-	// Specify the path for the new file
-	newPath := filepath.Join(path, ".env")
-
-	_, err = os.Stat(newPath)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", newPath)
-		return
-	}
-
-	// Create a new file
-	newFile, err := os.Create(newPath)
-	if err != nil {
-		log.Fatalf("failed to create new file: %v", err)
-		panic(err)
-	}
-	defer newFile.Close()
-
-	// Write the data to the new file
-	_, err = newFile.WriteString(string(data))
-	if err != nil {
-		log.Fatalf("failed to write data to new file: %v", err)
-		panic(err)
-	}
-	log.Infof("Remote .env file created successfully: %s\n", newPath)
-
 }
 
 //go:embed genesis.json
@@ -116,14 +57,36 @@ var embeddedCometbftGenesisFile embed.FS
 //go:embed priv_validator_key.json
 var embeddedCometbftValidatorFile embed.FS
 
-// RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json and priv_validator_key.json file at the specified path.
-func RecreateCometbftAndSequencerGenesisData(path string) {
+// RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json
+// and priv_validator_key.json file at the specified path. It uses the local
+// network name and local default denomination to update the chain id and
+// default denom for the local sequencer network.
+func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNativeDenom string) {
 	// Read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 		panic(err)
 	}
+	// Unmarshal JSON into a map to update sequencer chain id
+	var data map[string]interface{}
+	if err := json.Unmarshal(genesisData, &data); err != nil {
+		log.Fatalf("Error unmarshaling JSON: %s", err)
+	}
+	// update chain id and default denom and convert back to bytes
+	data["chain_id"] = localNetworkName
+	if appState, ok := data["app_state"].(map[string]interface{}); ok {
+		appState["native_asset_base_denomination"] = localNativeDenom
+		appState["allowed_fee_assets"] = []interface{}{localNativeDenom}
+		data["app_state"] = appState
+	} else {
+		log.Println("Error: Expected map[string]interface{} for 'app_state'")
+	}
+	genesisData, err = json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		log.Fatalf("Error marshaling updated data to JSON: %s", err)
+	}
+
 	// Read the content from the embedded file
 	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, "priv_validator_key.json")
 	if err != nil {
@@ -272,4 +235,68 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	}
 
 	return nil
+}
+
+// MergeConfigs merges two or more slices of "key=value" strings into a single slice.
+// The slices are merged in order, with later slices overwriting earlier ones.
+func MergeConfigs(configs ...[]string) []string {
+	mergedMap := make(map[string]string)
+
+	// Helper function to add slices to the map
+	addSliceToMap := func(slice []string) {
+		for _, item := range slice {
+			keyVal := strings.SplitN(item, "=", 2)
+			if len(keyVal) != 2 {
+				continue // skip any items that don't correctly split into two parts
+			}
+			key, value := keyVal[0], keyVal[1]
+			mergedMap[key] = value
+		}
+	}
+
+	for _, config := range configs {
+		addSliceToMap(config)
+	}
+
+	// Convert the map back to a slice
+	var result []string
+	for key, value := range mergedMap {
+		result = append(result, key+"="+value)
+	}
+	sort.Strings(result)
+
+	return result
+}
+
+// LogEnv logs the configuration to the cli log file.
+func LogEnv(env []string) {
+	log.Debug("Environment:")
+	for _, item := range env {
+		log.Debug(item)
+	}
+}
+
+// validateServiceLogLevelOrPanic validates the service log level and panics if
+// it is invalid. The valid log levels are: debug, info, error.
+func validateServiceLogLevelOrPanic(logLevel string) {
+	switch logLevel {
+	case "debug", "info", "error":
+		return
+	default:
+		log.WithField("service-log-level", logLevel).Fatal("Invalid service log level. Must be one of: 'debug', 'info', 'error'")
+		panic("Invalid service log level")
+	}
+
+}
+
+// GetServiceLogLevelOverrides returns a slice of strings that can be used to
+// update the log level for the Astria services.
+func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
+	validateServiceLogLevelOrPanic(serviceLogLevel)
+	serviceLogLevelOverrides := []string{
+		"ASTRIA_SEQUENCER_LOG=\"astria_sequencer=" + serviceLogLevel + "\"",
+		"ASTRIA_COMPOSER_LOG=\"astria_composer=" + serviceLogLevel + "\"",
+		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
+	}
+	return serviceLogLevelOverrides
 }
