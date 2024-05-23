@@ -304,13 +304,15 @@ func (b BaseConfig) ToSlice() []string {
 	return output
 }
 
-// GetEndpointOverrides returns a slice of environment variables that can be used to
-// override the default environment variables for the network configuration. It
-// uses the BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
+// GetEndpointOverrides returns a slice of environment variables for supporting
+// the ability to run against different Sequencer networks. It enables a way to
+// dynamically configure endpoints for Conductor and Composer to override
+// the default environment variables for the network configuration. It uses the
+// BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
 func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
 	rollupEndpoint := bc.Astria_composer_rollups
 	// get the rollup ws endpoint
-	pattern := `ws://(.*)`
+	pattern := `ws{1,2}:\/\/.*:\d+`
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		log.Error("Error compiling regex")
