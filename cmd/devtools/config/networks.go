@@ -143,7 +143,7 @@ type NetworkConfig struct {
 	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
 	SequencerRPC     string `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
 	RollupName       string `mapstructure:"rollup_name" toml:"rollup_name"`
-	DefaultDenom     string `mapstructure:"default_denom" toml:"default_denom"`
+	NativeDenom      string `mapstructure:"default_denom" toml:"default_denom"`
 }
 
 // DefaultNetworksConfig returns a NetworksConfig struct populated with all
@@ -155,31 +155,30 @@ func DefaultNetworksConfigs() NetworkConfigs {
 			SequencerGRPC:    "http://127.0.0.1:8080",
 			SequencerRPC:     "http://127.0.0.1:26657",
 			RollupName:       "astria-test-chain",
-			DefaultDenom:     "nria",
+			NativeDenom:      "nria",
 		},
 		Dusk: NetworkConfig{
 			SequencerChainId: "astria-dusk-5",
 			SequencerGRPC:    "https://grpc.sequencer.dusk-5.devnet.astria.org/",
 			SequencerRPC:     "https://rpc.sequencer.dusk-5.devnet.astria.org/",
 			RollupName:       "",
-			DefaultDenom:     "nria",
+			NativeDenom:      "nria",
 		},
 		Dawn: NetworkConfig{
 			SequencerChainId: "astria-dawn-0",
 			SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
 			SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
 			RollupName:       "",
-			DefaultDenom:     "ibc/channel0/utia",
+			NativeDenom:      "ibc/channel0/utia",
 		},
 		Mainnet: NetworkConfig{
 			SequencerChainId: "astria",
 			SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 			SequencerRPC:     "https://rpc.sequencer.astria.org/",
 			RollupName:       "",
-			DefaultDenom:     "ibc/channel0/utia",
+			NativeDenom:      "ibc/channel0/utia",
 		},
 	}
-	// }
 	return config
 }
 
@@ -207,7 +206,7 @@ func LoadNetworksConfigsOrPanic(path string) NetworkConfigs {
 // the default local denom and local sequencer network chain id .
 // It will skip initialization if the file already exists. It will panic if the
 // file cannot be created or written to.
-func CreateNetworksConfig(path, localSequencerChainId, localDefaultDenom string) {
+func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) {
 
 	_, err := os.Stat(path)
 	if err == nil {
@@ -216,7 +215,7 @@ func CreateNetworksConfig(path, localSequencerChainId, localDefaultDenom string)
 	}
 	// Create an instance of the Config struct with some data
 	config := DefaultNetworksConfigs()
-	config.Local.DefaultDenom = localDefaultDenom
+	config.Local.NativeDenom = localNativeDenom
 	config.Local.SequencerChainId = localSequencerChainId
 
 	// Open a file for writing

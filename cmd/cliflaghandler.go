@@ -74,8 +74,8 @@ func (f *CliFlagHandler) BindPersistentFlag(name string, defaultValue string, us
 	}
 }
 
-// getEnvVar returns the full env var name for a given flag name.
-func (f *CliFlagHandler) getEnvVar(flagName string) string {
+// toEnvVarName returns the full env var name for a given flag name.
+func (f *CliFlagHandler) toEnvVarName(flagName string) string {
 	envSuffix := strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
 	fullEnvVar := strings.ToUpper(f.EnvPrefix) + "_" + strings.ToUpper(envSuffix)
 	return fullEnvVar
@@ -102,7 +102,7 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 		// return the default value.
 		err := viper.BindPFlag(envSuffix, flag)
 		if err != nil {
-			log.Fatalf("getValu: Error rebinding bool flag for reading: %s", flagName)
+			log.Fatalf("getValue: Error rebinding bool flag for reading: %s", flagName)
 			panic(err)
 		}
 		value = fmt.Sprintf("%t", viper.GetBool(envSuffix))
@@ -110,7 +110,7 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	case reflect.String:
 		err := viper.BindPFlag(envSuffix, flag)
 		if err != nil {
-			log.Fatalf("getValu: Error rebinding string flag for reading: %s", flagName)
+			log.Fatalf("getValue: Error rebinding string flag for reading: %s", flagName)
 			panic(err)
 		}
 		value = viper.GetString(envSuffix)
@@ -124,7 +124,7 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 		log.Debugf("%s flag is set with value: %s", flagName, value)
 		return value
 	}
-	_, envExists := os.LookupEnv(f.getEnvVar(flagName))
+	_, envExists := os.LookupEnv(f.toEnvVarName(flagName))
 	if envExists {
 		log.Debugf("%s flag is set via env var to: %s", flagName, value)
 		return value
