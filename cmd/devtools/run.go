@@ -60,7 +60,7 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	baseConfigPath := filepath.Join(astriaDir, instance, config.DefaultConfigDirName, config.DefualtBaseConfigName)
 	baseConfig := config.LoadBaseConfigOrPanic(baseConfigPath)
-	baseConfigEnvVars := config.ConvertStructToEnvArray(baseConfig)
+	baseConfigEnvVars := baseConfig.ToSlice()
 
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
 	networkConfigs := config.LoadNetworksConfigsOrPanic(networksConfigPath)

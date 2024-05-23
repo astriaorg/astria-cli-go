@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -236,38 +235,6 @@ func replaceInFile(filename, oldValue, newValue string) error {
 	}
 
 	return nil
-}
-
-// ConvertStructToEnvArray creates a []string of "key=value" pairs out of a struct.
-// The variable name will become the env var key and that variable's value will
-// be the value. It only works on non-nested structs.
-func ConvertStructToEnvArray(v interface{}) []string {
-	val := reflect.ValueOf(v)
-	typ := reflect.TypeOf(v)
-
-	// If the passed interface is a pointer, dereference it
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-		typ = typ.Elem()
-	}
-
-	var output []string
-	// Ensure the provided variable is a struct
-	if val.Kind() == reflect.Struct {
-		for i := 0; i < val.NumField(); i++ {
-			field := typ.Field(i)
-			value := val.Field(i)
-			if value.Kind() == reflect.String {
-				output = append(output, fmt.Sprintf("%s=%s", strings.ToUpper(field.Name), value.String()))
-			} else {
-				output = append(output, fmt.Sprintf("%s=%v", strings.ToUpper(field.Name), value.Interface()))
-			}
-		}
-	} else {
-		fmt.Println("Provided variable is not a struct or a pointer to a struct")
-	}
-
-	return output
 }
 
 // MergeConfig merges two slices of "key=value" strings into a single slice,

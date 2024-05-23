@@ -1,9 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -278,6 +281,28 @@ func LoadBaseConfigOrPanic(path string) BaseConfig {
 	}
 
 	return config
+}
+
+// ToSlice creates a []string of "key=value" pairs out of a BaseConfig.
+// The variable name will become the env var key and that variable's value will
+// be the value.
+func (b BaseConfig) ToSlice() []string {
+	val := reflect.ValueOf(b)
+	typ := reflect.TypeOf(b)
+
+	var output []string
+	// Ensure the provided variable is a struct
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		value := val.Field(i)
+		if value.Kind() == reflect.String {
+			output = append(output, fmt.Sprintf("%s=%s", strings.ToUpper(field.Name), value.String()))
+		} else {
+			output = append(output, fmt.Sprintf("%s=%v", strings.ToUpper(field.Name), value.Interface()))
+		}
+	}
+
+	return output
 }
 
 // GetEnvOverrides returns a slice of environment variables that can be used to
