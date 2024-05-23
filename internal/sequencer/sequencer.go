@@ -11,11 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	// DefaultSequencerNetworkID is the default network id for the sequencer.
-	DefaultSequencerNetworkID = "sequencer-test-chain-0"
-)
-
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
 	signer, err := client.GenerateSigner()
@@ -276,7 +271,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// build transaction
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: opts.ChainID,
+			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
@@ -284,7 +279,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
 						RollupId:   rollupID,
-						AssetId:    assetIdFromDenom(opts.AssetId),
+						AssetId:    assetIdFromDenom(opts.AssetID),
 						FeeAssetId: assetIdFromDenom(opts.FeeAssetID),
 					},
 				},
@@ -325,6 +320,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	log.Debugf("BridgeLockOpts: %v", opts)
+
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
@@ -358,17 +355,12 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 	to, err := addressFromText(opts.ToAddress)
 	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'to' address %v", opts.ToAddress)
-	}
-
-	if err != nil {
 		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
 		return &BridgeLockResponse{}, err
 	}
-
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
-			ChainId: DefaultSequencerNetworkID,
+			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
@@ -377,14 +369,15 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      to,
 						Amount:                  amount,
-						AssetId:                 assetIdFromDenom("transfer/channel-0/utia"),
-						FeeAssetId:              assetIdFromDenom("nria"),
-						DestinationChainAddress: opts.DestinationChain,
+						AssetId:                 assetIdFromDenom(opts.AssetID),
+						FeeAssetId:              assetIdFromDenom(opts.FeeAssetID),
+						DestinationChainAddress: opts.DestinationChainAddress,
 					},
 				},
 			},
 		},
 	}
+
 	// sign transaction
 	signed, err := signer.SignTransaction(tx)
 	if err != nil {

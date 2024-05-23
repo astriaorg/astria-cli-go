@@ -15,35 +15,36 @@ var bridgeCmd = &cobra.Command{
 
 // bridgeInitCmd represents the `bridge init` command
 var bridgeInitCmd = &cobra.Command{
-	Use:   "init [rollup-id]",
-	Short: "Initialize a bridge account",
-	Args:  cobra.ExactArgs(1),
-	Run:   bridgeInitCmdHandler,
+	Use:   "init [rollup-id] [--keyfile | --keyring-address | --privkey]",
+	Short: "Initialize a bridge account for the given rollup",
+	Long: `Initialize a bridge account for the given rollup on the chain.
+The sender of the transaction is used as the owner of the bridge account
+and is the only actor authorized to transfer out of this account.`,
+	Args: cobra.ExactArgs(1),
+	Run:  bridgeInitCmdHandler,
 }
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	url := flagHandler.GetValue("sequencer-url")
-	chainID := flagHandler.GetValue("chain-id")
+	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 	assetID := flagHandler.GetValue("asset-id")
 	feeAssetID := flagHandler.GetValue("fee-asset-id")
-	printJSON := flagHandler.GetValue("json") == "true"
-
 	rollupID := args[0]
-
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
 	opts := sequencer.InitBridgeOpts{
-		SequencerURL: url,
-		FromKey:      priv,
-		RollupID:     rollupID,
-		ChainID:      chainID,
-		AssetId:      assetID,
-		FeeAssetID:   feeAssetID,
+		SequencerURL:     url,
+		FromKey:          priv,
+		RollupID:         rollupID,
+		SequencerChainID: sequencerChainID,
+		AssetID:          assetID,
+		FeeAssetID:       feeAssetID,
 	}
 	bridgeAccount, err := sequencer.InitBridgeAccount(opts)
 	if err != nil {
@@ -60,10 +61,13 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 
 // bridgeLockCmd represents the `bridge lock` command
 var bridgeLockCmd = &cobra.Command{
-	Use:   "lock [address] [amount] [destination-chain-address]",
-	Short: "Locks tokens on the bridge account",
-	Args:  cobra.ExactArgs(3),
-	Run:   bridgeLockCmdHandler,
+	Use:   "lock [amount] [to] [destination-chain-address] [--keyfile | --keyring-address | --privkey]",
+	Short: "Lock tokens on the bridge account",
+	Long: `A bridge lock is a transfer of tokens from the signing Sequencer
+account to a Sequencer bridge account. These tokens will then be
+bridged to a destination chain address if an IBC relayer is running.`,
+	Args: cobra.ExactArgs(3),
+	Run:  bridgeLockCmdHandler,
 }
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
@@ -77,12 +81,21 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	amount := args[0]
+	toAddress := args[1]
+	destinationChainAddress := args[2]
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	assetID := flagHandler.GetValue("asset-id")
+	feeAssetID := flagHandler.GetValue("fee-asset-id")
 	opts := sequencer.BridgeLockOpts{
-		SequencerURL:     url,
-		FromKey:          priv,
-		ToAddress:        args[0],
-		Amount:           args[1],
-		DestinationChain: args[2],
+		SequencerURL:            url,
+		FromKey:                 priv,
+		ToAddress:               toAddress,
+		Amount:                  amount,
+		DestinationChainAddress: destinationChainAddress,
+		SequencerChainID:        sequencerChainID,
+		AssetID:                 assetID,
+		FeeAssetID:              feeAssetID,
 	}
 	tx, err := sequencer.BridgeLock(opts)
 	if err != nil {
@@ -103,11 +116,11 @@ func init() {
 	bridgeCmd.AddCommand(bridgeInitCmd)
 	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
 	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
-	bifh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge")
-	bifh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees")
+	bifh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge.")
+	bifh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees.")
 
-	bifh.BindBoolFlag("json", false, "Output bridge account as JSON")
-	bifh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account")
+	bifh.BindBoolFlag("json", false, "Output bridge account as JSON.")
+	bifh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account on.")
 
 	bifh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
 	bifh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
@@ -117,8 +130,12 @@ func init() {
 
 	bridgeCmd.AddCommand(bridgeLockCmd)
 	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
+	blfh.BindStringFlag("sequencer-chain-id", DefaultSequencerChainID, "The chain ID of the sequencer.")
+	blfh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset to be locked and transferred.")
+	blfh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The asset used to pay the transaction fee.")
+
 	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
-	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer where the bridge account resides")
+	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to lock assets on.")
 
 	blfh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
 	blfh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")

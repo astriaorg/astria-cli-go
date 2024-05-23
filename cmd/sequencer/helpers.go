@@ -17,7 +17,7 @@ import (
 // If the 'keyfile' flag is set, it calls the 'PrivateKeyFromKeyfile' function
 // to retrieve the private key from the keyfile.
 // If none of the flags are set or if the value of 'keyfile' is empty, it returns an error.
-// NOTE - this requires the flags `keyfile`, `keyring-address`, and `privkey`
+// NOTE - requires the flags `keyfile`, `keyring-address`, and `privkey` along with `MarkFlagsOneRequired` and `MarkFlagsMutuallyExclusive`
 func GetPrivateKeyFromFlags(c *cobra.Command) (string, error) {
 	keyfile := c.Flag("keyfile").Value.String()
 	keyringAddress := c.Flag("keyring-address").Value.String()

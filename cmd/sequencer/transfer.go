@@ -9,10 +9,10 @@ import (
 )
 
 var transferCmd = &cobra.Command{
-	Use:   "transfer [amount] [to]",
-	Short: "Transfer tokens from one account to another.",
-	Args:  cobra.ExactArgs(2),
-	Run:   transferCmdHandler,
+	Use:    "transfer [amount] [to] [--keyfile | --keyring-address | --privkey]",
+	Short:  "Transfer tokens from one account to another.",
+	Args:   cobra.ExactArgs(2),
+	Run:    transferCmdHandler,
 }
 
 func init() {
