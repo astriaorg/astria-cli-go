@@ -64,7 +64,7 @@ func runInitialization(c *cobra.Command, args []string) {
 	baseConfigPath := filepath.Join(configDirPath, config.DefualtBaseConfigName)
 	config.CreateBaseConfig(baseConfigPath, instance)
 
-	config.CreateDevPrivKeyFile(configDirPath)
+	config.CreateComposerDevPrivKeyFile(configDirPath)
 
 	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDefaultDenom)
 
