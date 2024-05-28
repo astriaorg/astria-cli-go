@@ -54,7 +54,7 @@ func IsSequencerChainIdValidOrPanic(id string) {
 //go:embed composer_dev_priv_key
 var embeddedDevPrivKey embed.FS
 
-// CreateComposerDevPrivKeyFile creates a new dev_priv_key file in the specified directory.
+// CreateComposerDevPrivKeyFile creates a new composer_dev_priv_key file in the specified directory.
 func CreateComposerDevPrivKeyFile(dir string) {
 	// Read the content from the embedded file
 	devPrivKeyData, err := fs.ReadFile(embeddedDevPrivKey, "composer_dev_priv_key")
