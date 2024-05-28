@@ -15,15 +15,15 @@ import (
 // resetCmd represents the root reset command
 var resetCmd = &cobra.Command{
 	Use:   "reset",
-	Short: "The root command for resetting the local development instance data.",
-	Long:  `The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run.`,
+	Short: "The root command for resetting the local development instance data. Re-initializing is not required after using a reset command.",
+	Long:  `The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run. Re-initializing is not required after using a reset command.`,
 }
 
 // resetConfigCmd represents the 'reset config' command
 var resetConfigCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Reset config files.",
-	Long:  "Reset config files. This will return all files in the config directory to their default state as though initially created.",
+	Short: "Reset config files. Re-initializing is not required after using this command.",
+	Long:  "Reset config files. This will return all files in the config directory to their default state as though initially created. Re-initializing is not required after using this command.",
 	Run:   resetConfigCmdHandler,
 }
 
@@ -74,8 +74,8 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 // resetNetworksCmd represents the 'reset networks' command
 var resetNetworksCmd = &cobra.Command{
 	Use:   "networks",
-	Short: "Reset the networks config.",
-	Long:  `Reset the networks config for the cli. This command only resets the networks-config.toml file. No other config files are affected.`,
+	Short: "Reset the networks config. Re-initializing is not required after using this command.",
+	Long:  `Reset the networks config for the cli. This command only resets the networks-config.toml file. No other config files are affected. Re-initializing is not required after using this command.`,
 	Run:   resetNetworksCmdHandler,
 }
 
@@ -108,8 +108,8 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 // resetStateCmd represents the 'reset state' command
 var resetStateCmd = &cobra.Command{
 	Use:   "state",
-	Short: "Reset Sequencer state.",
-	Long:  "Reset Sequencer state. This will reset both the sequencer and Cometbft data to their initial state.",
+	Short: "Reset Sequencer state. Re-initializing is not required after using this command.",
+	Long:  "Reset Sequencer state. This will reset both the sequencer and Cometbft data to their initial state. Re-initializing is not required after using this command.",
 	Run:   resetStateCmdHandler,
 }
 
