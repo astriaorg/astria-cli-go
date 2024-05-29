@@ -1,4 +1,4 @@
-package devtools
+package devrunner
 
 import (
 	"archive/tar"
@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/devtools/config"
+	"github.com/astria/astria-cli-go/cmd/devrunner/config"
 
 	log "github.com/sirupsen/logrus"
 
