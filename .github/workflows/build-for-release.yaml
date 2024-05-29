@@ -19,12 +19,18 @@ jobs:
             goos: "linux"
     steps:
       - uses: actions/checkout@v4
-      - uses: wangyoucao577/go-release-action@v1
+      - uses: actions/setup-go@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          ldflags: >
-            -s -w -X github.com/astria/astria-cli-go/cmd.version=${{ github.ref_name }}
-          project_path: "./"
-          binary_name: "astria-go"
+          go-version: 1.22
+
+      - name: Build binary with debug info
+        run: |
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+          -o astria-go-debug-${{ matrix.goos }}-${{ matrix.goarch }} -gcflags "all=-N -l" \
+          -ldflags "-X github.com/astria/astria-cli-go/cmd.version=${{ github.ref_name }}" .
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+            name: astria-go-${{ matrix.goos }}-${{ matrix.goarch }}
+            path: astria-go-${{ matrix.goos }}-${{ matrix.goarch }}
