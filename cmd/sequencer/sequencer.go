@@ -2,6 +2,7 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/cmd/sequencer/sudo"
 	"github.com/spf13/cobra"
 )
 
@@ -21,4 +22,5 @@ Generate accounts, get account balances, transfer tokens, and more.`,
 
 func init() {
 	cmd.RootCmd.AddCommand(sequencerCmd)
+	sequencerCmd.AddCommand(sudo.SudoCmd)
 }
