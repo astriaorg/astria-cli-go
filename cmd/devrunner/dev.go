@@ -1,8 +1,8 @@
-package devtools
+package devrunner
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/devtools/config"
+	"github.com/astria/astria-cli-go/cmd/devrunner/config"
 	"github.com/spf13/cobra"
 )
 

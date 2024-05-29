@@ -1,11 +1,11 @@
-package devtools
+package devrunner
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/astria/astria-cli-go/cmd/devtools/config"
+	"github.com/astria/astria-cli-go/cmd/devrunner/config"
 
 	"github.com/astria/astria-cli-go/cmd"
 	log "github.com/sirupsen/logrus"

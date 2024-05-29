@@ -1,4 +1,4 @@
-package devtools
+package devrunner
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astria/astria-cli-go/cmd/devtools/config"
-	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
+	"github.com/astria/astria-cli-go/cmd/devrunner/config"
+	util "github.com/astria/astria-cli-go/cmd/devrunner/utilities"
 
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/internal/processrunner"

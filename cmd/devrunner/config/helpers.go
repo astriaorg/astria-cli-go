@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	util "github.com/astria/astria-cli-go/cmd/devtools/utilities"
+	util "github.com/astria/astria-cli-go/cmd/devrunner/utilities"
 
 	log "github.com/sirupsen/logrus"
 )
