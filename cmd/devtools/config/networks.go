@@ -52,7 +52,7 @@ type BaseConfig struct {
 	Astria_composer_sequencer_url              string `mapstructure:"astria_composer_sequencer_url" toml:"astria_composer_sequencer_url"`
 	Astria_composer_sequencer_chain_id         string `mapstructure:"astria_composer_sequencer_chain_id" toml:"astria_composer_sequencer_chain_id"`
 	Astria_composer_rollups                    string `mapstructure:"astria_composer_rollups" toml:"astria_composer_rollups"`
-	Astria_composer_private_key                string `mapstructure:"astria_composer_private_key" toml:"astria_composer_private_key"`
+	Astria_composer_private_key_file           string `mapstructure:"astria_composer_private_key_file" toml:"astria_composer_private_key_file"`
 	Astria_composer_max_submit_interval_ms     int    `mapstructure:"astria_composer_max_submit_interval_ms" toml:"astria_composer_max_submit_interval_ms"`
 	Astria_composer_max_bytes_per_bundle       int    `mapstructure:"astria_composer_max_bytes_per_bundle" toml:"astria_composer_max_bytes_per_bundle"`
 	Astria_composer_bundle_queue_capacity      int    `mapstructure:"astria_composer_bundle_queue_capacity" toml:"astria_composer_bundle_queue_capacity"`
@@ -111,9 +111,9 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		Astria_composer_pretty_print:               true,
 		Astria_composer_api_listen_addr:            "0.0.0.0:0",
 		Astria_composer_sequencer_url:              "http://127.0.0.1:26657",
-		Astria_composer_sequencer_chain_id:         "astria-dusk-5",
+		Astria_composer_sequencer_chain_id:         "astria-dusk-7",
 		Astria_composer_rollups:                    "astriachain::ws://127.0.0.1:8546",
-		Astria_composer_private_key:                "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90",
+		Astria_composer_private_key_file:           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		Astria_composer_max_submit_interval_ms:     2000,
 		Astria_composer_max_bytes_per_bundle:       200000,
 		Astria_composer_bundle_queue_capacity:      40000,
@@ -161,9 +161,9 @@ func DefaultNetworksConfigs() NetworkConfigs {
 			NativeDenom:      "nria",
 		},
 		Dusk: NetworkConfig{
-			SequencerChainId: "astria-dusk-5",
-			SequencerGRPC:    "https://grpc.sequencer.dusk-5.devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dusk-5.devnet.astria.org/",
+			SequencerChainId: "astria-dusk-7",
+			SequencerGRPC:    "https://grpc.sequencer.dusk-7.devnet.astria.org/",
+			SequencerRPC:     "https://rpc.sequencer.dusk-7.devnet.astria.org/",
 			RollupName:       "",
 			NativeDenom:      "nria",
 		},

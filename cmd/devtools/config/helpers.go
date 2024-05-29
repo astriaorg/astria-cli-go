@@ -51,6 +51,43 @@ func IsSequencerChainIdValidOrPanic(id string) {
 	}
 }
 
+//go:embed composer_dev_priv_key
+var embeddedDevPrivKey embed.FS
+
+// CreateComposerDevPrivKeyFile creates a new composer_dev_priv_key file in the specified directory.
+func CreateComposerDevPrivKeyFile(dir string) {
+	// Read the content from the embedded file
+	devPrivKeyData, err := fs.ReadFile(embeddedDevPrivKey, "composer_dev_priv_key")
+	if err != nil {
+		log.Fatalf("failed to read embedded file: %v", err)
+		panic(err)
+	}
+
+	// Specify the path for the new file
+	newDevPrivKeyPath := filepath.Join(dir, "composer_dev_priv_key")
+
+	_, err = os.Stat(newDevPrivKeyPath)
+	if err == nil {
+		log.Infof("%s already exists. Skipping initialization.\n", newDevPrivKeyPath)
+	} else {
+		// Create a new file
+		newDevPrivKeyFile, err := os.Create(newDevPrivKeyPath)
+		if err != nil {
+			log.Fatalf("failed to create new file: %v", err)
+			panic(err)
+		}
+		defer newDevPrivKeyFile.Close()
+
+		// Write the data to the new file
+		_, err = newDevPrivKeyFile.Write(devPrivKeyData)
+		if err != nil {
+			log.Fatalf("failed to write data to new file: %v", err)
+			panic(err)
+		}
+		log.Infof("New composer_dev_priv_key file created successfully: %s\n", newDevPrivKeyPath)
+	}
+}
+
 //go:embed genesis.json
 var embeddedCometbftGenesisFile embed.FS
 
