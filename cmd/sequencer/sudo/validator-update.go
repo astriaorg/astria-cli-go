@@ -10,9 +10,11 @@ import (
 var validatorUpdateCmd = &cobra.Command{
 	Use:   "validator-update",
 	Short: "Update the validator set on the sequencer.",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("validator-update called")
-	},
+	Run:   validatorUpdateCmdHandler,
+}
+
+func validatorUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	fmt.Println("validator-update called")
 }
 
 func init() {

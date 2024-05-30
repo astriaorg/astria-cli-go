@@ -407,3 +407,80 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	return tr, nil
 
 }
+
+func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("BridgeLockOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &FeeAssetResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &FeeAssetResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &FeeAssetResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_FeeAssetChangeAction{
+					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
+						Value: &txproto.FeeAssetChangeAction_Addition{
+							Addition: assetIdFromDenom(opts.Asset),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &FeeAssetResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &FeeAssetResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &FeeAssetResponse{
+		From:       hex.EncodeToString(fromAddr[:]),
+		Nonce:      nonce,
+		TxHash:     hash,
+		FeeAssetId: opts.Asset,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}

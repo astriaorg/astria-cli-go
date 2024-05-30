@@ -2,6 +2,8 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/cmd/sequencer/defaults"
+	util "github.com/astria/astria-cli-go/cmd/sequencer/key-utils"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -20,8 +22,8 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(transferCmd, cmd.EnvPrefix)
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
-	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
-	flagHandler.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	flagHandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flagHandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
@@ -39,7 +41,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	amount := args[0]
 	to := args[1]
 
-	priv, err := GetPrivateKeyFromFlags(c)
+	priv, err := util.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)

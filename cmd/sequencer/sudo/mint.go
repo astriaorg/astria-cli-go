@@ -10,9 +10,11 @@ import (
 var mintCmd = &cobra.Command{
 	Use:   "mint",
 	Short: "Mint native assets to an account on the sequencer.",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("mint called")
-	},
+	Run:   mintCmdHandler,
+}
+
+func mintCmdHandler(cmd *cobra.Command, args []string) {
+	fmt.Println("mint called")
 }
 
 func init() {
