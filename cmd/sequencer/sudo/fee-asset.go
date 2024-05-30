@@ -1,8 +1,6 @@
 package sudo
 
 import (
-	"fmt"
-
 	"github.com/astria/astria-cli-go/cmd"
 	"github.com/astria/astria-cli-go/cmd/sequencer/defaults"
 	util "github.com/astria/astria-cli-go/cmd/sequencer/key-utils"
@@ -20,7 +18,6 @@ var addFeeAssetCmd = &cobra.Command{
 }
 
 func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
-	fmt.Println("add-fee-asset called")
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
 	url := flagHandler.GetValue("sequencer-url")
@@ -59,15 +56,62 @@ var removeFeeAssetCmd = &cobra.Command{
 	Run:   removeFeeAssetCmdHandler,
 }
 
-func removeFeeAssetCmdHandler(cmd *cobra.Command, args []string) {
-	fmt.Println("remove-fee-asset called")
+func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
+	url := flagHandler.GetValue("sequencer-url")
+	chainId := flagHandler.GetValue("sequencer-chain-id")
+	asset := flagHandler.GetValue("asset")
+
+	priv, err := util.GetPrivateKeyFromFlags(c)
+	if err != nil {
+		log.WithError(err).Error("Could not get private key from flags")
+		panic(err)
+	}
+
+	opts := sequencer.FeeAssetOpts{
+		FromKey:          priv,
+		SequencerURL:     url,
+		SequencerChainID: chainId,
+		Asset:            asset,
+	}
+	tx, err := sequencer.RemoveFeeAsset(opts)
+	if err != nil {
+		log.WithError(err).Error("Error transferring tokens")
+		panic(err)
+	}
+
+	printer := ui.ResultsPrinter{
+		Data:      tx,
+		PrintJSON: printJSON,
+	}
+	printer.Render()
 }
 
 func init() {
 	SudoCmd.AddCommand(addFeeAssetCmd)
-	flagHandler := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
-	flagHandler.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
-	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
+
+	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
+	afafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
+	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
+	afafh.BindStringFlag("asset", "", "The asset to add as a fee asset.")
+	afafh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	afafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
+	afafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
+	afafh.BindStringFlag("privkey", "", "The private key of the sender.")
+	addFeeAssetCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	addFeeAssetCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 
 	SudoCmd.AddCommand(removeFeeAssetCmd)
+
+	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
+	rfafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
+	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
+	rfafh.BindStringFlag("asset", "", "The asset to add as a fee asset.")
+	rfafh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	rfafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
+	rfafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
+	rfafh.BindStringFlag("privkey", "", "The private key of the sender.")
+	removeFeeAssetCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
+	removeFeeAssetCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 }

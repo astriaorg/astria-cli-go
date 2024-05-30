@@ -290,7 +290,7 @@ func (far *FeeAssetResponse) JSON() ([]byte, error) {
 }
 
 func (far *FeeAssetResponse) TableHeader() []string {
-	return []string{"From", "To", "Amount", "Nonce", "TxHash"}
+	return []string{"From", "Nonce", "TxHash", "FeeAssetId"}
 }
 
 func (far *FeeAssetResponse) TableRows() [][]string {
