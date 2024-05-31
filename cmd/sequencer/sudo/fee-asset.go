@@ -19,8 +19,9 @@ var feeAssetCmd = &cobra.Command{
 
 // addFeeAssetCmd represents the add fee asset command
 var addFeeAssetCmd = &cobra.Command{
-	Use:   "add",
+	Use:   "add [asset] [--keyfile | --keyring-address | --privkey]",
 	Short: "Add a fee asset to the sequencer.",
+	Args:  cobra.ExactArgs(1),
 	Run:   addFeeAssetCmdHandler,
 }
 
@@ -29,7 +30,8 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 	url := flagHandler.GetValue("sequencer-url")
 	chainId := flagHandler.GetValue("sequencer-chain-id")
-	asset := flagHandler.GetValue("asset")
+
+	asset := args[0]
 
 	priv, err := util.GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -58,8 +60,9 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 
 // removeFeeAssetCmd represents the remove fee asset command
 var removeFeeAssetCmd = &cobra.Command{
-	Use:   "remove",
+	Use:   "remove [asset] [--keyfile | --keyring-address | --privkey]",
 	Short: "Remove a fee asset from the sequencer.",
+	Args:  cobra.ExactArgs(1),
 	Run:   removeFeeAssetCmdHandler,
 }
 
@@ -68,7 +71,8 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 	url := flagHandler.GetValue("sequencer-url")
 	chainId := flagHandler.GetValue("sequencer-chain-id")
-	asset := flagHandler.GetValue("asset")
+
+	asset := args[0]
 
 	priv, err := util.GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -102,7 +106,6 @@ func init() {
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
 	afafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
 	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	afafh.BindStringFlag("asset", "", "The asset to add as a fee asset.")
 	afafh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	afafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	afafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
@@ -115,7 +118,6 @@ func init() {
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
 	rfafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
 	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	rfafh.BindStringFlag("asset", "", "The asset to add as a fee asset.")
 	rfafh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	rfafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	rfafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")

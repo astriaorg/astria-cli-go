@@ -374,3 +374,39 @@ func (m *MintResponse) TableRows() [][]string {
 		{m.From, strconv.Itoa(int(m.Nonce)), m.To, m.Amount, m.TxHash},
 	}
 }
+
+type ChangeSudoAddressOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// ToAddress is the address of the receiver
+	UpdateAddress string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+}
+
+type ChangeSudoAddressResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// To is the address of the receiver
+	NewSudoAddress string `json:"newSudoAddress"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+}
+
+func (m *ChangeSudoAddressResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(m, "", "  ")
+}
+
+func (m *ChangeSudoAddressResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "NewSudoAddress", "TxHash"}
+}
+
+func (m *ChangeSudoAddressResponse) TableRows() [][]string {
+	return [][]string{
+		{m.From, strconv.Itoa(int(m.Nonce)), m.NewSudoAddress, m.TxHash},
+	}
+}

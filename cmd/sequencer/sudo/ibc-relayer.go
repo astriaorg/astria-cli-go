@@ -19,8 +19,9 @@ var IBCRelayerCmd = &cobra.Command{
 
 // addIBCRelayerCmd represents the add ibc relayer command
 var addIBCRelayerCmd = &cobra.Command{
-	Use:   "add",
+	Use:   "add [address] [--keyfile | --keyring-address | --privkey]",
 	Short: "Add an address to the IBC Relayer set on the sequencer.",
+	Args:  cobra.ExactArgs(1),
 	Run:   addIBCRelayerCmdHandler,
 }
 
@@ -29,7 +30,8 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 	url := flagHandler.GetValue("sequencer-url")
 	chainId := flagHandler.GetValue("sequencer-chain-id")
-	address := flagHandler.GetValue("address")
+
+	address := args[0]
 
 	priv, err := util.GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -58,8 +60,9 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 
 // removeIBCRelayerCmd represents the remove ibc relayer command
 var removeIBCRelayerCmd = &cobra.Command{
-	Use:   "remove",
+	Use:   "remove [address] [--keyfile | --keyring-address | --privkey]",
 	Short: "Remove an address to the IBC Relayer set on the sequencer.",
+	Args:  cobra.ExactArgs(1),
 	Run:   removeIBCRelayerCmdHandler,
 }
 
@@ -68,7 +71,8 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 	url := flagHandler.GetValue("sequencer-url")
 	chainId := flagHandler.GetValue("sequencer-chain-id")
-	address := flagHandler.GetValue("address")
+
+	address := args[0]
 
 	priv, err := util.GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -102,7 +106,6 @@ func init() {
 	aibfh := cmd.CreateCliFlagHandler(addIBCRelayerCmd, cmd.EnvPrefix)
 	aibfh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
 	aibfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	aibfh.BindStringFlag("address", "", "The IBC Relayer address to add.")
 	aibfh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	aibfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	aibfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
@@ -115,7 +118,6 @@ func init() {
 	ribfh := cmd.CreateCliFlagHandler(removeIBCRelayerCmd, cmd.EnvPrefix)
 	ribfh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to remove the relayer address from.")
 	ribfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	ribfh.BindStringFlag("address", "", "The IBC Relayer address to remove.")
 	ribfh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	ribfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	ribfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")

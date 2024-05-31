@@ -96,7 +96,7 @@ func NewBaseConfig(instanceName string) BaseConfig {
 
 		Astria_sequencer_listen_addr:                "127.0.0.1:26658",
 		Astria_sequencer_db_filepath:                filepath.Join(homePath, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
-		Astria_sequencer_enable_mint:                true,
+		Astria_sequencer_enable_mint:                false,
 		Astria_sequencer_grpc_addr:                  "127.0.0.1:8080",
 		Astria_sequencer_log:                        "astria_sequencer=info",
 		Astria_sequencer_no_otel:                    true,
