@@ -298,3 +298,39 @@ func (far *FeeAssetResponse) TableRows() [][]string {
 		{far.From, strconv.Itoa(int(far.Nonce)), far.TxHash, far.FeeAssetId},
 	}
 }
+
+type IBCRelayerOpts struct {
+	// FromKey is the private key of the sender
+	FromKey string
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+	// IBCRelayerAddress is the ibc relayer address that will be added or removed
+	IBCRelayerAddress string
+}
+
+type IBCRelayerResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+	// IBCRelayerAddress is the asset id of the fee asset
+	IBCRelayerAddress string `json:"ibcRelayerAddress"`
+}
+
+func (far *IBCRelayerResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(far, "", "  ")
+}
+
+func (far *IBCRelayerResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "TxHash", "IBCRelayerAddress"}
+}
+
+func (far *IBCRelayerResponse) TableRows() [][]string {
+	return [][]string{
+		{far.From, strconv.Itoa(int(far.Nonce)), far.TxHash, far.IBCRelayerAddress},
+	}
+}

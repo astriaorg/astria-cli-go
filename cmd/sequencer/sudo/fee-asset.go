@@ -10,9 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// feeAssetCmd represents the root command for interacting with fee assets on
+// the sequencer.
+var feeAssetCmd = &cobra.Command{
+	Use:   "fee-asset",
+	Short: "Interact with fee assets on the sequencer.",
+}
+
 // addFeeAssetCmd represents the add fee asset command
 var addFeeAssetCmd = &cobra.Command{
-	Use:   "add-fee-asset",
+	Use:   "add",
 	Short: "Add a fee asset to the sequencer.",
 	Run:   addFeeAssetCmdHandler,
 }
@@ -51,7 +58,7 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 
 // removeFeeAssetCmd represents the remove fee asset command
 var removeFeeAssetCmd = &cobra.Command{
-	Use:   "remove-fee-asset",
+	Use:   "remove",
 	Short: "Remove a fee asset from the sequencer.",
 	Run:   removeFeeAssetCmdHandler,
 }
@@ -89,7 +96,8 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 }
 
 func init() {
-	SudoCmd.AddCommand(addFeeAssetCmd)
+	SudoCmd.AddCommand(feeAssetCmd)
+	feeAssetCmd.AddCommand(addFeeAssetCmd)
 
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
 	afafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
@@ -102,7 +110,7 @@ func init() {
 	addFeeAssetCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
 	addFeeAssetCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
 
-	SudoCmd.AddCommand(removeFeeAssetCmd)
+	feeAssetCmd.AddCommand(removeFeeAssetCmd)
 
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
 	rfafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")

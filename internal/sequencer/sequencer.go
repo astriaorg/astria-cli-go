@@ -563,3 +563,171 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	log.Debugf("Transfer hash: %v", hash)
 	return tr, nil
 }
+
+// AddIBCRelayer adds an IBC Relayer address to the sequencer.
+func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("IBCRelayerOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &IBCRelayerResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &IBCRelayerResponse{}, err
+	}
+
+	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
+		return &IBCRelayerResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_IbcRelayerChangeAction{
+					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
+						Value: &txproto.IbcRelayerChangeAction_Addition{
+							Addition: ibcRelayerAddress,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &IBCRelayerResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &IBCRelayerResponse{
+		From:              hex.EncodeToString(fromAddr[:]),
+		Nonce:             nonce,
+		TxHash:            hash,
+		IBCRelayerAddress: opts.IBCRelayerAddress,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
+
+// RemoveIBCRelayer removes an IBC Relayer address from the sequencer.
+func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("IBCRelayerOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &IBCRelayerResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &IBCRelayerResponse{}, err
+	}
+
+	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
+		return &IBCRelayerResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_IbcRelayerChangeAction{
+					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
+						Value: &txproto.IbcRelayerChangeAction_Removal{
+							Removal: ibcRelayerAddress,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &IBCRelayerResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &IBCRelayerResponse{
+		From:              hex.EncodeToString(fromAddr[:]),
+		Nonce:             nonce,
+		TxHash:            hash,
+		IBCRelayerAddress: opts.IBCRelayerAddress,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
