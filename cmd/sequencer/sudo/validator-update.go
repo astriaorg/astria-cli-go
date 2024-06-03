@@ -11,8 +11,9 @@ import (
 
 // validatorUpdateCmd represents the validator update command
 var validatorUpdateCmd = &cobra.Command{
-	Use:   "validator-update [address] [power] [--keyfile | --keyring-address | --privkey]",
+	Use:   "validator-update [public key] [power] [--keyfile | --keyring-address | --privkey]",
 	Short: "Update a validator on the sequencer.",
+	Long:  `Update a validator on the sequencer. The user needs to provide a public key and a power level for the validator.`,
 	Args:  cobra.ExactArgs(2),
 	Run:   validatorUpdateCmdHandler,
 }

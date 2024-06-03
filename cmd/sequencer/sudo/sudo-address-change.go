@@ -13,6 +13,7 @@ import (
 var sudoAddressChangeCmd = &cobra.Command{
 	Use:   "sudo-address-change [address] [--keyfile | --keyring-address | --privkey]",
 	Short: "Update the sequencer's sudo address to a new address.",
+	Long:  `Update the sequencer's sudo address to a new address. The provided address must be a valid address on the chain and will become the new sudo address.`,
 	Args:  cobra.ExactArgs(1),
 	Run:   sudoAddressChangeCmdHandler,
 }
