@@ -1002,6 +1002,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 		Power:   opts.Power,
 		TxHash:  hash,
 	}
+	log.Debug(tr)
 
 	log.Debugf("Update Validator TX hash: %v", hash)
 	return tr, nil
