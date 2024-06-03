@@ -416,8 +416,8 @@ type UpdateValidatorOpts struct {
 	SequencerURL string
 	// FromKey is the private key of the sender
 	FromKey string
-	// Address is the public address of the validtor being updated
-	Address string
+	// PubKey is the public key of the validtor being updated
+	PubKey string
 	// Power is the new power of the validator
 	Power string
 	// SequencerChainID is the chain ID of the sequencer
@@ -429,8 +429,8 @@ type UpdateValidatorResponse struct {
 	From string `json:"from"`
 	// Nonce is the nonce of the transaction
 	Nonce uint32 `json:"nonce"`
-	// To is the address of the receiver
-	Address string `json:"address"`
+	// Is the public key of the validator being updated
+	PubKey string `json:"pubKey"`
 	// Power is the new power of the validator
 	Power string `json:"power"`
 	// TxHash is the hash of the transaction
@@ -442,11 +442,11 @@ func (uv *UpdateValidatorResponse) JSON() ([]byte, error) {
 }
 
 func (uv *UpdateValidatorResponse) TableHeader() []string {
-	return []string{"From", "Nonce", "Address", "Power", "TxHash"}
+	return []string{"From", "Nonce", "PubKey", "Power", "TxHash"}
 }
 
 func (uv *UpdateValidatorResponse) TableRows() [][]string {
 	return [][]string{
-		{uv.From, strconv.Itoa(int(uv.Nonce)), uv.Address, uv.Power, uv.TxHash},
+		{uv.From, strconv.Itoa(int(uv.Nonce)), uv.PubKey, uv.Power, uv.TxHash},
 	}
 }

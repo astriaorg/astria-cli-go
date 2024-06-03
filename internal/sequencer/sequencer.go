@@ -941,17 +941,15 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 		return &UpdateValidatorResponse{}, err
 	}
 
-	to, err := addressFromText(opts.Address)
+	// decode public key
+	pk, err := publicKeyFromText(opts.PubKey)
 	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.Address)
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.PubKey)
 		return &UpdateValidatorResponse{}, err
 	}
-	toBytes := to.GetInner()
-	log.Debug("To address: ", toBytes)
-	log.Debug("toBytes len: ", len(toBytes))
-	toPubKey := &crypto.PublicKey{
+	pubKey := &crypto.PublicKey{
 		Sum: &crypto.PublicKey_Ed25519{
-			Ed25519: to.GetInner(),
+			Ed25519: pk,
 		},
 	}
 
@@ -970,7 +968,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 			{
 				Value: &txproto.Action_ValidatorUpdateAction{
 					ValidatorUpdateAction: &abci.ValidatorUpdate{
-						PubKey: toPubKey,
+						PubKey: pubKey,
 						Power:  power,
 					},
 				},
@@ -996,11 +994,11 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &UpdateValidatorResponse{
-		From:    hex.EncodeToString(fromAddr[:]),
-		Nonce:   nonce,
-		Address: opts.Address,
-		Power:   opts.Power,
-		TxHash:  hash,
+		From:   hex.EncodeToString(fromAddr[:]),
+		Nonce:  nonce,
+		PubKey: opts.PubKey,
+		Power:  opts.Power,
+		TxHash: hash,
 	}
 	log.Debug(tr)
 

@@ -111,6 +111,18 @@ func addressFromText(addr string) (*primproto.Address, error) {
 	}, nil
 }
 
+// publicKeyFromText converts a hexadecimal string representation of a public
+// key to an ed25519.PublicKey. If the input string is not a valid hexadecimal
+// string, an error will be returned.
+func publicKeyFromText(addr string) (ed25519.PublicKey, error) {
+	addr = strip0xPrefix(addr)
+	bytes, err := hex.DecodeString(addr)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
+}
+
 // privateKeyFromText converts a string representation of a private key to an ed25519.PrivateKey.
 // It decodes the private key from hex string format and creates a new ed25519.PrivateKey.
 func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {

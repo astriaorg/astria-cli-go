@@ -23,7 +23,7 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	url := flagHandler.GetValue("sequencer-url")
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	to := args[0]
+	pubKey := args[0]
 	power := args[1]
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
@@ -34,7 +34,7 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 
 	opts := sequencer.UpdateValidatorOpts{
 		FromKey:          priv,
-		Address:          to,
+		PubKey:           pubKey,
 		Power:            power,
 		SequencerURL:     url,
 		SequencerChainID: chainId,
