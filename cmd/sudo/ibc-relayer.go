@@ -2,8 +2,7 @@ package sudo
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/sequencer/defaults"
-	util "github.com/astria/astria-cli-go/cmd/sequencer/key-utils"
+	sequencercmd "github.com/astria/astria-cli-go/cmd/sequencer"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -33,7 +32,7 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 
 	address := args[0]
 
-	priv, err := util.GetPrivateKeyFromFlags(c)
+	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
@@ -74,7 +73,7 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 
 	address := args[0]
 
-	priv, err := util.GetPrivateKeyFromFlags(c)
+	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
@@ -100,13 +99,13 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 }
 
 func init() {
-	SudoCmd.AddCommand(IBCRelayerCmd)
+	sudoCmd.AddCommand(IBCRelayerCmd)
 	IBCRelayerCmd.AddCommand(addIBCRelayerCmd)
 
 	aibfh := cmd.CreateCliFlagHandler(addIBCRelayerCmd, cmd.EnvPrefix)
-	aibfh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
+	aibfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
 	aibfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	aibfh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	aibfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	aibfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	aibfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	aibfh.BindStringFlag("privkey", "", "The private key of the sender.")
@@ -116,9 +115,9 @@ func init() {
 	IBCRelayerCmd.AddCommand(removeIBCRelayerCmd)
 
 	ribfh := cmd.CreateCliFlagHandler(removeIBCRelayerCmd, cmd.EnvPrefix)
-	ribfh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to remove the relayer address from.")
+	ribfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove the relayer address from.")
 	ribfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	ribfh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	ribfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	ribfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	ribfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	ribfh.BindStringFlag("privkey", "", "The private key of the sender.")

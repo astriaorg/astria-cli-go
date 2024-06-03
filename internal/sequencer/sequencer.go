@@ -4,9 +4,14 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"strconv"
 	"time"
 
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+	abci "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
+	crypto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
+
+	// astria_vendored/tendermint/abci/types.proto
 	"github.com/astriaorg/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
 )
@@ -827,7 +832,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	log.Debugf("Mint Opts: %v", opts)
+	log.Debugf("Change Sudo Address Opts: %v", opts)
 
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
@@ -900,6 +905,104 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 		TxHash:         hash,
 	}
 
-	log.Debugf("Mint TX hash: %v", hash)
+	log.Debugf("Change Sudo Address TX hash: %v", hash)
+	return tr, nil
+}
+
+// UpdateValidator changes the power of a validator.
+func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("Update Validator Opts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &UpdateValidatorResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &UpdateValidatorResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &UpdateValidatorResponse{}, err
+	}
+
+	to, err := addressFromText(opts.Address)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.Address)
+		return &UpdateValidatorResponse{}, err
+	}
+	toBytes := to.GetInner()
+	log.Debug("To address: ", toBytes)
+	log.Debug("toBytes len: ", len(toBytes))
+	toPubKey := &crypto.PublicKey{
+		Sum: &crypto.PublicKey_Ed25519{
+			Ed25519: to.GetInner(),
+		},
+	}
+
+	power, err := strconv.ParseInt(opts.Power, 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding power string to int64 %v", opts.Power)
+		return &UpdateValidatorResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_ValidatorUpdateAction{
+					ValidatorUpdateAction: &abci.ValidatorUpdate{
+						PubKey: toPubKey,
+						Power:  power,
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &UpdateValidatorResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &UpdateValidatorResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &UpdateValidatorResponse{
+		From:    hex.EncodeToString(fromAddr[:]),
+		Nonce:   nonce,
+		Address: opts.Address,
+		Power:   opts.Power,
+		TxHash:  hash,
+	}
+
+	log.Debugf("Update Validator TX hash: %v", hash)
 	return tr, nil
 }

@@ -18,5 +18,5 @@ func validatorUpdateCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	SudoCmd.AddCommand(validatorUpdateCmd)
+	sudoCmd.AddCommand(validatorUpdateCmd)
 }

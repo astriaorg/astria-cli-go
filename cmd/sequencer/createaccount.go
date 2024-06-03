@@ -23,7 +23,7 @@ transactions and blocks. The account will be created with a private key, public 
 }
 
 func init() {
-	sequencerCmd.AddCommand(createaccountCmd)
+	SequencerCmd.AddCommand(createaccountCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(createaccountCmd, cmd.EnvPrefix)
 	flagHandler.BindBoolFlag("json", false, "Output the account information in JSON format.")

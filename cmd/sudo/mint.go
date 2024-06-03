@@ -2,43 +2,44 @@ package sudo
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/sequencer/defaults"
-	util "github.com/astria/astria-cli-go/cmd/sequencer/key-utils"
+	sequencercmd "github.com/astria/astria-cli-go/cmd/sequencer"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-// sudoAddressChangeCmd represents the sudo address change command
-var sudoAddressChangeCmd = &cobra.Command{
-	Use:   "sudo-address-change [address] [--keyfile | --keyring-address | --privkey]",
-	Short: "Update the sequencer's sudo address to a new address.",
-	Args:  cobra.ExactArgs(1),
-	Run:   sudoAddressChangeCmdHandler,
+// mintCmd represents the mint command
+var mintCmd = &cobra.Command{
+	Use:   "mint [amount] [to] [--keyfile | --keyring-address | --privkey]",
+	Short: "Mint tokens to an account.",
+	Args:  cobra.ExactArgs(2),
+	Run:   mintCmdHandler,
 }
 
-func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
+func mintCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
 	url := flagHandler.GetValue("sequencer-url")
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	to := args[0]
+	amount := args[0]
+	to := args[1]
 
-	priv, err := util.GetPrivateKeyFromFlags(c)
+	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
 
-	opts := sequencer.ChangeSudoAddressOpts{
+	opts := sequencer.MintOpts{
 		FromKey:          priv,
-		UpdateAddress:    to,
+		ToAddress:        to,
 		SequencerURL:     url,
 		SequencerChainID: chainId,
+		Amount:           amount,
 	}
-	tx, err := sequencer.ChangeSudoAddress(opts)
+	tx, err := sequencer.Mint(opts)
 	if err != nil {
 		log.WithError(err).Error("Error minting tokens")
 		panic(err)
@@ -52,12 +53,12 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 }
 
 func init() {
-	SudoCmd.AddCommand(sudoAddressChangeCmd)
+	sudoCmd.AddCommand(mintCmd)
 
-	flaghandler := cmd.CreateCliFlagHandler(sudoAddressChangeCmd, cmd.EnvPrefix)
+	flaghandler := cmd.CreateCliFlagHandler(mintCmd, cmd.EnvPrefix)
 	flaghandler.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	flaghandler.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
-	flaghandler.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
+	flaghandler.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	flaghandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flaghandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flaghandler.BindStringFlag("privkey", "", "The private key of the sender.")

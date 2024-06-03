@@ -397,16 +397,56 @@ type ChangeSudoAddressResponse struct {
 	TxHash string `json:"txHash"`
 }
 
-func (m *ChangeSudoAddressResponse) JSON() ([]byte, error) {
-	return json.MarshalIndent(m, "", "  ")
+func (c *ChangeSudoAddressResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(c, "", "  ")
 }
 
-func (m *ChangeSudoAddressResponse) TableHeader() []string {
+func (c *ChangeSudoAddressResponse) TableHeader() []string {
 	return []string{"From", "Nonce", "NewSudoAddress", "TxHash"}
 }
 
-func (m *ChangeSudoAddressResponse) TableRows() [][]string {
+func (c *ChangeSudoAddressResponse) TableRows() [][]string {
 	return [][]string{
-		{m.From, strconv.Itoa(int(m.Nonce)), m.NewSudoAddress, m.TxHash},
+		{c.From, strconv.Itoa(int(c.Nonce)), c.NewSudoAddress, c.TxHash},
+	}
+}
+
+type UpdateValidatorOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// Address is the public address of the validtor being updated
+	Address string
+	// Power is the new power of the validator
+	Power string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+}
+
+type UpdateValidatorResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// To is the address of the receiver
+	Address string `json:"address"`
+	// Power is the new power of the validator
+	Power string `json:"power"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+}
+
+func (uv *UpdateValidatorResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(uv, "", "  ")
+}
+
+func (uv *UpdateValidatorResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "Address", "Power", "TxHash"}
+}
+
+func (uv *UpdateValidatorResponse) TableRows() [][]string {
+	return [][]string{
+		{uv.From, strconv.Itoa(int(uv.Nonce)), uv.Address, uv.Power, uv.TxHash},
 	}
 }

@@ -2,8 +2,7 @@ package sudo
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/sequencer/defaults"
-	util "github.com/astria/astria-cli-go/cmd/sequencer/key-utils"
+	sequencercmd "github.com/astria/astria-cli-go/cmd/sequencer"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -33,7 +32,7 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 
 	asset := args[0]
 
-	priv, err := util.GetPrivateKeyFromFlags(c)
+	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
@@ -74,7 +73,7 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 
 	asset := args[0]
 
-	priv, err := util.GetPrivateKeyFromFlags(c)
+	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
@@ -100,13 +99,13 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 }
 
 func init() {
-	SudoCmd.AddCommand(feeAssetCmd)
+	sudoCmd.AddCommand(feeAssetCmd)
 	feeAssetCmd.AddCommand(addFeeAssetCmd)
 
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
-	afafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
+	afafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
 	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	afafh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	afafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	afafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	afafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	afafh.BindStringFlag("privkey", "", "The private key of the sender.")
@@ -116,9 +115,9 @@ func init() {
 	feeAssetCmd.AddCommand(removeFeeAssetCmd)
 
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
-	rfafh.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
+	rfafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
 	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	rfafh.BindStringPFlag("sequencer-chain-id", "c", defaults.DefaultSequencerChainID, "The chain ID of the sequencer.")
+	rfafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	rfafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	rfafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	rfafh.BindStringFlag("privkey", "", "The private key of the sender.")

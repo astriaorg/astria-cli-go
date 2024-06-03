@@ -3,8 +3,8 @@ module github.com/astria/astria-cli-go
 go 1.22.2
 
 require (
-	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.1-20240517150107-e54d335d6779.1
-	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240517150110-b4ffcca70a25.1
+	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.1-20240528191859-2caf2e8901b3.1
+	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240528191859-59fd0d703e09.1
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/go-sequencer-client v0.4.0
 	github.com/gdamore/tcell/v2 v2.7.4

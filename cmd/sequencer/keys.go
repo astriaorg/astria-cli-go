@@ -41,6 +41,6 @@ func getKeyCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	sequencerCmd.AddCommand(setKeyCmd)
-	sequencerCmd.AddCommand(getKeyCmd)
+	SequencerCmd.AddCommand(setKeyCmd)
+	SequencerCmd.AddCommand(getKeyCmd)
 }

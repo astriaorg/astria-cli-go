@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/sequencer/defaults"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -19,10 +18,10 @@ var balancesCmd = &cobra.Command{
 }
 
 func init() {
-	sequencerCmd.AddCommand(balancesCmd)
+	SequencerCmd.AddCommand(balancesCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(balancesCmd, cmd.EnvPrefix)
-	flagHandler.BindStringPFlag("sequencer-url", "u", defaults.DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 
 	viper.RegisterAlias("balance", "balances")

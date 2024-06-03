@@ -2,12 +2,11 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/cmd/sequencer/sudo"
 	"github.com/spf13/cobra"
 )
 
-// sequencerCmd represents the sequencer command
-var sequencerCmd = &cobra.Command{
+// SequencerCmd represents the sequencer command
+var SequencerCmd = &cobra.Command{
 	Use:   "sequencer",
 	Short: "Interact with the Astria Shared Sequencer.",
 	Long: `Use this command to interact with the Astria Shared Sequencer.
@@ -21,6 +20,5 @@ Generate accounts, get account balances, transfer tokens, and more.`,
 }
 
 func init() {
-	cmd.RootCmd.AddCommand(sequencerCmd)
-	sequencerCmd.AddCommand(sudo.SudoCmd)
+	cmd.RootCmd.AddCommand(SequencerCmd)
 }

@@ -1,4 +1,4 @@
-package key_utils
+package sequencer
 
 import (
 	"fmt"
