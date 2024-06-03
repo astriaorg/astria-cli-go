@@ -574,7 +574,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	log.Debugf("IBCRelayerOpts: %v", opts)
+	log.Debugf("AddIBCRelayerOpts: %v", opts)
 
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
@@ -658,7 +658,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	log.Debugf("IBCRelayerOpts: %v", opts)
+	log.Debugf("RemoveIBCRelayerOpts: %v", opts)
 
 	// client
 	opts.SequencerURL = addPortToURL(opts.SequencerURL)
@@ -944,7 +944,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	// decode public key
 	pk, err := publicKeyFromText(opts.PubKey)
 	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.PubKey)
+		log.WithError(err).Errorf("Error decoding hex encoded public key %v", opts.PubKey)
 		return &UpdateValidatorResponse{}, err
 	}
 	pubKey := &crypto.PublicKey{
