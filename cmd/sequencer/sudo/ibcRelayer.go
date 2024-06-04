@@ -13,7 +13,7 @@ import (
 // on the sequencer.
 var IBCRelayerCmd = &cobra.Command{
 	Use:   "ibc-relayer",
-	Short: "Iteract with IBC Relayers on the sequencer.",
+	Short: "Interact with IBC Relayers on the sequencer.",
 }
 
 // addIBCRelayerCmd represents the add ibc relayer command
