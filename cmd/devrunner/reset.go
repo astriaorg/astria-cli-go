@@ -44,7 +44,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 		panic(err)
 	}
 	localConfigDir := filepath.Join(homePath, ".astria", instance, config.DefaultConfigDirName)
-	baseConfigPath := filepath.Join(localConfigDir, config.DefualtBaseConfigName)
+	baseConfigPath := filepath.Join(localConfigDir, config.DefaultBaseConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
@@ -95,7 +95,7 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	networksConfigPath := filepath.Join(homePath, ".astria", instance, config.DefualtNetworksConfigName)
+	networksConfigPath := filepath.Join(homePath, ".astria", instance, config.DefaultNetworksConfigName)
 
 	err = os.Remove(networksConfigPath)
 	if err != nil {

@@ -55,13 +55,13 @@ func runInitialization(c *cobra.Command, args []string) {
 	log.Info("Creating new instance in:", instanceDir)
 	cmd.CreateDirOrPanic(instanceDir)
 
-	networksConfigPath := filepath.Join(defaultDir, instance, config.DefualtNetworksConfigName)
+	networksConfigPath := filepath.Join(defaultDir, instance, config.DefaultNetworksConfigName)
 	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
 
 	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
 	cmd.CreateDirOrPanic(configDirPath)
 
-	baseConfigPath := filepath.Join(configDirPath, config.DefualtBaseConfigName)
+	baseConfigPath := filepath.Join(configDirPath, config.DefaultBaseConfigName)
 	config.CreateBaseConfig(baseConfigPath, instance)
 
 	config.CreateComposerDevPrivKeyFile(configDirPath)

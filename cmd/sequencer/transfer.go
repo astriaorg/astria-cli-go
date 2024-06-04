@@ -9,10 +9,10 @@ import (
 )
 
 var transferCmd = &cobra.Command{
-	Use:    "transfer [amount] [to] [--keyfile | --keyring-address | --privkey]",
-	Short:  "Transfer tokens from one account to another.",
-	Args:   cobra.ExactArgs(2),
-	Run:    transferCmdHandler,
+	Use:   "transfer [amount] [to] [--keyfile | --keyring-address | --privkey]",
+	Short: "Transfer tokens from one account to another.",
+	Args:  cobra.ExactArgs(2),
+	Run:   transferCmdHandler,
 }
 
 func init() {
@@ -21,7 +21,7 @@ func init() {
 	flagHandler := cmd.CreateCliFlagHandler(transferCmd, cmd.EnvPrefix)
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
-	flagHandler.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-chain-id", "c", cmd.DefaultLocalSequencerChainID, "The chain ID of the sequencer.")
 	flagHandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flagHandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
