@@ -58,11 +58,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	network := flagHandler.GetValue("network")
 
-	baseConfigPath := filepath.Join(astriaDir, instance, config.DefaultConfigDirName, config.DefualtBaseConfigName)
+	baseConfigPath := filepath.Join(astriaDir, instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 	baseConfig := config.LoadBaseConfigOrPanic(baseConfigPath)
 	baseConfigEnvVars := baseConfig.ToSlice()
 
-	networksConfigPath := filepath.Join(astriaDir, instance, config.DefualtNetworksConfigName)
+	networksConfigPath := filepath.Join(astriaDir, instance, config.DefaultNetworksConfigName)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	// get the log level for the Astria Services using override env vars.
