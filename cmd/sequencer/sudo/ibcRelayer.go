@@ -60,7 +60,7 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 // removeIBCRelayerCmd represents the remove ibc relayer command
 var removeIBCRelayerCmd = &cobra.Command{
 	Use:   "remove [address] [--keyfile | --keyring-address | --privkey]",
-	Short: "Remove an address to the IBC Relayer set on the sequencer.",
+	Short: "Remove an address from the IBC Relayer set on the sequencer.",
 	Args:  cobra.ExactArgs(1),
 	Run:   removeIBCRelayerCmdHandler,
 }
