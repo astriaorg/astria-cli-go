@@ -262,3 +262,191 @@ func (tr *TransferResponse) TableRows() [][]string {
 		{tr.From, tr.To, strconv.Itoa(int(tr.Nonce)), tr.Amount, tr.TxHash},
 	}
 }
+
+type FeeAssetOpts struct {
+	// FromKey is the private key of the sender
+	FromKey string
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+	// Asset is the fee asset that will be added or removed
+	Asset string
+}
+
+type FeeAssetResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+	// FeeAssetId is the asset id of the fee asset
+	FeeAssetId string `json:"feeAssetId"`
+}
+
+func (far *FeeAssetResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(far, "", "  ")
+}
+
+func (far *FeeAssetResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "TxHash", "FeeAssetId"}
+}
+
+func (far *FeeAssetResponse) TableRows() [][]string {
+	return [][]string{
+		{far.From, strconv.Itoa(int(far.Nonce)), far.TxHash, far.FeeAssetId},
+	}
+}
+
+type IBCRelayerOpts struct {
+	// FromKey is the private key of the sender
+	FromKey string
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+	// IBCRelayerAddress is the ibc relayer address that will be added or removed
+	IBCRelayerAddress string
+}
+
+type IBCRelayerResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+	// IBCRelayerAddress is the asset id of the fee asset
+	IBCRelayerAddress string `json:"ibcRelayerAddress"`
+}
+
+func (i *IBCRelayerResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(i, "", "  ")
+}
+
+func (i *IBCRelayerResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "TxHash", "IBCRelayerAddress"}
+}
+
+func (i *IBCRelayerResponse) TableRows() [][]string {
+	return [][]string{
+		{i.From, strconv.Itoa(int(i.Nonce)), i.TxHash, i.IBCRelayerAddress},
+	}
+}
+
+type MintOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// ToAddress is the address of the receiver
+	ToAddress string
+	// Amount is the amount to be transferred. Using string type to support huge numbers
+	Amount string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+}
+
+type MintResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// To is the address of the receiver
+	To string `json:"to"`
+	// Amount is the amount transferred
+	Amount string `json:"amount"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+}
+
+func (m *MintResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(m, "", "  ")
+}
+
+func (m *MintResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "To", "Amount", "TxHash"}
+}
+
+func (m *MintResponse) TableRows() [][]string {
+	return [][]string{
+		{m.From, strconv.Itoa(int(m.Nonce)), m.To, m.Amount, m.TxHash},
+	}
+}
+
+type ChangeSudoAddressOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// ToAddress is the address of the receiver
+	UpdateAddress string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+}
+
+type ChangeSudoAddressResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// To is the address of the receiver
+	NewSudoAddress string `json:"newSudoAddress"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+}
+
+func (c *ChangeSudoAddressResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(c, "", "  ")
+}
+
+func (c *ChangeSudoAddressResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "NewSudoAddress", "TxHash"}
+}
+
+func (c *ChangeSudoAddressResponse) TableRows() [][]string {
+	return [][]string{
+		{c.From, strconv.Itoa(int(c.Nonce)), c.NewSudoAddress, c.TxHash},
+	}
+}
+
+type UpdateValidatorOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey string
+	// PubKey is the public key of the validator being updated
+	PubKey string
+	// Power is the new power of the validator
+	Power string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+}
+
+type UpdateValidatorResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// Is the public key of the validator being updated
+	PubKey string `json:"pubKey"`
+	// Power is the new power of the validator
+	Power string `json:"power"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+}
+
+func (uv *UpdateValidatorResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(uv, "", "  ")
+}
+
+func (uv *UpdateValidatorResponse) TableHeader() []string {
+	return []string{"From", "Nonce", "PubKey", "Power", "TxHash"}
+}
+
+func (uv *UpdateValidatorResponse) TableRows() [][]string {
+	return [][]string{
+		{uv.From, strconv.Itoa(int(uv.Nonce)), uv.PubKey, uv.Power, uv.TxHash},
+	}
+}

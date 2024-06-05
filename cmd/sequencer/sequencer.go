@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// sequencerCmd represents the sequencer command
-var sequencerCmd = &cobra.Command{
+// SequencerCmd represents the sequencer command
+var SequencerCmd = &cobra.Command{
 	Use:   "sequencer",
 	Short: "Interact with the Astria Shared Sequencer.",
 	Long: `Use this command to interact with the Astria Shared Sequencer.
@@ -20,5 +20,5 @@ Generate accounts, get account balances, transfer tokens, and more.`,
 }
 
 func init() {
-	cmd.RootCmd.AddCommand(sequencerCmd)
+	cmd.RootCmd.AddCommand(SequencerCmd)
 }

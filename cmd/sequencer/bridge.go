@@ -111,7 +111,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 }
 
 func init() {
-	sequencerCmd.AddCommand(bridgeCmd)
+	SequencerCmd.AddCommand(bridgeCmd)
 
 	bridgeCmd.AddCommand(bridgeInitCmd)
 	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)

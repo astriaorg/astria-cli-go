@@ -17,7 +17,7 @@ var nonceCmd = &cobra.Command{
 }
 
 func init() {
-	sequencerCmd.AddCommand(nonceCmd)
+	SequencerCmd.AddCommand(nonceCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(nonceCmd, cmd.EnvPrefix)
 

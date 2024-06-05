@@ -16,7 +16,7 @@ var transferCmd = &cobra.Command{
 }
 
 func init() {
-	sequencerCmd.AddCommand(transferCmd)
+	SequencerCmd.AddCommand(transferCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(transferCmd, cmd.EnvPrefix)
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")

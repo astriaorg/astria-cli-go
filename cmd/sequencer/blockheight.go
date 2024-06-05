@@ -16,7 +16,7 @@ var blockheightCmd = &cobra.Command{
 }
 
 func init() {
-	sequencerCmd.AddCommand(blockheightCmd)
+	SequencerCmd.AddCommand(blockheightCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(blockheightCmd, cmd.EnvPrefix)
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")

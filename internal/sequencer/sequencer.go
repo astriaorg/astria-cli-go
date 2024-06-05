@@ -4,9 +4,13 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"strconv"
 	"time"
 
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
+	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
+
 	"github.com/astriaorg/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
 )
@@ -406,4 +410,597 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	log.Debugf("Transfer hash: %v", hash)
 	return tr, nil
 
+}
+
+// AddFeeAsset adds a fee asset to the sequencer.
+func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("AddFeeAssetOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &FeeAssetResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &FeeAssetResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &FeeAssetResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_FeeAssetChangeAction{
+					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
+						Value: &txproto.FeeAssetChangeAction_Addition{
+							Addition: assetIdFromDenom(opts.Asset),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &FeeAssetResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &FeeAssetResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &FeeAssetResponse{
+		From:       hex.EncodeToString(fromAddr[:]),
+		Nonce:      nonce,
+		TxHash:     hash,
+		FeeAssetId: opts.Asset,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
+
+// RemoveFeeAsset removes a fee asset from the sequencer.
+func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("RemoveFeeAssetOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &FeeAssetResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &FeeAssetResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &FeeAssetResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_FeeAssetChangeAction{
+					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
+						Value: &txproto.FeeAssetChangeAction_Removal{
+							Removal: assetIdFromDenom(opts.Asset),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &FeeAssetResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &FeeAssetResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &FeeAssetResponse{
+		From:       hex.EncodeToString(fromAddr[:]),
+		Nonce:      nonce,
+		TxHash:     hash,
+		FeeAssetId: opts.Asset,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
+
+// AddIBCRelayer adds an IBC Relayer address to the sequencer.
+func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("AddIBCRelayerOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &IBCRelayerResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &IBCRelayerResponse{}, err
+	}
+
+	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
+		return &IBCRelayerResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_IbcRelayerChangeAction{
+					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
+						Value: &txproto.IbcRelayerChangeAction_Addition{
+							Addition: ibcRelayerAddress,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &IBCRelayerResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &IBCRelayerResponse{
+		From:              hex.EncodeToString(fromAddr[:]),
+		Nonce:             nonce,
+		TxHash:            hash,
+		IBCRelayerAddress: opts.IBCRelayerAddress,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
+
+// RemoveIBCRelayer removes an IBC Relayer address from the sequencer.
+func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("RemoveIBCRelayerOpts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &IBCRelayerResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &IBCRelayerResponse{}, err
+	}
+
+	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
+		return &IBCRelayerResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_IbcRelayerChangeAction{
+					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
+						Value: &txproto.IbcRelayerChangeAction_Removal{
+							Removal: ibcRelayerAddress,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &IBCRelayerResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &IBCRelayerResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &IBCRelayerResponse{
+		From:              hex.EncodeToString(fromAddr[:]),
+		Nonce:             nonce,
+		TxHash:            hash,
+		IBCRelayerAddress: opts.IBCRelayerAddress,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
+
+// Mint tokens to an account.
+func Mint(opts MintOpts) (*MintResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("Mint Opts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &MintResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &MintResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &MintResponse{}, err
+	}
+
+	to, err := addressFromText(opts.ToAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
+		return &MintResponse{}, err
+	}
+
+	amount, err := convertToUint128(opts.Amount)
+	if err != nil {
+		log.WithError(err).Error("Error converting amount to Uint128 proto")
+		return &MintResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_MintAction{
+					MintAction: &txproto.MintAction{
+						To:     to,
+						Amount: amount,
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &MintResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &MintResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &MintResponse{
+		From:   hex.EncodeToString(fromAddr[:]),
+		Nonce:  nonce,
+		To:     opts.ToAddress,
+		Amount: opts.Amount,
+		TxHash: hash,
+	}
+
+	log.Debugf("Mint TX hash: %v", hash)
+	return tr, nil
+}
+
+// ChangeSudoAddress changes the sudo address.
+func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("Change Sudo Address Opts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &ChangeSudoAddressResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &ChangeSudoAddressResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &ChangeSudoAddressResponse{}, err
+	}
+
+	to, err := addressFromText(opts.UpdateAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.UpdateAddress)
+		return &ChangeSudoAddressResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_SudoAddressChangeAction{
+					SudoAddressChangeAction: &txproto.SudoAddressChangeAction{
+						NewAddress: to,
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &ChangeSudoAddressResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &ChangeSudoAddressResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &ChangeSudoAddressResponse{
+		From:           hex.EncodeToString(fromAddr[:]),
+		Nonce:          nonce,
+		NewSudoAddress: opts.UpdateAddress,
+		TxHash:         hash,
+	}
+
+	log.Debugf("Change Sudo Address TX hash: %v", hash)
+	return tr, nil
+}
+
+// UpdateValidator changes the power of a validator.
+func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Debugf("Update Validator Opts: %v", opts)
+
+	// client
+	opts.SequencerURL = addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &UpdateValidatorResponse{}, err
+	}
+
+	// create signer
+	from, err := privateKeyFromText(opts.FromKey)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return &UpdateValidatorResponse{}, err
+	}
+	signer := client.NewSigner(from)
+
+	// Get current address nonce
+	fromAddr := signer.Address()
+	nonce, err := c.GetNonce(ctx, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &UpdateValidatorResponse{}, err
+	}
+
+	// decode public key
+	pk, err := publicKeyFromText(opts.PubKey)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding hex encoded public key %v", opts.PubKey)
+		return &UpdateValidatorResponse{}, err
+	}
+	pubKey := &crypto.PublicKey{
+		Sum: &crypto.PublicKey_Ed25519{
+			Ed25519: pk,
+		},
+	}
+
+	power, err := strconv.ParseInt(opts.Power, 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding power string to int64 %v", opts.Power)
+		return &UpdateValidatorResponse{}, err
+	}
+
+	tx := &txproto.UnsignedTransaction{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_ValidatorUpdateAction{
+					ValidatorUpdateAction: &abci.ValidatorUpdate{
+						PubKey: pubKey,
+						Power:  power,
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &UpdateValidatorResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTxSync(ctx, signed)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &UpdateValidatorResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	tr := &UpdateValidatorResponse{
+		From:   hex.EncodeToString(fromAddr[:]),
+		Nonce:  nonce,
+		PubKey: opts.PubKey,
+		Power:  opts.Power,
+		TxHash: hash,
+	}
+	log.Debug(tr)
+
+	log.Debugf("Update Validator TX hash: %v", hash)
+	return tr, nil
 }

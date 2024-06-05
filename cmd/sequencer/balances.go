@@ -18,7 +18,7 @@ var balancesCmd = &cobra.Command{
 }
 
 func init() {
-	sequencerCmd.AddCommand(balancesCmd)
+	SequencerCmd.AddCommand(balancesCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(balancesCmd, cmd.EnvPrefix)
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
