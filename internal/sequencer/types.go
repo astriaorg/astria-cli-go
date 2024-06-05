@@ -416,7 +416,7 @@ type UpdateValidatorOpts struct {
 	SequencerURL string
 	// FromKey is the private key of the sender
 	FromKey string
-	// PubKey is the public key of the validtor being updated
+	// PubKey is the public key of the validator being updated
 	PubKey string
 	// Power is the new power of the validator
 	Power string
