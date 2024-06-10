@@ -370,46 +370,6 @@ func (i *IBCRelayerResponse) TableRows() [][]string {
 	}
 }
 
-type MintOpts struct {
-	// SequencerURL is the URL of the sequencer
-	SequencerURL string
-	// FromKey is the private key of the sender
-	FromKey string
-	// ToAddress is the address of the receiver
-	ToAddress string
-	// Amount is the amount to be transferred. Using string type to support huge numbers
-	Amount string
-	// SequencerChainID is the chain ID of the sequencer
-	SequencerChainID string
-}
-
-type MintResponse struct {
-	// From is the address of the sender
-	From string `json:"from"`
-	// Nonce is the nonce of the transaction
-	Nonce uint32 `json:"nonce"`
-	// To is the address of the receiver
-	To string `json:"to"`
-	// Amount is the amount transferred
-	Amount string `json:"amount"`
-	// TxHash is the hash of the transaction
-	TxHash string `json:"txHash"`
-}
-
-func (m *MintResponse) JSON() ([]byte, error) {
-	return json.MarshalIndent(m, "", "  ")
-}
-
-func (m *MintResponse) TableHeader() []string {
-	return []string{"From", "Nonce", "To", "Amount", "TxHash"}
-}
-
-func (m *MintResponse) TableRows() [][]string {
-	return [][]string{
-		{m.From, strconv.Itoa(int(m.Nonce)), m.To, m.Amount, m.TxHash},
-	}
-}
-
 type ChangeSudoAddressOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
