@@ -13,7 +13,7 @@ import (
 // on the sequencer.
 var IBCRelayerCmd = &cobra.Command{
 	Use:   "ibc-relayer",
-	Short: "Iteract with IBC Relayers on the sequencer.",
+	Short: "Interact with IBC Relayers on the sequencer.",
 }
 
 // addIBCRelayerCmd represents the add ibc relayer command
@@ -60,7 +60,7 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 // removeIBCRelayerCmd represents the remove ibc relayer command
 var removeIBCRelayerCmd = &cobra.Command{
 	Use:   "remove [address] [--keyfile | --keyring-address | --privkey]",
-	Short: "Remove an address to the IBC Relayer set on the sequencer.",
+	Short: "Remove an address from the IBC Relayer set on the sequencer.",
 	Args:  cobra.ExactArgs(1),
 	Run:   removeIBCRelayerCmdHandler,
 }

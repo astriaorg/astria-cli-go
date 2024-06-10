@@ -58,7 +58,7 @@ func init() {
 
 	flaghandler := cmd.CreateCliFlagHandler(validatorUpdateCmd, cmd.EnvPrefix)
 	flaghandler.BindBoolFlag("json", false, "Output the command result in JSON format.")
-	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
+	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to update the validator on.")
 	flaghandler.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	flaghandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flaghandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
