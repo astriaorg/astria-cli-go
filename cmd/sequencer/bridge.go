@@ -15,7 +15,7 @@ var bridgeCmd = &cobra.Command{
 
 // bridgeInitCmd represents the `bridge init` command
 var bridgeInitCmd = &cobra.Command{
-	Use:   "init [rollup-id] [--keyfile | --keyring-address | --privkey]",
+	Use:   "init [rollup-name] [--keyfile | --keyring-address | --privkey]",
 	Short: "Initialize a bridge account for the given rollup",
 	Long: `Initialize a bridge account for the given rollup on the chain.
 The sender of the transaction is used as the owner of the bridge account
@@ -32,7 +32,7 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 	assetID := flagHandler.GetValue("asset-id")
 	feeAssetID := flagHandler.GetValue("fee-asset-id")
-	rollupID := args[0]
+	rollupName := args[0]
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
@@ -41,7 +41,7 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	opts := sequencer.InitBridgeOpts{
 		SequencerURL:     url,
 		FromKey:          priv,
-		RollupID:         rollupID,
+		RollupName:       rollupName,
 		SequencerChainID: sequencerChainID,
 		AssetID:          assetID,
 		FeeAssetID:       feeAssetID,

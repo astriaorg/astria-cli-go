@@ -144,8 +144,8 @@ type InitBridgeOpts struct {
 	SequencerURL string
 	// fromKey is the private key of the sender
 	FromKey string
-	// RollupID is the ID of the rollup to create the bridge account for
-	RollupID string
+	// RollupName is the name of the rollup to create the bridge account for
+	RollupName string
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
