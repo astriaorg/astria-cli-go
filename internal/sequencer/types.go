@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"math/big"
 	"strconv"
+
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // Account is the struct that holds the account information.
@@ -96,6 +99,38 @@ func (br *BalancesResponse) TableRows() [][]string {
 		rows[i] = []string{balance.Denom, balance.Balance.String()}
 	}
 	return rows
+}
+
+// BlockOpts are the options for the GetBlock function.
+type BlockOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// BlockHeight is the height of the block to get
+	BlockHeight int64
+}
+
+// BlockResponse is the response of the GetBlock function.
+type BlockResponse struct {
+	Block *coretypes.ResultBlock `json:"block"`
+}
+
+func (br *BlockResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(br.Block, "", "  ")
+
+}
+
+func (br *BlockResponse) TableHeader() []string {
+	return []string{"Block"}
+}
+
+func (br *BlockResponse) TableRows() [][]string {
+	data, err := json.MarshalIndent(br.Block, "", "  ")
+	if err != nil {
+		log.Debug("Error marshalling block to JSON")
+	}
+	return [][]string{
+		{string(data)},
+	}
 }
 
 // BlockheightResponse is the response of the GetBlockheight function.

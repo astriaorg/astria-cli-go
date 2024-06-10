@@ -84,6 +84,33 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 	return &b, nil
 }
 
+// GetBlock returns the specific block from the sequencer.
+func GetBlock(opts BlockOpts) (*BlockResponse, error) {
+	sequencerURL := addPortToURL(opts.SequencerURL)
+
+	log.Debug("Creating CometBFT client with url: ", sequencerURL)
+
+	c, err := client.NewClient(sequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &BlockResponse{}, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	block, err := c.GetBlock(ctx, &opts.BlockHeight)
+	if err != nil {
+		log.WithError(err).Error("Error getting blockheight")
+		return &BlockResponse{}, err
+	}
+
+	log.Debug("Retrieved Block at block height: ", opts.BlockHeight)
+	return &BlockResponse{
+		Block: block,
+	}, nil
+}
+
 // GetBlockheight returns the current blockheight of the sequencer.
 func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 	sequencerURL = addPortToURL(sequencerURL)

@@ -29,8 +29,8 @@ github.com/MarvinJWendt/testza v0.5.2 h1:53KDo64C1z/h/d/stCYCPY69bt/OSwjq5KpFNwi
 github.com/MarvinJWendt/testza v0.5.2/go.mod h1:xu53QFE5sCdjtMCKk8YMQ2MnymimEctc4n3EjyIYvEY=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
-github.com/astriaorg/go-sequencer-client v0.4.0 h1:jOPtqkUlb4mbvScZmt53RPNJnYhn97CK8siUixY3Kx8=
-github.com/astriaorg/go-sequencer-client v0.4.0/go.mod h1:kfjiQZzNYqIksi9XcMMEJVRojBmlBUg/YqWdfW0D0PA=
+github.com/astriaorg/go-sequencer-client v0.4.1-0.20240610174144-de42a9cdb5d8 h1:gPATstiXZa9C/3ACOi4qRPvVEyHlsBE5IGwRyz7cQ8g=
+github.com/astriaorg/go-sequencer-client v0.4.1-0.20240610174144-de42a9cdb5d8/go.mod h1:kfjiQZzNYqIksi9XcMMEJVRojBmlBUg/YqWdfW0D0PA=
 github.com/atomicgo/cursor v0.0.1/go.mod h1:cBON2QmmrysudxNBFthvMtN32r3jxVRIvzkUiF/RuIk=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
