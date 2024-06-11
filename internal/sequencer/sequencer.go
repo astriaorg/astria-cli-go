@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -12,8 +13,11 @@ import (
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
 
 	"github.com/astriaorg/go-sequencer-client/client"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	log "github.com/sirupsen/logrus"
 )
+
+const AddressPrefix = "astria"
 
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
@@ -25,13 +29,18 @@ func CreateAccount() (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	addr := hex.EncodeToString(address[:])
+	encoded, err := bech32.ConvertAndEncode(AddressPrefix, address[:])
+	if err != nil {
+		fmt.Printf("Error encoding address: %v\n", err)
+		return nil, err
+	}
+
 	priv := ed25519.NewKeyFromSeed(seed[:])
 	pub := priv.Public().(ed25519.PublicKey)
 
-	log.Debug("Created account with address: ", addr)
+	log.Debug("Created account with address: ", encoded)
 	return &Account{
-		Address:    addr,
+		Address:    encoded,
 		PublicKey:  pub,
 		PrivateKey: priv,
 	}, nil
@@ -39,7 +48,11 @@ func CreateAccount() (*Account, error) {
 
 // GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
-	address = strip0xPrefix(address)
+	addressBytes, err := getAddressAsBytes(address)
+	if err != nil {
+		log.WithError(err).Error("Error getting address as bytes")
+		return nil, err
+	}
 	sequencerURL = addPortToURL(sequencerURL)
 
 	log.Debug("Getting balance for address: ", address)
@@ -51,24 +64,18 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 		return nil, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return nil, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	balances, err := c.GetBalances(ctx, address20)
+	balances, err := c.GetBalances(ctx, addressBytes)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return nil, err
 	}
 
+	if len(balances) == 0 {
+		log.Info("No balances found")
+	}
 	for _, b := range balances {
 		log.Debug("Denom:", b.Denom, "Balance:", b.Balance.String())
 	}

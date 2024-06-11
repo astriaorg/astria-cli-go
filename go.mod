@@ -7,6 +7,7 @@ require (
 	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240528191859-59fd0d703e09.1
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/go-sequencer-client v0.4.0
+	github.com/cosmos/cosmos-sdk v0.50.7
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -17,6 +18,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.23.0
 )
+
+require github.com/cosmos/btcutil v1.0.5 // indirect
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
@@ -95,7 +98,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
+	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.1 // indirect
 	go.opencensus.io v0.24.0 // indirect

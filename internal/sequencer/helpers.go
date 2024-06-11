@@ -11,6 +11,7 @@ import (
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -132,4 +133,38 @@ func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
 	}
 	from := ed25519.NewKeyFromSeed(privKeyBytes)
 	return from, nil
+}
+
+// getAddressAsBytes converts an address string to a byte array. It will first
+// attempt to decode the address as bech32, and if that fails, it will attempt
+// to decode the address as a hexadecimal string. If the address is not a valid
+// bech32 or hex string, an error will be returned.
+func getAddressAsBytes(address string) ([20]byte, error) {
+	hrp, data, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		log.Debugf("Could not decode address as bech32: %v\n", err)
+
+		address = strip0xPrefix(address)
+		bytes, err := hex.DecodeString(address)
+		if err != nil {
+			log.WithError(err).Error("Error decoding hex encoded address")
+
+			return [20]byte{}, err
+		}
+
+		var address20 [20]byte
+		copy(address20[:], bytes)
+
+		return address20, nil
+	}
+
+	if hrp != "astria" {
+		log.Error("Invalid address prefix: ", hrp)
+		return [20]byte{}, fmt.Errorf("invalid address prefix: %s", hrp)
+	}
+
+	var address20 [20]byte
+	copy(address20[:], data)
+
+	return address20, nil
 }
