@@ -254,7 +254,7 @@ func (tr *TransferResponse) JSON() ([]byte, error) {
 }
 
 func (tr *TransferResponse) TableHeader() []string {
-	return []string{"From", "To", "Amount", "Nonce", "TxHash"}
+	return []string{"From", "To", "Nonce", "Amount", "TxHash"}
 }
 
 func (tr *TransferResponse) TableRows() [][]string {
