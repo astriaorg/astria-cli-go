@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// blockCmd represents the getblock command
+// blockCmd represents the block command
 var blockCmd = &cobra.Command{
 	Use:   "block [height]",
-	Short: "Get the specific block from the sequencer.",
+	Short: "Get sequencer block at specified height.",
 	Args:  cobra.ExactArgs(1),
 	Run:   blockCmdHandler,
 }
