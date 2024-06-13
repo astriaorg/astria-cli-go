@@ -11,6 +11,7 @@ import (
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 
+	"github.com/btcsuite/btcd/btcutil/bech32"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -97,18 +98,29 @@ func addressFromPublicKey(pubkey ed25519.PublicKey) string {
 	return hex.EncodeToString(addr[:])
 }
 
-// addressFromText converts a hexadecimal string representation of an address to an Address protobuf
-// The input address string is expected to have the "0x" prefix stripped before being passed to this function.
-// If the input string is not a valid hexadecimal string, an error will be returned.
+// addressFromText converts a bech32 or hexadecimal string representation of an
+// address to an Address protobuf. The input address string is expected to have
+// the "0x" prefix stripped before being passed to this function. If the input
+// string is not a valid hexadecimal string, an error will be returned.
 func addressFromText(addr string) (*primproto.Address, error) {
-	addr = strip0xPrefix(addr)
-	bytes, err := hex.DecodeString(addr)
+	address, wasBech, err := getAddressAsBytes(addr)
 	if err != nil {
 		return nil, err
 	}
-	return &primproto.Address{
-		Inner: bytes,
-	}, nil
+
+	if wasBech {
+		// FIXME: why does inner work here but not bech32m?
+		// return &primproto.Address{
+		// 	Bech32M: addr,
+		// }, nil
+		return &primproto.Address{
+			Inner: address[:],
+		}, nil
+	} else {
+		return &primproto.Address{
+			Inner: address[:],
+		}, nil
+	}
 }
 
 // publicKeyFromText converts a hexadecimal string representation of a public
@@ -132,4 +144,51 @@ func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
 	}
 	from := ed25519.NewKeyFromSeed(privKeyBytes)
 	return from, nil
+}
+
+// getAddressAsBytes converts an address string to a byte array. It will first
+// attempt to decode the address as bech32m, and if that fails, it will attempt
+// to decode the address as a hexadecimal string. If the address is not a valid
+// bech32m or hex string, an error will be returned. The boolean return value
+// indicates if the address was successfully decoded as bech32m. It will be true
+// if the address was decoded as bech32m, and false if it was decoded as hex or
+// couldn't be decoded.
+func getAddressAsBytes(address string) ([20]byte, bool, error) {
+	hrp, data, err := bech32.Decode(address)
+	if err != nil {
+		log.Debugf("Could not decode address as bech32: %v\n", err)
+		log.Debug("Attempting to decode address as hex")
+
+		address = strip0xPrefix(address)
+		bytes, err := hex.DecodeString(address)
+		if err != nil {
+			log.WithError(err).Error("Error decoding hex encoded address")
+
+			return [20]byte{}, false, err
+		}
+		log.Debug("Successfully decoded address as hex")
+
+		var address20 [20]byte
+		copy(address20[:], bytes)
+
+		return address20, false, nil
+	}
+
+	// Convert the data from 5-bit groups back to 8-bit
+	decoded, err := bech32.ConvertBits(data, 5, 8, false)
+	if err != nil {
+		log.Fatalf("Error converting bits: %v", err)
+	}
+
+	if hrp != "astria" {
+		log.Error("Invalid address prefix: ", hrp)
+		return [20]byte{}, true, fmt.Errorf("invalid address prefix: %s", hrp)
+	}
+	log.Debug("Successfully decoded address as bech32m")
+
+	var address20 [20]byte
+	copy(address20[:], decoded)
+	// copy(address20[:], data)
+
+	return address20, true, nil
 }

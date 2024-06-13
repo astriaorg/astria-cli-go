@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -12,8 +13,12 @@ import (
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
 
 	"github.com/astriaorg/go-sequencer-client/client"
+	"github.com/btcsuite/btcd/btcutil/bech32"
+
 	log "github.com/sirupsen/logrus"
 )
+
+const AddressPrefix = "astria"
 
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
@@ -25,13 +30,27 @@ func CreateAccount() (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	addr := hex.EncodeToString(address[:])
+	log.Debug("Created account with address: ", hex.EncodeToString(address[:]))
+
+	// Convert the address to 5-bit groups for encoding
+	converted, err := bech32.ConvertBits(address[:], 8, 5, true)
+	if err != nil {
+		log.Fatalf("Error converting bits: %v", err)
+	}
+
+	// encode address to bech32m
+	encoded, err := bech32.EncodeM(AddressPrefix, converted)
+	if err != nil {
+		fmt.Printf("Error encoding address to bech32: %v\n", err)
+		return nil, err
+	}
+
 	priv := ed25519.NewKeyFromSeed(seed[:])
 	pub := priv.Public().(ed25519.PublicKey)
 
-	log.Debug("Created account with address: ", addr)
+	log.Debug("Created account with address: ", encoded)
 	return &Account{
-		Address:    addr,
+		Address:    encoded,
 		PublicKey:  pub,
 		PrivateKey: priv,
 	}, nil
@@ -39,10 +58,16 @@ func CreateAccount() (*Account, error) {
 
 // GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
-	address = strip0xPrefix(address)
+	addressBytes, _, err := getAddressAsBytes(address)
+	if err != nil {
+		log.WithError(err).Error("Error getting address as bytes")
+		return nil, err
+	}
+
 	sequencerURL = addPortToURL(sequencerURL)
 
 	log.Debug("Getting balance for address: ", address)
+	log.Debug("Decoded address bytes: ", hex.EncodeToString(addressBytes[:]))
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
 
 	c, err := client.NewClient(sequencerURL)
@@ -51,24 +76,18 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 		return nil, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return nil, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	balances, err := c.GetBalances(ctx, address20)
+	balances, err := c.GetBalances(ctx, addressBytes)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return nil, err
 	}
 
+	if len(balances) == 0 {
+		log.Info("No balances found")
+	}
 	for _, b := range balances {
 		log.Debug("Denom:", b.Denom, "Balance:", b.Balance.String())
 	}
@@ -140,7 +159,11 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 
 // GetNonce returns the nonce of an address.
 func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
-	address = strip0xPrefix(address)
+	addressBytes, _, err := getAddressAsBytes(address)
+	if err != nil {
+		log.WithError(err).Error("Error getting address as bytes")
+		return nil, err
+	}
 	sequencerURL = addPortToURL(sequencerURL)
 
 	log.Debug("Getting nonce for address: ", address)
@@ -152,19 +175,10 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 		return &NonceResponse{}, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return &NonceResponse{}, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	nonce, err := c.GetNonce(ctx, address20)
+	nonce, err := c.GetNonce(ctx, addressBytes)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &NonceResponse{}, err
