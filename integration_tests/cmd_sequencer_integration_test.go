@@ -190,6 +190,13 @@ func TestValidatorUpdate(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGetBlock(t *testing.T) {
+	// get a block
+	getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json")
+	_, err := getBlockCmd.CombinedOutput()
+	assert.NoError(t, err)
+}
+
 func TestUpdateSudoAddress(t *testing.T) {
 	// change the sudo address
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
