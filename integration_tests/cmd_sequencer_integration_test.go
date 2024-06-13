@@ -149,6 +149,20 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
 }
 
+func TestAddAndRemoveFeeAssts(t *testing.T) {
+	testAssetName := "testAsset"
+	// add a fee asset
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err := addFeeAssetCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err = removeFeeAssetCmd.CombinedOutput()
+	assert.NoError(t, err)
+}
+
 // TODO - move setup and teardown here and out of the justfile.
 
 //// build the cli with a unique name just for testing
