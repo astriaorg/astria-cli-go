@@ -271,7 +271,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rollupID := rollupIdFromText(opts.RollupID)
+	rollupID := rollupIdFromText(opts.RollupName)
 	log.Debug("rollup id :", rollupID)
 
 	// client
@@ -336,7 +336,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &InitBridgeResponse{
-		RollupID: opts.RollupID,
+		RollupID: opts.RollupName,
 		Nonce:    nonce,
 		TxHash:   hash,
 	}
