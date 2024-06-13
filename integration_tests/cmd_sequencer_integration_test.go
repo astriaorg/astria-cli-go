@@ -191,10 +191,27 @@ func TestValidatorUpdate(t *testing.T) {
 }
 
 func TestGetBlock(t *testing.T) {
-	// get a block
-	getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json")
-	_, err := getBlockCmd.CombinedOutput()
-	assert.NoError(t, err)
+	// get initial blockheight
+	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json")
+	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
+	}
+	var blockHeight sequencer.BlockheightResponse
+	err = json.Unmarshal(blockHeightOutput, &blockHeight)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
+	}
+	initialBlockHeight := blockHeight.Blockheight
+
+	if initialBlockHeight > 0 {
+		// get a block
+		getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json")
+		_, err := getBlockCmd.CombinedOutput()
+		assert.NoError(t, err)
+	} else {
+		t.Fatalf("Blockheight is 0, cannot get block")
+	}
 }
 
 func TestUpdateSudoAddress(t *testing.T) {
