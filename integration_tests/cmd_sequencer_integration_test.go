@@ -163,6 +163,19 @@ func TestAddAndRemoveFeeAssts(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRemoveAndAddIBCRelayer(t *testing.T) {
+	// remove an address from the existing IBC relayer set
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	removeIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err := removeIBCRelayerCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err = addIBCRelayerCmd.CombinedOutput()
+	assert.NoError(t, err)
+}
+
 // TODO - move setup and teardown here and out of the justfile.
 
 //// build the cli with a unique name just for testing
