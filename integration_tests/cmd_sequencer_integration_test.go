@@ -176,6 +176,20 @@ func TestRemoveAndAddIBCRelayer(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestUpdateSudoAddress(t *testing.T) {
+	// change the sudo address
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err := addressChangeCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// use the old sudo address to try to change the sudo address, this will fail
+	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err = failingAddressChangeCmd.CombinedOutput()
+	assert.Error(t, err)
+
+}
+
 // TODO - move setup and teardown here and out of the justfile.
 
 //// build the cli with a unique name just for testing
