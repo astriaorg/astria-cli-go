@@ -18,6 +18,7 @@ import (
 const TestFromPrivKey = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
 const TestFromAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
 const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
+const TestToPubKey = "88787e29db8d5247c6adfac9909b56e6b2705c3120b2e3885e8ec8aa416a10f1"
 const TransferAmount = 535353
 
 func TestCreateaccount(t *testing.T) {
@@ -176,6 +177,19 @@ func TestRemoveAndAddIBCRelayer(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestValidatorUpdate(t *testing.T) {
+	// update the validator power
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	validatorUpdateCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err := validatorUpdateCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// revert the validator power
+	validatorUpdateCmd = exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", "http://127.0.0.1:26657")
+	_, err = validatorUpdateCmd.CombinedOutput()
+	assert.NoError(t, err)
+}
+
 func TestUpdateSudoAddress(t *testing.T) {
 	// change the sudo address
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
@@ -187,7 +201,6 @@ func TestUpdateSudoAddress(t *testing.T) {
 	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
 	_, err = failingAddressChangeCmd.CombinedOutput()
 	assert.Error(t, err)
-
 }
 
 // TODO - move setup and teardown here and out of the justfile.
