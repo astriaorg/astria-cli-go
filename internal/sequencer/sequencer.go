@@ -18,7 +18,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const AddressPrefix = "astria"
+const BechAddressPrefix = "astria"
 
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
@@ -39,7 +39,7 @@ func CreateAccount() (*Account, error) {
 	}
 
 	// encode address to bech32m
-	encoded, err := bech32.EncodeM(AddressPrefix, converted)
+	encoded, err := bech32.EncodeM(BechAddressPrefix, converted)
 	if err != nil {
 		fmt.Printf("Error encoding address to bech32: %v\n", err)
 		return nil, err
@@ -58,7 +58,7 @@ func CreateAccount() (*Account, error) {
 
 // GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
-	addressBytes, _, err := getAddressAsBytes(address)
+	addressBytes, _, err := addressAsBytes(address)
 	if err != nil {
 		log.WithError(err).Error("Error getting address as bytes")
 		return nil, err
@@ -159,7 +159,7 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 
 // GetNonce returns the nonce of an address.
 func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
-	addressBytes, _, err := getAddressAsBytes(address)
+	addressBytes, _, err := addressAsBytes(address)
 	if err != nil {
 		log.WithError(err).Error("Error getting address as bytes")
 		return nil, err
