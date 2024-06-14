@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"math/big"
 	"strconv"
+
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // Account is the struct that holds the account information.
@@ -98,6 +101,38 @@ func (br *BalancesResponse) TableRows() [][]string {
 	return rows
 }
 
+// BlockOpts are the options for the GetBlock function.
+type BlockOpts struct {
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// BlockHeight is the height of the block to get
+	BlockHeight int64
+}
+
+// BlockResponse is the response of the GetBlock function.
+type BlockResponse struct {
+	Block *coretypes.ResultBlock `json:"block"`
+}
+
+func (br *BlockResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(br.Block, "", "  ")
+
+}
+
+func (br *BlockResponse) TableHeader() []string {
+	return []string{"Block"}
+}
+
+func (br *BlockResponse) TableRows() [][]string {
+	data, err := json.MarshalIndent(br.Block, "", "  ")
+	if err != nil {
+		log.Debug("Error marshalling block to JSON")
+	}
+	return [][]string{
+		{string(data)},
+	}
+}
+
 // BlockheightResponse is the response of the GetBlockheight function.
 type BlockheightResponse struct {
 	Blockheight int64 `json:"blockheight"` // NOTE - cometbft returns int64 for this
@@ -144,14 +179,21 @@ type InitBridgeOpts struct {
 	SequencerURL string
 	// fromKey is the private key of the sender
 	FromKey string
-	// RollupID is the ID of the rollup to create the bridge account for
-	RollupID string
+	// RollupName is the name of the rollup to create the bridge account for
+	RollupName string
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
 	AssetID string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
 	FeeAssetID string
+	// SudoAddress specifies the address to use for the bridge account which has
+	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
+	// this bridge account. If this is empty, the sender of the transaction is used.
+	SudoAddress string
+	// WithdrawerAddress specifies the address that can withdraw funds from this
+	// bridge account. If this is empty, the sender of the transaction is used.
+	WithdrawerAddress string
 }
 type InitBridgeResponse struct {
 	RollupID string `json:"rollupID"`
@@ -332,46 +374,6 @@ func (i *IBCRelayerResponse) TableHeader() []string {
 func (i *IBCRelayerResponse) TableRows() [][]string {
 	return [][]string{
 		{i.From, strconv.Itoa(int(i.Nonce)), i.TxHash, i.IBCRelayerAddress},
-	}
-}
-
-type MintOpts struct {
-	// SequencerURL is the URL of the sequencer
-	SequencerURL string
-	// FromKey is the private key of the sender
-	FromKey string
-	// ToAddress is the address of the receiver
-	ToAddress string
-	// Amount is the amount to be transferred. Using string type to support huge numbers
-	Amount string
-	// SequencerChainID is the chain ID of the sequencer
-	SequencerChainID string
-}
-
-type MintResponse struct {
-	// From is the address of the sender
-	From string `json:"from"`
-	// Nonce is the nonce of the transaction
-	Nonce uint32 `json:"nonce"`
-	// To is the address of the receiver
-	To string `json:"to"`
-	// Amount is the amount transferred
-	Amount string `json:"amount"`
-	// TxHash is the hash of the transaction
-	TxHash string `json:"txHash"`
-}
-
-func (m *MintResponse) JSON() ([]byte, error) {
-	return json.MarshalIndent(m, "", "  ")
-}
-
-func (m *MintResponse) TableHeader() []string {
-	return []string{"From", "Nonce", "To", "Amount", "TxHash"}
-}
-
-func (m *MintResponse) TableRows() [][]string {
-	return [][]string{
-		{m.From, strconv.Itoa(int(m.Nonce)), m.To, m.Amount, m.TxHash},
 	}
 }
 

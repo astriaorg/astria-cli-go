@@ -3,11 +3,10 @@ module github.com/astria/astria-cli-go
 go 1.22.2
 
 require (
-	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.1-20240607202648-0eefaac9f5b8.1
-	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240609195145-373c666381d1.1
+	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240607202648-0eefaac9f5b8.2
+	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240609195145-373c666381d1.2
 	github.com/99designs/keyring v1.2.2
-	github.com/astriaorg/go-sequencer-client v0.4.0
-	github.com/btcsuite/btcd/btcutil v1.1.5
+	github.com/astriaorg/go-sequencer-client v0.4.1
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -17,6 +16,11 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.24.0
+)
+
+require (
+	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
 )
 
 require (
@@ -33,7 +37,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.7 // indirect
+	github.com/cometbft/cometbft v0.38.7
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/cosmos/gogoproto v1.5.0 // indirect
@@ -46,7 +50,7 @@ require (
 	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
-	github.com/getsentry/sentry-go v0.28.0 // indirect
+	github.com/getsentry/sentry-go v0.28.1 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
@@ -65,7 +69,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
