@@ -187,9 +187,12 @@ type InitBridgeOpts struct {
 	AssetID string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
 	FeeAssetID string
-	// SudoAddress specifies the sudo address to use for the bridge account
+	// SudoAddress specifies the address to use for the bridge account which has
+	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
+	// this bridge account. If this is empty, the sender of the transaction is used.
 	SudoAddress string
-	// WithdrawerAddress specifies the withdrawer address to use for the bridge account
+	// WithdrawerAddress specifies the address that can withdraw funds from this
+	// bridge account. If this is empty, the sender of the transaction is used.
 	WithdrawerAddress string
 }
 type InitBridgeResponse struct {
