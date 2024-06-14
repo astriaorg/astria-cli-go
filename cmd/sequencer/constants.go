@@ -1,8 +1,8 @@
 package sequencer
 
 const (
-	DefaultSequencerURL     = "https://rpc.sequencer.dusk-8.devnet.astria.org"
-	DefaultSequencerChainID = "astria-dusk-8"
+	DefaultSequencerURL     = "https://rpc.sequencer.dusk-7.devnet.astria.org"
+	DefaultSequencerChainID = "astria-dusk-7"
 	DefaultBridgeAssetID    = "utia"
 	DefaultBridgeFeeAssetID = "nria"
 )

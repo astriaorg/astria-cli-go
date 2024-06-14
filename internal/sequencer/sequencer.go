@@ -58,7 +58,7 @@ func CreateAccount() (*Account, error) {
 
 // GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
-	addressBytes, _, err := addressAsBytes(address)
+	addressBytes, err := addressAsBytes(address)
 	if err != nil {
 		log.WithError(err).Error("Error getting address as bytes")
 		return nil, err
@@ -159,7 +159,7 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 
 // GetNonce returns the nonce of an address.
 func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
-	addressBytes, _, err := addressAsBytes(address)
+	addressBytes, err := addressAsBytes(address)
 	if err != nil {
 		log.WithError(err).Error("Error getting address as bytes")
 		return nil, err
