@@ -7,7 +7,7 @@ require (
 	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240609195145-373c666381d1.1
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/go-sequencer-client v0.4.0
-	github.com/cosmos/cosmos-sdk v0.50.7
+	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -17,12 +17,6 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.24.0
-)
-
-require (
-	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
-	github.com/btcsuite/btcutil v1.0.2 // indirect
-	github.com/cosmos/btcutil v1.0.5 // indirect
 )
 
 require (
