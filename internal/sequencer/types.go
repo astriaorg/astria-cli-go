@@ -187,6 +187,10 @@ type InitBridgeOpts struct {
 	AssetID string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
 	FeeAssetID string
+	// SudoAddress specifies the sudo address to use for the bridge account
+	SudoAddress string
+	// WithdrawerAddress specifies the withdrawer address to use for the bridge account
+	WithdrawerAddress string
 }
 type InitBridgeResponse struct {
 	RollupID string `json:"rollupID"`
