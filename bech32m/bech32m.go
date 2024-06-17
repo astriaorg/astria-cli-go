@@ -12,9 +12,14 @@ import (
 // an error.
 func ValidateBech32M(address, expectedPrefix string) error {
 	// Decode the Bech32m address
-	hrp, _, err := bech32.Decode(address)
+	hrp, _, version, err := bech32.DecodeGeneric(address)
 	if err != nil {
 		return fmt.Errorf("failed to decode address: %v", err)
+	}
+
+	// Check if the version is Bech32m and not a different bech32 version
+	if version != bech32.VersionM {
+		return fmt.Errorf("address is not a bech32m address")
 	}
 
 	// Check if the human-readable prefix matches the expected prefix
@@ -32,7 +37,8 @@ func DecodeBech32M(address string, prefix string) ([20]byte, error) {
 		return [20]byte{}, fmt.Errorf("failed to validate addres as bech32m: %v", err)
 	}
 
-	_, data, err := bech32.Decode(address)
+	// can ignore the version here because we already validated the address
+	_, data, _, err := bech32.DecodeGeneric(address)
 	if err != nil {
 		return [20]byte{}, fmt.Errorf("failed to decode address: %v", err)
 	}
@@ -51,9 +57,9 @@ func DecodeBech32M(address string, prefix string) ([20]byte, error) {
 
 // EncodeBech32M creates a bech32m address from a byte slice and string
 // prefix.
-func EncodeBech32M(prefix string, data [20]byte) (string, error) {
+func EncodeBech32M(prefix string, data []byte) (string, error) {
 	// Convert the data from 8-bit groups to 5-bit
-	converted, err := bech32.ConvertBits(data[:], 8, 5, true)
+	converted, err := bech32.ConvertBits(data, 8, 5, true)
 	if err != nil {
 		return "", fmt.Errorf("failed to convert bits from 8-bit groups to 5-bit groups: %v", err)
 	}

@@ -29,7 +29,7 @@ func CreateAccount() (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	encoded, err := bech32m.EncodeBech32M(BechAddressPrefix, address)
+	encoded, err := bech32m.EncodeBech32M(BechAddressPrefix, address[:])
 	if err != nil {
 		log.WithError(err).Error("Error encoding address to bech32")
 		return nil, err
