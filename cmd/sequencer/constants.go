@@ -1,10 +1,8 @@
 package sequencer
 
-import "github.com/astria/astria-cli-go/cmd"
-
 const (
-	DefaultSequencerURL     = "http://127.0.0.1:26657"
-	DefaultSequencerChainID = cmd.DefaultLocalSequencerChainID
-	DefaultBridgeAssetID    = "transfer/channel-0/utia"
+	DefaultSequencerURL     = "https://rpc.sequencer.dusk-7.devnet.astria.org"
+	DefaultSequencerChainID = "astria-dusk-7"
+	DefaultBridgeAssetID    = "utia"
 	DefaultBridgeFeeAssetID = "nria"
 )

@@ -179,14 +179,21 @@ type InitBridgeOpts struct {
 	SequencerURL string
 	// fromKey is the private key of the sender
 	FromKey string
-	// RollupID is the ID of the rollup to create the bridge account for
-	RollupID string
+	// RollupName is the name of the rollup to create the bridge account for
+	RollupName string
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
 	AssetID string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
 	FeeAssetID string
+	// SudoAddress specifies the address to use for the bridge account which has
+	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
+	// this bridge account. If this is empty, the sender of the transaction is used.
+	SudoAddress string
+	// WithdrawerAddress specifies the address that can withdraw funds from this
+	// bridge account. If this is empty, the sender of the transaction is used.
+	WithdrawerAddress string
 }
 type InitBridgeResponse struct {
 	RollupID string `json:"rollupID"`

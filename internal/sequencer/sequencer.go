@@ -285,7 +285,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rollupID := rollupIdFromText(opts.RollupID)
+	rollupID := rollupIdFromText(opts.RollupName)
 	log.Debug("rollup id :", rollupID)
 
 	// client
@@ -313,6 +313,16 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 		return &InitBridgeResponse{}, err
 	}
 
+	sudoAddress, err := addressFromText(opts.SudoAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding 'sudo' address %v to proto", opts.SudoAddress)
+	}
+
+	withdrawerAddress, err := addressFromText(opts.WithdrawerAddress)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding 'withdrawer' address %v to proto", opts.WithdrawerAddress)
+	}
+
 	// build transaction
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
@@ -323,9 +333,11 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 			{
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
-						RollupId:   rollupID,
-						AssetId:    assetIdFromDenom(opts.AssetID),
-						FeeAssetId: assetIdFromDenom(opts.FeeAssetID),
+						RollupId:          rollupID,
+						AssetId:           assetIdFromDenom(opts.AssetID),
+						FeeAssetId:        assetIdFromDenom(opts.FeeAssetID),
+						SudoAddress:       sudoAddress,
+						WithdrawerAddress: withdrawerAddress,
 					},
 				},
 			},
@@ -350,7 +362,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &InitBridgeResponse{
-		RollupID: opts.RollupID,
+		RollupID: opts.RollupName,
 		Nonce:    nonce,
 		TxHash:   hash,
 	}

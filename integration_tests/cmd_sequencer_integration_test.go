@@ -42,19 +42,19 @@ func TestTransferFlags(t *testing.T) {
 	// test that we get error when too many flags passed in
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	secondKey := fmt.Sprintf("--keyfile=/fake/file")
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey)
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657")
 	_, err := transferCmd.CombinedOutput()
 	assert.Error(t, err)
 
 	// test that we get error when no type of key passed in
-	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo)
+	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657")
 	_, err = transferCmd.CombinedOutput()
 	assert.Error(t, err)
 }
 
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
-	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json")
+	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
@@ -67,7 +67,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	initialBlockHeight := blockHeight.Blockheight
 
 	// get initial nonce
-	getNonceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json")
+	getNonceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	nonceOutput, err := getNonceCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
@@ -80,7 +80,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	initialNonce := nonce.Nonce
 
 	// get initial balance
-	getBalanceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json")
+	getBalanceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	balanceOutput, err := getBalanceCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
@@ -95,7 +95,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	// transfer
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0")
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657")
 	transferOutput, err := transferCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
@@ -106,7 +106,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// get blockheight after transfer
-	getBlockHeightAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json")
+	getBlockHeightAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	blockHeightAfterOutput, err := getBlockHeightAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
@@ -120,7 +120,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Greaterf(t, finalBlockHeight, initialBlockHeight, "Blockheight should increase")
 
 	// get nonce after transfer
-	getNonceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json")
+	getNonceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
@@ -135,7 +135,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Equal(t, expectedFinalNonce, finalNonce)
 
 	// get balance after transfer
-	getBalanceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json")
+	getBalanceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
