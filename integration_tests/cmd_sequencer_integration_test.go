@@ -4,6 +4,7 @@
 package integration_tests
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -72,10 +73,19 @@ func TestTransferAndGetNonce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
 	}
+
+	lines := bytes.Split(nonceOutput, []byte{'\n'})
+	// Convert the slice of byte slices to a slice of strings
+	var stringLines []string
+	for _, line := range lines {
+		stringLines = append(stringLines, string(line))
+	}
+	bytes := []byte(stringLines[len(stringLines)-1])
+
 	var nonce sequencer.NonceResponse
-	err = json.Unmarshal(nonceOutput, &nonce)
+	err = json.Unmarshal(bytes, &nonce)
 	if err != nil {
-		t.Fatalf("Failed to unmarshal nonce json output: %v", err)
+		t.Fatalf("Failed to unmarshal nonce json output: %v, %s", err, nonceOutput)
 	}
 	initialNonce := nonce.Nonce
 
