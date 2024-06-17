@@ -18,11 +18,12 @@ import (
 const TestFromPrivKey = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
 const TestFromAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
 const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
+const TestToPubKey = "88787e29db8d5247c6adfac9909b56e6b2705c3120b2e3885e8ec8aa416a10f1"
 const TransferAmount = 535353
 
 func TestCreateaccount(t *testing.T) {
 	createaccountCmd := exec.Command("../bin/astria-go-testy", "sequencer", "createaccount", "--insecure", "--json")
-	createaccountOutput, err := createaccountCmd.CombinedOutput()
+	createaccountOutput, err := createaccountCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)
 
@@ -41,20 +42,20 @@ func TestTransferFlags(t *testing.T) {
 	// test that we get error when too many flags passed in
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	secondKey := fmt.Sprintf("--keyfile=/fake/file")
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657")
-	_, err := transferCmd.CombinedOutput()
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err := transferCmd.Output()
 	assert.Error(t, err)
 
 	// test that we get error when no type of key passed in
-	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657")
-	_, err = transferCmd.CombinedOutput()
+	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err = transferCmd.Output()
 	assert.Error(t, err)
 }
 
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
+	blockHeightOutput, err := getBlockHeightCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
 	}
@@ -67,20 +68,21 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial nonce
 	getNonceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	nonceOutput, err := getNonceCmd.CombinedOutput()
+	nonceOutput, err := getNonceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
 	}
+
 	var nonce sequencer.NonceResponse
 	err = json.Unmarshal(nonceOutput, &nonce)
 	if err != nil {
-		t.Fatalf("Failed to unmarshal nonce json output: %v", err)
+		t.Fatalf("Failed to unmarshal nonce json output: %v, %s", err, nonceOutput)
 	}
 	initialNonce := nonce.Nonce
 
 	// get initial balance
 	getBalanceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	balanceOutput, err := getBalanceCmd.CombinedOutput()
+	balanceOutput, err := getBalanceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
 	}
@@ -94,8 +96,8 @@ func TestTransferAndGetNonce(t *testing.T) {
 	// transfer
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657")
-	transferOutput, err := transferCmd.CombinedOutput()
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	transferOutput, err := transferCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
 	}
@@ -106,7 +108,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get blockheight after transfer
 	getBlockHeightAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	blockHeightAfterOutput, err := getBlockHeightAfterCmd.CombinedOutput()
+	blockHeightAfterOutput, err := getBlockHeightAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
 	}
@@ -120,7 +122,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get nonce after transfer
 	getNonceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
+	nonceAfterOutput, err := getNonceAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
 	}
@@ -135,7 +137,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get balance after transfer
 	getBalanceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
+	balanceAfterOutput, err := getBalanceAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
 	}
@@ -147,6 +149,84 @@ func TestTransferAndGetNonce(t *testing.T) {
 	expectedFinalBalance := big.NewInt(0).Add(initialBalance, big.NewInt(TransferAmount))
 	finalBalance := toBalancesAfter[0].Balance
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
+}
+
+func TestAddAndRemoveFeeAssts(t *testing.T) {
+	testAssetName := "testAsset"
+	// add a fee asset
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err := addFeeAssetCmd.Output()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err = removeFeeAssetCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestRemoveAndAddIBCRelayer(t *testing.T) {
+	// remove an address from the existing IBC relayer set
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	removeIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err := removeIBCRelayerCmd.Output()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err = addIBCRelayerCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestValidatorUpdate(t *testing.T) {
+	// update the validator power
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	validatorUpdateCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err := validatorUpdateCmd.Output()
+	assert.NoError(t, err)
+
+	// revert the validator power
+	validatorUpdateCmd = exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err = validatorUpdateCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestGetBlock(t *testing.T) {
+	// get initial blockheight
+	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	blockHeightOutput, err := getBlockHeightCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
+	}
+	var blockHeight sequencer.BlockheightResponse
+	err = json.Unmarshal(blockHeightOutput, &blockHeight)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
+	}
+	initialBlockHeight := blockHeight.Blockheight
+
+	// get a block
+	if initialBlockHeight > 0 {
+		getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json", "--sequencer-url", "http://127.0.0.1:26657")
+		_, err := getBlockCmd.Output()
+		assert.NoError(t, err)
+	} else {
+		t.Fatalf("Blockheight is 0, cannot get block")
+	}
+}
+
+func TestUpdateSudoAddress(t *testing.T) {
+	// change the sudo address
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err := addressChangeCmd.Output()
+	assert.NoError(t, err)
+
+	// use the old sudo address to try to update the sudo address again, this
+	// will fail becuase the old sudo address is no longer the sudo address
+	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
+	_, err = failingAddressChangeCmd.Output()
+	assert.Error(t, err)
 }
 
 // TODO - move setup and teardown here and out of the justfile.
@@ -163,7 +243,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 //		panic(err)
 //	}
 //	c := exec.Command("go build -o bin/astria-go-testy")
-//	o, err := c.CombinedOutput()
+//	o, err := c.Output()
 //	if err != nil {
 //		panic(err)
 //	}
