@@ -42,12 +42,12 @@ func TestTransferFlags(t *testing.T) {
 	// test that we get error when too many flags passed in
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	secondKey := fmt.Sprintf("--keyfile=/fake/file")
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657")
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err := transferCmd.CombinedOutput()
 	assert.Error(t, err)
 
 	// test that we get error when no type of key passed in
-	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657")
+	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err = transferCmd.CombinedOutput()
 	assert.Error(t, err)
 }
@@ -95,7 +95,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	// transfer
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657")
+	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	transferOutput, err := transferCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
@@ -154,12 +154,12 @@ func TestAddAndRemoveFeeAssts(t *testing.T) {
 	testAssetName := "testAsset"
 	// add a fee asset
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	addFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657")
+	addFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err := addFeeAssetCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// remove a fee asset
-	removeFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657")
+	removeFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err = removeFeeAssetCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
@@ -167,12 +167,12 @@ func TestAddAndRemoveFeeAssts(t *testing.T) {
 func TestRemoveAndAddIBCRelayer(t *testing.T) {
 	// remove an address from the existing IBC relayer set
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	removeIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	removeIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err := removeIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// add same address back to the IBC relayer set
-	addIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	addIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err = addIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
@@ -180,19 +180,19 @@ func TestRemoveAndAddIBCRelayer(t *testing.T) {
 func TestValidatorUpdate(t *testing.T) {
 	// update the validator power
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	validatorUpdateCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", "http://127.0.0.1:26657")
+	validatorUpdateCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err := validatorUpdateCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// revert the validator power
-	validatorUpdateCmd = exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", "http://127.0.0.1:26657")
+	validatorUpdateCmd = exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err = validatorUpdateCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
 
 func TestGetBlock(t *testing.T) {
 	// get initial blockheight
-	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json")
+	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
@@ -206,7 +206,7 @@ func TestGetBlock(t *testing.T) {
 
 	if initialBlockHeight > 0 {
 		// get a block
-		getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json")
+		getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 		_, err := getBlockCmd.CombinedOutput()
 		assert.NoError(t, err)
 	} else {
@@ -217,12 +217,12 @@ func TestGetBlock(t *testing.T) {
 func TestUpdateSudoAddress(t *testing.T) {
 	// change the sudo address
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	addressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	addressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err := addressChangeCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// use the old sudo address to try to change the sudo address, this will fail
-	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657")
+	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err = failingAddressChangeCmd.CombinedOutput()
 	assert.Error(t, err)
 }
