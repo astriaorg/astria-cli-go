@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -12,8 +11,8 @@ import (
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
 
+	"github.com/astria/astria-cli-go/bech32m"
 	"github.com/astriaorg/go-sequencer-client/client"
-	"github.com/btcsuite/btcd/btcutil/bech32"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -30,18 +29,9 @@ func CreateAccount() (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	log.Debug("Created account with address: ", hex.EncodeToString(address[:]))
-
-	// Convert the address to 5-bit groups for encoding
-	converted, err := bech32.ConvertBits(address[:], 8, 5, true)
+	encoded, err := bech32m.EncodeBech32M(BechAddressPrefix, address)
 	if err != nil {
-		log.Fatalf("Error converting bits: %v", err)
-	}
-
-	// encode address to bech32m
-	encoded, err := bech32.EncodeM(BechAddressPrefix, converted)
-	if err != nil {
-		fmt.Printf("Error encoding address to bech32: %v\n", err)
+		log.WithError(err).Error("Error encoding address to bech32")
 		return nil, err
 	}
 

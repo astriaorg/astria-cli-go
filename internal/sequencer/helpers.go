@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
+	"github.com/astria/astria-cli-go/bech32m"
 
-	"github.com/btcsuite/btcd/btcutil/bech32"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -98,23 +98,18 @@ func addressFromPublicKey(pubkey ed25519.PublicKey) string {
 	return hex.EncodeToString(addr[:])
 }
 
-// isBech32m checks if an address is a valid bech32m address.
-func isBech32m(address string) bool {
-	_, _, err := bech32.Decode(address)
-	return err == nil
-}
-
-// addressFromText converts a bech32 or hexadecimal string representation of an
+// addressFromText converts a bech32m or hexadecimal string representation of an
 // address to an Address protobuf. The input address string is expected to have
 // the "0x" prefix stripped before being passed to this function. If the input
-// string is not a valid hexadecimal string, an error will be returned.
+// string is not a valid bech32m or hexadecimal string, an error will be returned.
 func addressFromText(addr string) (*primproto.Address, error) {
 	address, err := addressAsBytes(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	if isBech32m(addr) {
+	err = bech32m.ValidateBech32M(addr, BechAddressPrefix)
+	if err == nil {
 		// FIXME: why does inner work here but not bech32m?
 		// return &primproto.Address{
 		// 	Bech32M: addr,
@@ -157,42 +152,25 @@ func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
 // to decode the address as a hexadecimal string. If the address is not a valid
 // bech32m or hex string, an error will be returned.
 func addressAsBytes(address string) ([20]byte, error) {
-	if strings.HasPrefix(address, BechAddressPrefix) {
-		hrp, data, err := bech32.Decode(address)
-		if err != nil {
-			log.WithError(err).Errorf("Error decoding address %s as bech32m", address)
-			return [20]byte{}, err
-		}
-
-		// confirm the bech32m hrp matches the expected prefix exactaly
-		if hrp != BechAddressPrefix {
-			log.Errorf("Invalid address prefix: %s, expected: %s", hrp, BechAddressPrefix)
-			return [20]byte{}, fmt.Errorf("invalid address prefix: %s", hrp)
-		}
-
-		// Convert the data from 5-bit groups back to 8-bit
-		decoded, err := bech32.ConvertBits(data, 5, 8, false)
-		if err != nil {
-			log.Fatalf("Error converting bits: %v", err)
-		}
-
-		var address20 [20]byte
-		copy(address20[:], decoded)
-
-		return address20, nil
+	// decode as bech32m
+	b, err := bech32m.DecodeBech32M(address, BechAddressPrefix)
+	if err != nil {
+		log.Warnf("Couldn't decode address %s as bech32m, attempting to decode as hex: %v", address, err)
 	} else {
-		log.Warnf("'%s' prefix not found in address, attempting to decode as hex", BechAddressPrefix)
-		address = strip0xPrefix(address)
-		bytes, err := hex.DecodeString(address)
-		if err != nil {
-			log.WithError(err).Error("Error decoding hex encoded address")
-			return [20]byte{}, err
-		}
-		log.Debugf("Successfully decoded address %s as hex", address)
-
-		var address20 [20]byte
-		copy(address20[:], bytes)
-
-		return address20, nil
+		return b, nil
 	}
+
+	// decode as hex
+	address = strip0xPrefix(address)
+	bytes, err := hex.DecodeString(address)
+	if err != nil {
+		log.WithError(err).Error("Error decoding hex encoded address")
+		return [20]byte{}, err
+	}
+	log.Debugf("Successfully decoded address %s as hex", address)
+
+	var address20 [20]byte
+	copy(address20[:], bytes)
+
+	return address20, nil
 }
