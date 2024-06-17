@@ -214,8 +214,8 @@ func TestGetBlock(t *testing.T) {
 	}
 	initialBlockHeight := blockHeight.Blockheight
 
+	// get a block
 	if initialBlockHeight > 0 {
-		// get a block
 		getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 		_, err := getBlockCmd.CombinedOutput()
 		assert.NoError(t, err)
@@ -231,7 +231,8 @@ func TestUpdateSudoAddress(t *testing.T) {
 	_, err := addressChangeCmd.CombinedOutput()
 	assert.NoError(t, err)
 
-	// use the old sudo address to try to change the sudo address, this will fail
+	// use the old sudo address to try to update the sudo address again, this
+	// will fail becuase the old sudo address is no longer the sudo address
 	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", "http://127.0.0.1:26657", "--sequencer-chain-id", "sequencer-test-chain-0")
 	_, err = failingAddressChangeCmd.CombinedOutput()
 	assert.Error(t, err)
