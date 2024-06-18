@@ -14,17 +14,22 @@ func ValidateBech32M(address, expectedPrefix string) error {
 	// Decode the Bech32m address
 	hrp, _, version, err := bech32.DecodeGeneric(address)
 	if err != nil {
-		return fmt.Errorf("failed to decode address: %v", err)
+		return fmt.Errorf("failed to decode address as bech32m: %v", err)
 	}
 
 	// Check if the version is Bech32m and not a different bech32 version
 	if version != bech32.VersionM {
-		return fmt.Errorf("address is not a bech32m address")
+		return fmt.Errorf("bech32 address is not a bech32m address")
+	}
+
+	// expected prefix should be all lowercase
+	if expectedPrefix != strings.ToLower(expectedPrefix) {
+		return fmt.Errorf("expected prefix should be all lowercase: got %s", expectedPrefix)
 	}
 
 	// Check if the human-readable prefix matches the expected prefix
-	if !strings.EqualFold(hrp, expectedPrefix) {
-		return fmt.Errorf("invalid prefix: got %s, want %s", hrp, expectedPrefix)
+	if hrp != expectedPrefix {
+		return fmt.Errorf("invalid address prefix: got %s, want %s", hrp, expectedPrefix)
 	}
 
 	return nil

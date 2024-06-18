@@ -47,6 +47,14 @@ func TestBech32MValidate(t *testing.T) {
 		t.Fatalf("incorrectly validated bech32m address with typo in prefix")
 	}
 
+	// bech32m address with missing characters should fail
+	// full address "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9c[fgm]"
+	// chars in [] are removed
+	err = ValidateBech32M("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9c", BechAddressPrefix)
+	if err == nil {
+		t.Fatalf("incorrectly validated bech32m address with missing characters")
+	}
+
 	// bech32m address with different prefix should fail
 	err = ValidateBech32M("otherp1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm", BechAddressPrefix)
 	if err == nil {
