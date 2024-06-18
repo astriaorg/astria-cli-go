@@ -11,7 +11,7 @@ import (
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
 
-	"github.com/astria/astria-cli-go/bech32m"
+	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astriaorg/go-sequencer-client/client"
 
 	log "github.com/sirupsen/logrus"

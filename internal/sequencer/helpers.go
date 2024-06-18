@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
-	"github.com/astria/astria-cli-go/bech32m"
+	"github.com/astria/astria-cli-go/internal/bech32m"
 
 	log "github.com/sirupsen/logrus"
 )
