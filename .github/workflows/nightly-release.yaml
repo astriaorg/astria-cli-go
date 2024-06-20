@@ -40,7 +40,7 @@ jobs:
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Upload Nightly Release
-        uses: wangyoucao577/go-release-action@v2
+        uses: wangyoucao577/go-release-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: linux,darwin
