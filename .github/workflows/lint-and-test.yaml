@@ -21,12 +21,12 @@ jobs:
           working-directory: modules/cli
           version: latest
           skip-pulls: false
-#      - name: Lint Go (go-sequencer-client)
-#        uses: golangci/golangci-lint-action@v2
-#        with:
-#          working-directory: modules/go-sequencer-client
-#          version: latest
-#          skip-pulls: false
+      - name: Lint Go (go-sequencer-client)
+        uses: golangci/golangci-lint-action@v2
+        with:
+          working-directory: modules/go-sequencer-client
+          version: latest
+          skip-pulls: false
       - name: Lint Markdown
         uses: nosborn/github-action-markdown-cli@v3.3.0
         with:
