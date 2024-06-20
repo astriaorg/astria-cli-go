@@ -9,13 +9,14 @@ import (
 	"github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 	accountsproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/accounts/v1alpha1"
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 )
 
+// BalanceResponse describes the response from a balance query.
 // Should this live here?
 type BalanceResponse struct {
 	Denom   string   `json:"denom,omitempty"`
@@ -28,13 +29,13 @@ type Client struct {
 }
 
 func NewClient(url string) (*Client, error) {
-	client, err := http.New(url, "")
+	c, err := http.New(url, "")
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		client: client,
+		client: c,
 	}, nil
 }
 

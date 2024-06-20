@@ -10,10 +10,10 @@ import (
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 )
 
-const DEFAULT_ASTRIA_ASSET = "nria"
+const DefaultAstriaAsset = "nria"
 
 var (
-	DefaultAstriaAssetID = sha256.Sum256([]byte(DEFAULT_ASTRIA_ASSET))
+	DefaultAstriaAssetID = sha256.Sum256([]byte(DefaultAstriaAsset))
 )
 
 type Signer struct {
