@@ -20,6 +20,13 @@ permissions:
 jobs:
   create-nightly-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [ linux, darwin ]
+        goarch: [ amd64, arm64 ]
+        exclude:
+          - goarch: "arm64"
+            goos: "linux"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -43,8 +50,8 @@ jobs:
         uses: wangyoucao577/go-release-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: linux,darwin
-          goarch: amd64,arm64
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
           ldflags: >
             -s -w -X github.com/astria/astria-cli-go/cmd.version=${{ env.TAG_NAME }}
           project_path: "./"
