@@ -7,13 +7,18 @@ import (
 	"math/big"
 	"strconv"
 
+	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
+	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
+
+	"github.com/astria/astria-cli-go/internal/bech32m"
+
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // Account is the struct that holds the account information.
 type Account struct {
-	Address    string
+	Address    bech32m.Bech32MAddress
 	PublicKey  ed25519.PublicKey
 	PrivateKey ed25519.PrivateKey
 }
@@ -21,13 +26,18 @@ type Account struct {
 // NewAccountFromPrivKey creates a new Account struct from a given private key.
 // It calculates the public key from the private key, generates the address from the public key,
 // and returns a pointer to the new Account struct with the address, public key, and private key set.
-func NewAccountFromPrivKey(privkey ed25519.PrivateKey) *Account {
+func NewAccountFromPrivKey(privkey ed25519.PrivateKey) (*Account, error) {
 	pub := privkey.Public().(ed25519.PublicKey)
+	address, err := addressFromPublicKey(pub)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Account{
-		Address:    addressFromPublicKey(pub),
+		Address:    *address,
 		PublicKey:  pub,
 		PrivateKey: privkey,
-	}
+	}, nil
 }
 
 // AccountJSON is for representing an `Account` as JSON
@@ -40,7 +50,7 @@ type AccountJSON struct {
 // ToJSONStruct converts an Account into an AccountJSON struct for JSON representation.
 func (a *Account) ToJSONStruct() *AccountJSON {
 	return &AccountJSON{
-		Address:    a.Address,
+		Address:    a.Address.ToString(),
 		PublicKey:  a.PublicKeyString(),
 		PrivateKey: a.PrivateKeyString(),
 	}
@@ -72,7 +82,7 @@ func (a *Account) TableHeader() []string {
 
 func (a *Account) TableRows() [][]string {
 	return [][]string{
-		{a.Address, a.PublicKeyString(), a.PrivateKeyString()},
+		{a.Address.ToString(), a.PublicKeyString(), a.PrivateKeyString()},
 	}
 }
 
@@ -178,22 +188,22 @@ type InitBridgeOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// fromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// RollupName is the name of the rollup to create the bridge account for
 	RollupName string
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
-	AssetID string
+	AssetID []byte
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
-	FeeAssetID string
+	FeeAssetID []byte
 	// SudoAddress specifies the address to use for the bridge account which has
 	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
 	// this bridge account. If this is empty, the sender of the transaction is used.
-	SudoAddress string
+	SudoAddress *primproto.Address
 	// WithdrawerAddress specifies the address that can withdraw funds from this
 	// bridge account. If this is empty, the sender of the transaction is used.
-	WithdrawerAddress string
+	WithdrawerAddress *primproto.Address
 }
 type InitBridgeResponse struct {
 	RollupID string `json:"rollupID"`
@@ -220,17 +230,17 @@ type BridgeLockOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// ToAddress is the address of the receiver
-	ToAddress string
+	ToAddress *primproto.Address
 	// SequencerChainID is the ID of the sequencer chain to lock asset on
 	SequencerChainID string
 	// AssetID is the name of the asset to lock
-	AssetID string
+	AssetID []byte
 	// FeeAssetID is the name of the asset to use for the transaction fee
-	FeeAssetID string
+	FeeAssetID []byte
 	// Amount is the amount to be locked
-	Amount string
+	Amount *primproto.Uint128
 	// DestinationChainAddress is the address on the destination chain
 	DestinationChainAddress string
 }
@@ -268,13 +278,17 @@ type TransferOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// ToAddress is the address of the receiver
-	ToAddress string
+	ToAddress *primproto.Address
 	// Amount is the amount to be transferred. Using string type to support huge numbers
-	Amount string
+	Amount *primproto.Uint128
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
+	// AssetID is the name of the asset to lock
+	AssetID []byte
+	// FeeAssetID is the name of the asset to use for the transaction fee
+	FeeAssetID []byte
 }
 
 // TransferResponse is the response of the Transfer function.
@@ -307,7 +321,7 @@ func (tr *TransferResponse) TableRows() [][]string {
 
 type FeeAssetOpts struct {
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// SequencerChainID is the chain ID of the sequencer
@@ -343,13 +357,13 @@ func (far *FeeAssetResponse) TableRows() [][]string {
 
 type IBCRelayerOpts struct {
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 	// IBCRelayerAddress is the ibc relayer address that will be added or removed
-	IBCRelayerAddress string
+	IBCRelayerAddress *primproto.Address
 }
 
 type IBCRelayerResponse struct {
@@ -381,9 +395,9 @@ type ChangeSudoAddressOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// ToAddress is the address of the receiver
-	UpdateAddress string
+	UpdateAddress *primproto.Address
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }
@@ -417,11 +431,11 @@ type UpdateValidatorOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// PubKey is the public key of the validator being updated
-	PubKey string
+	PubKey *crypto.PublicKey
 	// Power is the new power of the validator
-	Power string
+	Power int64
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }

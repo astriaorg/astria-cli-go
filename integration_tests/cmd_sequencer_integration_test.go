@@ -16,8 +16,8 @@ import (
 )
 
 const TestFromPrivKey = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
-const TestFromAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
-const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
+const TestFromAddress = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+const TestTo = "astria1xnlvg0rle2u6auane79t4p27g8hxnj36ja960z"
 const TestToPubKey = "88787e29db8d5247c6adfac9909b56e6b2705c3120b2e3885e8ec8aa416a10f1"
 const TransferAmount = 535353
 

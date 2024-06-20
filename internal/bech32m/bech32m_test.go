@@ -11,38 +11,38 @@ import (
 
 // Bech32Address and Bech32MAddress were encoded from the LegacyAddress using
 // this bech32 encoding tool: https://slowli.github.io/bech32-buffer/
-const LegacyAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
-const Bech32Address = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrweg9de"
-const Bech32MAddress = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
-const BechAddressPrefix = "astria"
+const legacyAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
+const bech32Address = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrweg9de"
+const bech32MAddress = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+const bechAddressPrefix = "astria"
 
-func TestBech32MValidate(t *testing.T) {
+func TestBech32MDecodeAndValidate(t *testing.T) {
 	// bech32m address should work
-	err := ValidateBech32M(Bech32MAddress, BechAddressPrefix)
+	_, err := DecodeAndValidateBech32M(bech32MAddress, bechAddressPrefix)
 	if err != nil {
 		t.Fatalf("failed to validate bech32m address: %v", err)
 	}
 
 	// checking legitimate bech32m address against a different prefix should fail
-	err = ValidateBech32M(Bech32MAddress, "differentprefix")
+	_, err = DecodeAndValidateBech32M(bech32MAddress, "differentprefix")
 	if err == nil {
-		t.Fatalf("failed to validate bech32m address: %v", err)
+		t.Fatalf("incorrectly validated bech32m address with incorrect prefix: %v", err)
 	}
 
 	// bech32 address should fail
-	err = ValidateBech32M(Bech32Address, BechAddressPrefix)
+	_, err = DecodeAndValidateBech32M(bech32Address, bechAddressPrefix)
 	if err == nil {
 		t.Fatalf("incorrectly validated bech32 address as bech32m")
 	}
 
 	// non bech32m addresses should fail
-	err = ValidateBech32M(LegacyAddress, BechAddressPrefix)
+	_, err = DecodeAndValidateBech32M(legacyAddress, bechAddressPrefix)
 	if err == nil {
 		t.Fatalf("incorrectly validated non-bech32 address as bech32m")
 	}
 
 	// bech32m address with typo in prefix should fail
-	err = ValidateBech32M("astri1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm", BechAddressPrefix)
+	_, err = DecodeAndValidateBech32M("astri1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm", bechAddressPrefix)
 	if err == nil {
 		t.Fatalf("incorrectly validated bech32m address with typo in prefix")
 	}
@@ -50,38 +50,43 @@ func TestBech32MValidate(t *testing.T) {
 	// bech32m address with missing characters should fail
 	// full address "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9c[fgm]"
 	// chars in [] are removed
-	err = ValidateBech32M("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9c", BechAddressPrefix)
+	_, err = DecodeAndValidateBech32M("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9c", bechAddressPrefix)
 	if err == nil {
 		t.Fatalf("incorrectly validated bech32m address with missing characters")
 	}
 
 	// bech32m address with different prefix should fail
-	err = ValidateBech32M("otherp1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm", BechAddressPrefix)
+	_, err = DecodeAndValidateBech32M("otherp1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm", bechAddressPrefix)
 	if err == nil {
 		t.Fatalf("incorrectly validated bech32m address with different prefix")
 	}
 }
 
 func TestBech32MEncode(t *testing.T) {
-	bytes, err := hex.DecodeString(LegacyAddress)
+	b, err := hex.DecodeString(legacyAddress)
 	if err != nil {
 		t.Fatalf("could not decode address as hex: %v", err)
 	}
-	bechString, err := EncodeBech32M(BechAddressPrefix, bytes)
+
+	var bytes [20]byte
+	copy(bytes[:], b)
+
+	bech32m, err := EncodeBech32M(bechAddressPrefix, bytes)
 	if err != nil {
 		t.Fatalf("could not encode address as bech32m: %v", err)
 	}
 
-	assert.Equal(t, Bech32MAddress, bechString)
+	assert.Equal(t, bech32MAddress, bech32m.ToString())
 }
 
 func TestBech32MDecode(t *testing.T) {
-	bytes, err := DecodeBech32M(Bech32MAddress, BechAddressPrefix)
+	bech32m, err := DecodeAndValidateBech32M(bech32MAddress, bechAddressPrefix)
 	if err != nil {
 		t.Fatalf("could not decode bech32m address: %v", err)
 	}
 
-	assert.Equal(t, LegacyAddress, hex.EncodeToString(bytes[:]))
+	bytes := bech32m.AsBytes()
+	assert.Equal(t, legacyAddress, hex.EncodeToString(bytes[:]))
 }
 
 func TestBech32MEncodeDecode(t *testing.T) {
@@ -91,15 +96,15 @@ func TestBech32MEncodeDecode(t *testing.T) {
 	}
 	addressBytes := signer.Address()
 
-	encoded, err := EncodeBech32M(BechAddressPrefix, addressBytes[:])
+	bech32m, err := EncodeBech32M(bechAddressPrefix, addressBytes)
 	if err != nil {
 		t.Fatalf("failed to encode bech32m address: %v", err)
 	}
 
-	address, err := DecodeBech32M(encoded, BechAddressPrefix)
+	address, err := DecodeAndValidateBech32M(bech32m.ToString(), bechAddressPrefix)
 	if err != nil {
 		t.Fatalf("failed to decode bech32m address: %v", err)
 	}
 
-	assert.Equal(t, addressBytes, address)
+	assert.Equal(t, addressBytes, address.AsBytes())
 }

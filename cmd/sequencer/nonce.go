@@ -2,6 +2,7 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -27,12 +28,20 @@ func init() {
 
 func nonceCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	address := args[0]
+	bech32mAddress, err := bech32m.DecodeAndValidateBech32M(address, "astria")
+	if err != nil {
+		log.WithError(err).Error("Error decoding address")
+		return
+	}
 
-	nonce, err := sequencer.GetNonce(address, url)
+	nonce, err := sequencer.GetNonce(bech32mAddress, sequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		panic(err)

@@ -25,10 +25,13 @@ func init() {
 
 func blockheightCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	blockheight, err := sequencer.GetBlockheight(url)
+	blockheight, err := sequencer.GetBlockheight(sequencerURL)
 	if err != nil {
 		log.WithError(err)
 		return

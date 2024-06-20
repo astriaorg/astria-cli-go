@@ -3,6 +3,7 @@ package sudo
 import (
 	"github.com/astria/astria-cli-go/cmd"
 	sequencercmd "github.com/astria/astria-cli-go/cmd/sequencer"
+	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -21,21 +22,34 @@ var sudoAddressChangeCmd = &cobra.Command{
 func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	to := args[0]
+	bech32mAddress, err := bech32m.DecodeAndValidateBech32M(to, "astria")
+	if err != nil {
+		log.WithError(err).Error("Error decoding address")
+		return
+	}
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := cmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
 
 	opts := sequencer.ChangeSudoAddressOpts{
-		FromKey:          priv,
-		UpdateAddress:    to,
-		SequencerURL:     url,
+		FromKey:          from,
+		UpdateAddress:    bech32mAddress.AsProtoAddress(),
+		SequencerURL:     sequencerURL,
 		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.ChangeSudoAddress(opts)
