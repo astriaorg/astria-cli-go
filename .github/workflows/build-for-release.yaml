@@ -30,6 +30,6 @@ jobs:
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           ldflags: >
-            -s -w -X github.com/astria/astria-cli-go/cmd.version=${{ github.ref_name }}
+            -s -w -X github.com/astriaorg/astria-cli-go/modules/cli/cmd.version=${{ github.ref_name }}
           project_path: "./"
           binary_name: "astria-go"

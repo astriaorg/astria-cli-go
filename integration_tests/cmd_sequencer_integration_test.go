@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astria/astria-cli-go/internal/sequencer"
+	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/stretchr/testify/assert"
 )
 
