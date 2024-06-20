@@ -1,6 +1,11 @@
 name: Nightly Release
 
-# Creates a nightly release which triggers build-for-release
+# Creates a nightly release and builds and uploads `astria-go` binaries.
+
+# NOTE - releases created via automation don't trigger actions that should
+#  trigger on release creation, e.g. build-for-release, so we have to have a
+#  build step in this workflow as well.
+#  see: https://github.com/orgs/community/discussions/25281
 
 on:
   schedule:
@@ -18,16 +23,30 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Set current date in environment variable
-        run: echo "RELEASE_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Set envars
+        run: |
+          TODAY=$(date +'%Y-%m-%d')
+          echo "RELEASE_DATE=$TODAY" >> $GITHUB_ENV
+          echo "TAG_NAME=nightly-$TODAY" >> $GITHUB_ENV
       - name: Create Nightly Release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
           name: "Nightly Release ${{ env.RELEASE_DATE }}"
           body: "${{ env.RELEASE_DATE }} nightly release of `astria-go`"
-          tag_name: nightly-${{ env.RELEASE_DATE }}
+          tag_name: ${{ env.TAG_NAME }}
           prerelease: true
           draft: false
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Upload Nightly Release
+        uses: wangyoucao577/go-release-action@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: linux,darwin
+          goarch: amd64,arm64
+          ldflags: >
+            -s -w -X github.com/astria/astria-cli-go/cmd.version=${{ env.TAG_NAME }}
+          project_path: "./"
+          binary_name: "astria-go"
+          release_tag: ${{ env.TAG_NAME }}
