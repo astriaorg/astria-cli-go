@@ -52,7 +52,7 @@ binaries available for macOS and Linux, for both x86_64 and arm64 architectures.
 
 ```bash
 # download the binary for your platform, e.g. macOS silicon
-curl -L https://github.com/astriaorg/astria-cli-go/releases/download/v0.3.0/astria-cli-v0.3.0-darwin-arm64.tar.gz \
+curl -L https://github.com/astriaorg/astria-cli-go/releases/download/v0.3.0/astria-go-v0.11.0-darwin-arm64.tar.gz \
   --output astria-go.tar.gz
 # extract the binary
 tar -xzvf astria-go.tar.gz
