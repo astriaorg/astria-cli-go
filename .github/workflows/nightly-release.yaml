@@ -1,0 +1,33 @@
+name: Nightly Release
+
+# Creates a nightly release which triggers build-for-release
+
+on:
+  schedule:
+    # every day at 6AM UTC. late night for America, early morning for Europe
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  create-nightly-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set current date in environment variable
+        run: echo "RELEASE_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Create Nightly Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Nightly Release ${{ env.RELEASE_DATE }}"
+          body: "${{ env.RELEASE_DATE }} nightly release of `astria-go`"
+          tag_name: nightly-${{ env.RELEASE_DATE }}
+          prerelease: true
+          draft: false
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}

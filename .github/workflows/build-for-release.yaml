@@ -1,3 +1,8 @@
+name: Build For Release
+
+# Build `astria-go` binaries for multiple architectures whenever
+# a release is created, using the tag name as the cli's version
+
 on:
   release:
     types: [created]
