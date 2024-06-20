@@ -8,7 +8,7 @@ default:
 get-all-balances:
     #!/bin/sh
     # used shebang to run the script in a subshell to only require single `cd ..`
-    cd ..
+    cd ../modules/cli
     echo "balances for 1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
     go run main.go sequencer balances 1c0c490f1b5528d8173c5de46d131160e4b2c0c3
     echo "balances for 34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
@@ -23,7 +23,7 @@ alias gab := get-all-balances
 get-all-nonces:
     #!/bin/sh
     # used shebang to run the script in a subshell to only require single `cd ..`
-    cd ..
+    cd ../modules/cli
     go run main.go sequencer nonce --json 1c0c490f1b5528d8173c5de46d131160e4b2c0c3
     go run main.go sequencer nonce --json 34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a
     go run main.go sequencer nonce --json 60709e2d391864b732b4f0f51e387abb76743871
@@ -34,7 +34,7 @@ alias gan := get-all-nonces
 tx:
     #!/bin/sh
     # used shebang to run the script in a subshell to only require single `cd ..`
-    cd ..
+    cd ../modules/cli
     go run main.go sequencer transfer 53000000 3ac486d3cd14cdc69633afe2dd170bdb093cd81a \
         --privkey=2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90 \
         --log-level=debug
@@ -43,7 +43,7 @@ tx:
 tx-huge:
     #!/bin/sh
     # used shebang to run the script in a subshell to only require single `cd ..`
-    cd ..
+    cd ../modules/cli
     go run main.go sequencer transfer 18446744073709551616 3ac486d3cd14cdc69633afe2dd170bdb093cd81a \
         --privkey=2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90 \
         --log-level=debug --json

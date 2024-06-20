@@ -20,8 +20,10 @@ const TestFromAddress = "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
 const TestTo = "34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a"
 const TransferAmount = 535353
 
+const TestBinPath = "../../../bin/astria-go-testy"
+
 func TestCreateaccount(t *testing.T) {
-	createaccountCmd := exec.Command("../bin/astria-go-testy", "sequencer", "createaccount", "--insecure", "--json")
+	createaccountCmd := exec.Command(TestBinPath, "sequencer", "createaccount", "--insecure", "--json")
 	createaccountOutput, err := createaccountCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)
@@ -41,19 +43,19 @@ func TestTransferFlags(t *testing.T) {
 	// test that we get error when too many flags passed in
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	secondKey := fmt.Sprintf("--keyfile=/fake/file")
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657")
+	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", "http://127.0.0.1:26657")
 	_, err := transferCmd.CombinedOutput()
 	assert.Error(t, err)
 
 	// test that we get error when no type of key passed in
-	transferCmd = exec.Command("../bin/astria-go-testy", "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657")
+	transferCmd = exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, "--sequencer-url", "http://127.0.0.1:26657")
 	_, err = transferCmd.CombinedOutput()
 	assert.Error(t, err)
 }
 
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
-	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
@@ -66,7 +68,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	initialBlockHeight := blockHeight.Blockheight
 
 	// get initial nonce
-	getNonceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	nonceOutput, err := getNonceCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
@@ -79,7 +81,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	initialNonce := nonce.Nonce
 
 	// get initial balance
-	getBalanceCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	balanceOutput, err := getBalanceCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
@@ -94,7 +96,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	// transfer
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
-	transferCmd := exec.Command("../bin/astria-go-testy", "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657")
+	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657")
 	transferOutput, err := transferCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
@@ -105,7 +107,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// get blockheight after transfer
-	getBlockHeightAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	blockHeightAfterOutput, err := getBlockHeightAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
@@ -119,7 +121,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Greaterf(t, finalBlockHeight, initialBlockHeight, "Blockheight should increase")
 
 	// get nonce after transfer
-	getNonceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
@@ -134,7 +136,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Equal(t, expectedFinalNonce, finalNonce)
 
 	// get balance after transfer
-	getBalanceAfterCmd := exec.Command("../bin/astria-go-testy", "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
+	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
 	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
@@ -148,37 +150,3 @@ func TestTransferAndGetNonce(t *testing.T) {
 	finalBalance := toBalancesAfter[0].Balance
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
 }
-
-// TODO - move setup and teardown here and out of the justfile.
-
-//// build the cli with a unique name just for testing
-//func setUp() {
-//	wd, err := os.Getwd()
-//	if err != nil {
-//		panic(err)
-//	}
-//	fmt.Println(wd)
-//	err = os.Chdir(wd)
-//	if err != nil {
-//		panic(err)
-//	}
-//	c := exec.Command("go build -o bin/astria-go-testy")
-//	o, err := c.CombinedOutput()
-//	if err != nil {
-//		panic(err)
-//	}
-//	fmt.Println(o)
-//}
-//
-//func tearDown() {
-//	// TODO - cleanup testy binary?
-//}
-//
-//func getBinPath() string {
-//	e, err := os.Executable()
-//	if err != nil {
-//		panic(err)
-//	}
-//	path := path.Dir(e)
-//	return path
-//}
