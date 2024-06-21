@@ -2,39 +2,50 @@
 default:
     @just --list
 
+default_binary_name := 'astria-go'
+
 # build the binary for the cli
-build:
-    go build -o bin/astria-go
-alias b := build
+build-cli binary_name=default_binary_name:
+    cd modules/cli && go build -o ../../bin/{{binary_name}}
+alias b := build-cli
 
 # test go code, minus integration tests
 test:
-    go test ./...
+    cd modules/cli && go test ./...
+    cd modules/go-sequencer-client && go test ./...
 alias t := test
 
 # unit tests with coverage report that opens in browser
 test-cov:
-    go test ./... -coverprofile=coverage.out
-    go tool cover -html=coverage.out
+    cd modules/cli && go test ./... -coverprofile=coverage.out
+    cd modules/cli && go tool cover -html=coverage.out
+    cd modules/go-sequencer-client && go test ./... -coverprofile=coverage.out
+    cd modules/go-sequencer-client && go tool cover -html=coverage.out
 
 # run unit and integration tests, and tests that require tty.
-test-all: test test-integration
+test-all: test test-integration-cli
 alias ta := test-all
+# run integration tests for all modules
+test-integration: test-integration-cli test-integration-go-sequencer-client
+alias ti := test-integration
 
 # run integrations tests. requires running geth + cometbft + astria core.
-test-integration:
-    # TODO - move this setup and teardown to the go test file
-    go build -o ./bin/astria-go-testy
-    go test ./integration_tests -tags=integration_tests
+test-integration-cli:
+    just build-cli astria-go-testy
+    cd modules/cli/integration_tests && go test ./... -tags=integration_tests -count=1
     rm ./bin/astria-go-testy
-alias ti := test-integration
+
+# run integration tests for go-sequencer-client. requires running geth + cometbft + astria core.
+test-integration-go-sequencer-client:
+    cd modules/go-sequencer-client/integration_tests && go test ./... -tags=integration_tests -count=1
 
 cleanup-integration-tests:
     rm -f ./bin/astria-go-testy
 
 # format all go files
 fmt:
-    go fmt ./...
+    cd modules/cli && go fmt ./...
+    cd modules/go-sequencer-client && go fmt ./...
 alias f := fmt
 
 default_lang := 'all'
@@ -50,11 +61,12 @@ alias l := lint
 
 [no-exit-message]
 _lint-go:
-    golangci-lint run
+    cd modules/cli && golangci-lint run
+    cd modules/go-sequencer-client && golangci-lint run
 
 [no-exit-message]
 _lint-md:
-    markdownlint-cli2 "**/*.md" "#bin" "#.github"
+    markdownlint-cli2 "**/*.md" "#bin" "#.github" --config .markdownlint.json
 
 # fix markdown linting issues that can be auto-fixed
 fix-md:
@@ -63,7 +75,7 @@ fix-md:
 defaultargs := ''
 # run the cli with --log-level=debug
 run *args=defaultargs:
-    go run main.go {{args}} --log-level=debug
+    cd modules/cli && go run main.go {{args}} --log-level=debug
 alias r := run
 
 run-race args=defaultargs:

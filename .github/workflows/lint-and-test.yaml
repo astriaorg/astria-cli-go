@@ -15,9 +15,16 @@ jobs:
         with:
           go-version: 1.22.0
           cache-dependency-path: ./go.sum
-      - name: Lint Go
+      - name: Lint Go (cli)
         uses: golangci/golangci-lint-action@v2
         with:
+          working-directory: modules/cli
+          version: latest
+          skip-pulls: false
+      - name: Lint Go (go-sequencer-client)
+        uses: golangci/golangci-lint-action@v2
+        with:
+          working-directory: modules/go-sequencer-client
           version: latest
           skip-pulls: false
       - name: Lint Markdown
@@ -26,7 +33,11 @@ jobs:
           files: .
           config_file: .markdownlint.json
           dot: true
-      - name: Test Go
+      - name: Test Go (cli)
         # FIXME - the ProcessPane tests require tty or pty i think.
         #  no solutions have worked so far https://github.com/actions/runner/issues/241
         run: go test ./... -skip TestProcessPane
+        working-directory: modules/cli
+#      - name: Test Go (go-sequencer-client)
+#        run: go test ./...
+#        working-directory: modules/go-sequencer-client
