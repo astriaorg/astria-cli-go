@@ -16,20 +16,21 @@ import (
 
 type BaseConfig struct {
 	// conductor
-	Astria_conductor_celestia_block_time_ms     int    `mapstructure:"astria_conductor_celestia_block_time_ms" toml:"astria_conductor_celestia_block_time_ms"`
-	Astria_conductor_celestia_bearer_token      string `mapstructure:"astria_conductor_celestia_bearer_token" toml:"astria_conductor_celestia_bearer_token"`
-	Astria_conductor_celestia_node_http_url     string `mapstructure:"astria_conductor_celestia_node_http_url" toml:"astria_conductor_celestia_node_http_url"`
-	Astria_conductor_execution_rpc_url          string `mapstructure:"astria_conductor_execution_rpc_url" toml:"astria_conductor_execution_rpc_url"`
-	Astria_conductor_execution_commit_level     string `mapstructure:"astria_conductor_execution_commit_level" toml:"astria_conductor_execution_commit_level"`
-	Astria_conductor_log                        string `mapstructure:"astria_conductor_log" toml:"astria_conductor_log"`
-	Astria_conductor_no_otel                    bool   `mapstructure:"astria_conductor_no_otel" toml:"astria_conductor_no_otel"`
-	Astria_conductor_force_stdout               bool   `mapstructure:"astria_conductor_force_stdout" toml:"astria_conductor_force_stdout"`
-	Astria_conductor_pretty_print               bool   `mapstructure:"astria_conductor_pretty_print" toml:"astria_conductor_pretty_print"`
-	Astria_conductor_sequencer_grpc_url         string `mapstructure:"astria_conductor_sequencer_grpc_url" toml:"astria_conductor_sequencer_grpc_url"`
-	Astria_conductor_sequencer_cometbft_url     string `mapstructure:"astria_conductor_sequencer_cometbft_url" toml:"astria_conductor_sequencer_cometbft_url"`
-	Astria_conductor_sequencer_block_time_ms    int    `mapstructure:"astria_conductor_sequencer_block_time_ms" toml:"astria_conductor_sequencer_block_time_ms"`
-	Astria_conductor_no_metrics                 bool   `mapstructure:"astria_conductor_no_metrics" toml:"astria_conductor_no_metrics"`
-	Astria_conductor_metrics_http_listener_addr string `mapstructure:"astria_conductor_metrics_http_listener_addr" toml:"astria_conductor_metrics_http_listener_addr"`
+	Astria_conductor_celestia_block_time_ms        int    `mapstructure:"astria_conductor_celestia_block_time_ms" toml:"astria_conductor_celestia_block_time_ms"`
+	Astria_conductor_celestia_bearer_token         string `mapstructure:"astria_conductor_celestia_bearer_token" toml:"astria_conductor_celestia_bearer_token"`
+	Astria_conductor_celestia_node_http_url        string `mapstructure:"astria_conductor_celestia_node_http_url" toml:"astria_conductor_celestia_node_http_url"`
+	Astria_conductor_execution_rpc_url             string `mapstructure:"astria_conductor_execution_rpc_url" toml:"astria_conductor_execution_rpc_url"`
+	Astria_conductor_execution_commit_level        string `mapstructure:"astria_conductor_execution_commit_level" toml:"astria_conductor_execution_commit_level"`
+	Astria_conductor_log                           string `mapstructure:"astria_conductor_log" toml:"astria_conductor_log"`
+	Astria_conductor_no_otel                       bool   `mapstructure:"astria_conductor_no_otel" toml:"astria_conductor_no_otel"`
+	Astria_conductor_force_stdout                  bool   `mapstructure:"astria_conductor_force_stdout" toml:"astria_conductor_force_stdout"`
+	Astria_conductor_pretty_print                  bool   `mapstructure:"astria_conductor_pretty_print" toml:"astria_conductor_pretty_print"`
+	Astria_conductor_sequencer_grpc_url            string `mapstructure:"astria_conductor_sequencer_grpc_url" toml:"astria_conductor_sequencer_grpc_url"`
+	Astria_conductor_sequencer_cometbft_url        string `mapstructure:"astria_conductor_sequencer_cometbft_url" toml:"astria_conductor_sequencer_cometbft_url"`
+	Astria_conductor_sequencer_block_time_ms       int    `mapstructure:"astria_conductor_sequencer_block_time_ms" toml:"astria_conductor_sequencer_block_time_ms"`
+	Astria_conductor_sequencer_requests_per_second int    `mapstructure:"astria_conductor_sequencer_requests_per_second" toml:"astria_conductor_sequencer_requests_per_second"`
+	Astria_conductor_no_metrics                    bool   `mapstructure:"astria_conductor_no_metrics" toml:"astria_conductor_no_metrics"`
+	Astria_conductor_metrics_http_listener_addr    string `mapstructure:"astria_conductor_metrics_http_listener_addr" toml:"astria_conductor_metrics_http_listener_addr"`
 
 	// sequencer
 	Astria_sequencer_listen_addr                string `mapstructure:"astria_sequencer_listen_addr" toml:"astria_sequencer_listen_addr"`
@@ -79,20 +80,21 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		panic(err)
 	}
 	return BaseConfig{
-		Astria_conductor_celestia_block_time_ms:     1200,
-		Astria_conductor_celestia_bearer_token:      "<JWT Bearer token>",
-		Astria_conductor_celestia_node_http_url:     "http://127.0.0.1:26658",
-		Astria_conductor_execution_rpc_url:          "http://127.0.0.1:50051",
-		Astria_conductor_execution_commit_level:     "SoftOnly",
-		Astria_conductor_log:                        "astria_conductor=info",
-		Astria_conductor_no_otel:                    true,
-		Astria_conductor_force_stdout:               true,
-		Astria_conductor_pretty_print:               true,
-		Astria_conductor_sequencer_grpc_url:         "http://127.0.0.1:8080",
-		Astria_conductor_sequencer_cometbft_url:     "http://127.0.0.1:26657",
-		Astria_conductor_sequencer_block_time_ms:    2000,
-		Astria_conductor_no_metrics:                 true,
-		Astria_conductor_metrics_http_listener_addr: "127.0.0.1:9000",
+		Astria_conductor_celestia_block_time_ms:        1200,
+		Astria_conductor_celestia_bearer_token:         "<JWT Bearer token>",
+		Astria_conductor_celestia_node_http_url:        "http://127.0.0.1:26658",
+		Astria_conductor_execution_rpc_url:             "http://127.0.0.1:50051",
+		Astria_conductor_execution_commit_level:        "SoftOnly",
+		Astria_conductor_log:                           "astria_conductor=info",
+		Astria_conductor_no_otel:                       true,
+		Astria_conductor_force_stdout:                  true,
+		Astria_conductor_pretty_print:                  true,
+		Astria_conductor_sequencer_grpc_url:            "http://127.0.0.1:8080",
+		Astria_conductor_sequencer_cometbft_url:        "http://127.0.0.1:26657",
+		Astria_conductor_sequencer_block_time_ms:       2000,
+		Astria_conductor_sequencer_requests_per_second: 500,
+		Astria_conductor_no_metrics:                    true,
+		Astria_conductor_metrics_http_listener_addr:    "127.0.0.1:9000",
 
 		Astria_sequencer_listen_addr:                "127.0.0.1:26658",
 		Astria_sequencer_db_filepath:                filepath.Join(homePath, ".astria", instanceName, DataDirName, "astria_sequencer_db"),

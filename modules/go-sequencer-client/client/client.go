@@ -92,6 +92,15 @@ func (c *Client) GetNonce(ctx context.Context, addr [20]byte) (uint32, error) {
 	return nonceResp.Nonce, nil
 }
 
+func (c *Client) GetBlock(ctx context.Context, height *int64) (*coretypes.ResultBlock, error) {
+	block, err := c.client.Block(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+
+	return block, nil
+}
+
 func (c *Client) GetBlockHeight(ctx context.Context) (int64, error) {
 	block, err := c.client.Block(ctx, nil)
 	if err != nil {
