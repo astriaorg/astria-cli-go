@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	primitives "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
 
@@ -46,7 +47,7 @@ func CreateAccount() (*Account, error) {
 }
 
 // GetBalances returns the balances of an address.
-func GetBalances(address [20]byte, sequencerURL string) (*BalancesResponse, error) {
+func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
 	c, err := client.NewClient(sequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error creating sequencer client")
@@ -56,7 +57,15 @@ func GetBalances(address [20]byte, sequencerURL string) (*BalancesResponse, erro
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	balances, err := c.GetBalances(ctx, address)
+	addr, err := hex.DecodeString(address)
+	if err != nil {
+		log.WithError(err).Error("Error decoding address")
+		return nil, err
+	}
+	var a [20]byte
+	copy(a[:], addr)
+
+	balances, err := c.GetBalances(ctx, a)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return nil, err
@@ -131,7 +140,7 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 }
 
 // GetNonce returns the nonce of an address.
-func GetNonce(address *bech32m.Bech32MAddress, sequencerURL string) (*NonceResponse, error) {
+func GetNonce(address [20]byte, sequencerURL string) (*NonceResponse, error) {
 
 	log.Debug("Getting nonce for address: ", address)
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
@@ -145,7 +154,7 @@ func GetNonce(address *bech32m.Bech32MAddress, sequencerURL string) (*NonceRespo
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	nonce, err := c.GetNonce(ctx, address.AsBytes())
+	nonce, err := c.GetNonce(ctx, address)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &NonceResponse{}, err
@@ -153,7 +162,7 @@ func GetNonce(address *bech32m.Bech32MAddress, sequencerURL string) (*NonceRespo
 
 	log.Debug("Nonce: ", nonce)
 	return &NonceResponse{
-		Address: address.ToString(),
+		Address: hex.EncodeToString(address[:]),
 		Nonce:   nonce,
 	}, nil
 }
@@ -689,6 +698,11 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 		return &ChangeSudoAddressResponse{}, err
 	}
 
+	transactionInner, err := hex.DecodeString(opts.UpdateAddress)
+	if err != nil {
+		log.WithError(err).Error("Error decoding update address to bytes")
+	}
+
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
@@ -698,7 +712,9 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 			{
 				Value: &txproto.Action_SudoAddressChangeAction{
 					SudoAddressChangeAction: &txproto.SudoAddressChangeAction{
-						NewAddress: opts.UpdateAddress,
+						NewAddress: &primitives.Address{
+							Inner: transactionInner,
+						},
 					},
 				},
 			},
@@ -725,7 +741,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	tr := &ChangeSudoAddressResponse{
 		From:           hex.EncodeToString(fromAddr[:]),
 		Nonce:          nonce,
-		NewSudoAddress: opts.UpdateAddress.Bech32M,
+		NewSudoAddress: opts.UpdateAddress,
 		TxHash:         hash,
 	}
 

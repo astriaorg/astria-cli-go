@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
-	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -37,16 +36,16 @@ func balancesCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	address := args[0]
-	bech32m, err := bech32m.DecodeAndValidateBech32M(address, "astria")
-	if err != nil {
-		log.WithError(err).Error("Error decoding address")
-		return
-	}
+	// bech32m, err := bech32m.DecodeAndValidateBech32M(address, "astria")
+	// if err != nil {
+	// 	log.WithError(err).Error("Error decoding address")
+	// 	return
+	// }
 
 	log.Debug("Getting balances for address: ", address)
 	log.Debug("From sequencer at url: ", sequencerURL)
 
-	balances, err := sequencer.GetBalances(bech32m.AsBytes(), sequencerURL)
+	balances, err := sequencer.GetBalances(address, sequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return

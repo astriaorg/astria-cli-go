@@ -3,7 +3,6 @@ package sudo
 import (
 	"github.com/astria/astria-cli-go/cmd"
 	sequencercmd "github.com/astria/astria-cli-go/cmd/sequencer"
-	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -29,11 +28,11 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	to := args[0]
-	bech32mAddress, err := bech32m.DecodeAndValidateBech32M(to, "astria")
-	if err != nil {
-		log.WithError(err).Error("Error decoding address")
-		return
-	}
+	// bech32mAddress, err := bech32m.DecodeAndValidateBech32M(to, "astria")
+	// if err != nil {
+	// 	log.WithError(err).Error("Error decoding address")
+	// 	return
+	// }
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -48,7 +47,7 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 
 	opts := sequencer.ChangeSudoAddressOpts{
 		FromKey:          from,
-		UpdateAddress:    bech32mAddress.AsProtoAddress(),
+		UpdateAddress:    to,
 		SequencerURL:     sequencerURL,
 		SequencerChainID: chainId,
 	}

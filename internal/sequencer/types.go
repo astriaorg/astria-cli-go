@@ -397,7 +397,7 @@ type ChangeSudoAddressOpts struct {
 	// FromKey is the private key of the sender
 	FromKey ed25519.PrivateKey
 	// ToAddress is the address of the receiver
-	UpdateAddress *primproto.Address
+	UpdateAddress string
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }
