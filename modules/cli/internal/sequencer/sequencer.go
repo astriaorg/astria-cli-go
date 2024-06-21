@@ -10,8 +10,8 @@ import (
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
+	"github.com/astriaorg/astria-cli-go/modules/go-sequencer-client/client"
 
-	"github.com/astriaorg/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
 )
 

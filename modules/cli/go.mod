@@ -6,7 +6,7 @@ require (
 	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240607202648-0eefaac9f5b8.2
 	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240609195145-373c666381d1.2
 	github.com/99designs/keyring v1.2.2
-	github.com/astriaorg/go-sequencer-client v0.4.1
+	github.com/astriaorg/astria-cli-go/modules/go-sequencer-client v0.0.0-00010101000000-000000000000
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -17,6 +17,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.24.0
 )
+
+replace github.com/astriaorg/astria-cli-go/modules/go-sequencer-client => ../go-sequencer-client
 
 require (
 	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect

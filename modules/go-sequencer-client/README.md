@@ -11,7 +11,7 @@ import (
   "fmt"
 
   sqproto "buf.build/gen/go/astria/astria/protocolbuffers/go/astria/sequencer/v1alpha1"
-  client "github.com/astriaorg/go-sequencer-client/client"
+  client "github.com/astriaorg/astria-cli-go/modules/go-sequencer-client/client"
 )
 
 func main() {
