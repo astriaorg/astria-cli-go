@@ -2,6 +2,7 @@ package sequencer
 
 import (
 	"github.com/astria/astria-cli-go/cmd"
+	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astria/astria-cli-go/internal/sequencer"
 	"github.com/astria/astria-cli-go/internal/ui"
 	log "github.com/sirupsen/logrus"
@@ -33,24 +34,44 @@ func init() {
 func transferCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	amount := args[0]
-	to := args[1]
+	amount, err := cmd.ConvertToUint128(args[0])
+	if err != nil {
+		log.WithError(err).Error("Error converting amount to Uint128 proto")
+		return
+	}
+
+	toAddress := args[1]
+	bech32mToAddress, err := bech32m.DecodeAndValidateBech32M(toAddress, "astria")
+	if err != nil {
+		log.WithError(err).Error("Error decoding address")
+		return
+	}
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := cmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
 
 	opts := sequencer.TransferOpts{
-		SequencerURL:     url,
-		FromKey:          priv,
-		ToAddress:        to,
+		SequencerURL:     sequencerURL,
+		FromKey:          from,
+		ToAddress:        bech32mToAddress.AsProtoAddress(),
 		Amount:           amount,
 		SequencerChainID: chainId,
+		AssetID:          cmd.AssetIdFromDenom("nria"),
+		FeeAssetID:       cmd.AssetIdFromDenom("nria"),
 	}
 	tx, err := sequencer.Transfer(opts)
 	if err != nil {

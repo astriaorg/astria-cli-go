@@ -21,21 +21,34 @@ var sudoAddressChangeCmd = &cobra.Command{
 func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	to := args[0]
+	// bech32mAddress, err := bech32m.DecodeAndValidateBech32M(to, "astria")
+	// if err != nil {
+	// 	log.WithError(err).Error("Error decoding address")
+	// 	return
+	// }
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := cmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
 
 	opts := sequencer.ChangeSudoAddressOpts{
-		FromKey:          priv,
+		FromKey:          from,
 		UpdateAddress:    to,
-		SequencerURL:     url,
+		SequencerURL:     sequencerURL,
 		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.ChangeSudoAddress(opts)

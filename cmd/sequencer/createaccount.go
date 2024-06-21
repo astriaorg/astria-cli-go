@@ -59,7 +59,7 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 			pwIn := pterm.DefaultInteractiveTextInput.WithMask("*")
 			pw, _ := pwIn.Show("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:")
 
-			ks, err := keys.NewEncryptedKeyStore(pw, account.Address, account.PrivateKey)
+			ks, err := keys.NewEncryptedKeyStore(pw, account.Address.ToString(), account.PrivateKey)
 			if err != nil {
 				log.WithError(err).Error("Error storing private key")
 				panic(err)
@@ -82,7 +82,7 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 			log.Infof("Storing private key in keyfile at %s", filename)
 		}
 		if useKeyring {
-			err = keys.StoreKeyring(account.Address, account.PrivateKeyString())
+			err = keys.StoreKeyring(account.Address.ToString(), account.PrivateKeyString())
 			if err != nil {
 				log.WithError(err).Error("Error storing private key")
 				panic(err)

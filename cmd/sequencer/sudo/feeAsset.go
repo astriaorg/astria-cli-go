@@ -27,7 +27,10 @@ var addFeeAssetCmd = &cobra.Command{
 func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	asset := args[0]
@@ -37,10 +40,15 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := cmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
 
 	opts := sequencer.FeeAssetOpts{
-		FromKey:          priv,
-		SequencerURL:     url,
+		FromKey:          from,
+		SequencerURL:     sequencerURL,
 		SequencerChainID: chainId,
 		Asset:            asset,
 	}
@@ -68,7 +76,10 @@ var removeFeeAssetCmd = &cobra.Command{
 func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := cmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	asset := args[0]
@@ -78,10 +89,15 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := cmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
 
 	opts := sequencer.FeeAssetOpts{
-		FromKey:          priv,
-		SequencerURL:     url,
+		FromKey:          from,
+		SequencerURL:     sequencerURL,
 		SequencerChainID: chainId,
 		Asset:            asset,
 	}

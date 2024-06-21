@@ -4,16 +4,20 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
-	"strconv"
+	"fmt"
 	"time"
 
+	primitives "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
 	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/abci"
-	"buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria_vendored/tendermint/crypto"
 
+	"github.com/astria/astria-cli-go/internal/bech32m"
 	"github.com/astriaorg/go-sequencer-client/client"
+
 	log "github.com/sirupsen/logrus"
 )
+
+const BechAddressPrefix = "astria"
 
 // CreateAccount creates a new account for the sequencer.
 func CreateAccount() (*Account, error) {
@@ -25,13 +29,18 @@ func CreateAccount() (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	addr := hex.EncodeToString(address[:])
+	encoded, err := bech32m.EncodeBech32M(BechAddressPrefix, address)
+	if err != nil {
+		log.WithError(err).Error("Error encoding address to bech32")
+		return nil, err
+	}
+
 	priv := ed25519.NewKeyFromSeed(seed[:])
 	pub := priv.Public().(ed25519.PublicKey)
 
-	log.Debug("Created account with address: ", addr)
+	log.Debug("Created account with address: ", encoded)
 	return &Account{
-		Address:    addr,
+		Address:    *encoded,
 		PublicKey:  pub,
 		PrivateKey: priv,
 	}, nil
@@ -39,36 +48,32 @@ func CreateAccount() (*Account, error) {
 
 // GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
-	address = strip0xPrefix(address)
-	sequencerURL = addPortToURL(sequencerURL)
-
-	log.Debug("Getting balance for address: ", address)
-	log.Debug("Creating CometBFT client with url: ", sequencerURL)
-
 	c, err := client.NewClient(sequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error creating sequencer client")
 		return nil, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return nil, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	balances, err := c.GetBalances(ctx, address20)
+	addr, err := hex.DecodeString(address)
+	if err != nil {
+		log.WithError(err).Error("Error decoding address")
+		return nil, err
+	}
+	var a [20]byte
+	copy(a[:], addr)
+
+	balances, err := c.GetBalances(ctx, a)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return nil, err
 	}
 
+	if len(balances) == 0 {
+		log.Info("No balances found")
+	}
 	for _, b := range balances {
 		log.Debug("Denom:", b.Denom, "Balance:", b.Balance.String())
 	}
@@ -86,11 +91,9 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 
 // GetBlock returns the specific block from the sequencer.
 func GetBlock(opts BlockOpts) (*BlockResponse, error) {
-	sequencerURL := addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 
-	log.Debug("Creating CometBFT client with url: ", sequencerURL)
-
-	c, err := client.NewClient(sequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error creating sequencer client")
 		return &BlockResponse{}, err
@@ -113,8 +116,6 @@ func GetBlock(opts BlockOpts) (*BlockResponse, error) {
 
 // GetBlockheight returns the current blockheight of the sequencer.
 func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
-	sequencerURL = addPortToURL(sequencerURL)
-
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
 
 	c, err := client.NewClient(sequencerURL)
@@ -139,9 +140,7 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 }
 
 // GetNonce returns the nonce of an address.
-func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
-	address = strip0xPrefix(address)
-	sequencerURL = addPortToURL(sequencerURL)
+func GetNonce(address [20]byte, sequencerURL string) (*NonceResponse, error) {
 
 	log.Debug("Getting nonce for address: ", address)
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
@@ -152,19 +151,10 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 		return &NonceResponse{}, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return &NonceResponse{}, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	nonce, err := c.GetNonce(ctx, address20)
+	nonce, err := c.GetNonce(ctx, address)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &NonceResponse{}, err
@@ -172,7 +162,7 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 
 	log.Debug("Nonce: ", nonce)
 	return &NonceResponse{
-		Address: address,
+		Address: hex.EncodeToString(address[:]),
 		Nonce:   nonce,
 	}, nil
 }
@@ -184,7 +174,6 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	defer cancel()
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -192,32 +181,16 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		return &TransferResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &TransferResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
-	// create transaction
-	amount, err := convertToUint128(opts.Amount)
-	if err != nil {
-		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return &TransferResponse{}, err
-	}
-
-	to, err := addressFromText(opts.ToAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'to' address %v", opts.ToAddress)
-	}
 	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
+
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &TransferResponse{}, err
 	}
+
 	log.Debugf("Nonce: %v", nonce)
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
@@ -228,10 +201,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 			{
 				Value: &txproto.Action_TransferAction{
 					TransferAction: &txproto.TransferAction{
-						To:         to,
-						Amount:     amount,
-						AssetId:    assetIdFromDenom("nria"),
-						FeeAssetId: assetIdFromDenom("nria"),
+						To:         opts.ToAddress,
+						Amount:     opts.Amount,
+						AssetId:    opts.AssetID,
+						FeeAssetId: opts.FeeAssetID,
 					},
 				},
 			},
@@ -253,13 +226,19 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 	log.Debugf("Broadcast response: %v", resp)
 
+	amount, err := convertUint128ToString(opts.Amount)
+	if err != nil {
+		log.WithError(err).Error("Error converting Uint128 to string")
+		return &TransferResponse{}, err
+	}
+
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &TransferResponse{
 		From:   hex.EncodeToString(fromAddr[:]),
-		To:     opts.ToAddress,
+		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
-		Amount: opts.Amount,
+		Amount: amount,
 		TxHash: hash,
 	}
 
@@ -271,11 +250,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rollupID := rollupIdFromText(opts.RollupName)
-	log.Debug("rollup id :", rollupID)
-
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -283,30 +258,13 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 		return &InitBridgeResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &InitBridgeResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &InitBridgeResponse{}, err
-	}
-
-	sudoAddress, err := addressFromText(opts.SudoAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'sudo' address %v to proto", opts.SudoAddress)
-	}
-
-	withdrawerAddress, err := addressFromText(opts.WithdrawerAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'withdrawer' address %v to proto", opts.WithdrawerAddress)
 	}
 
 	// build transaction
@@ -319,11 +277,11 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 			{
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
-						RollupId:          rollupID,
-						AssetId:           assetIdFromDenom(opts.AssetID),
-						FeeAssetId:        assetIdFromDenom(opts.FeeAssetID),
-						SudoAddress:       sudoAddress,
-						WithdrawerAddress: withdrawerAddress,
+						RollupId:          rollupIdFromText(opts.RollupName),
+						AssetId:           opts.AssetID,
+						FeeAssetId:        opts.FeeAssetID,
+						SudoAddress:       opts.SudoAddress,
+						WithdrawerAddress: opts.WithdrawerAddress,
 					},
 				},
 			},
@@ -363,10 +321,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	log.Debugf("BridgeLockOpts: %v", opts)
-
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -374,15 +329,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		return &BridgeLockResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &BridgeLockResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
@@ -391,16 +339,6 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 
 	// create transaction
-	amount, err := convertToUint128(opts.Amount)
-	if err != nil {
-		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return &BridgeLockResponse{}, err
-	}
-	to, err := addressFromText(opts.ToAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
-		return &BridgeLockResponse{}, err
-	}
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
@@ -410,10 +348,10 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 			{
 				Value: &txproto.Action_BridgeLockAction{
 					BridgeLockAction: &txproto.BridgeLockAction{
-						To:                      to,
-						Amount:                  amount,
-						AssetId:                 assetIdFromDenom(opts.AssetID),
-						FeeAssetId:              assetIdFromDenom(opts.FeeAssetID),
+						To:                      opts.ToAddress,
+						Amount:                  opts.Amount,
+						AssetId:                 opts.AssetID,
+						FeeAssetId:              opts.FeeAssetID,
 						DestinationChainAddress: opts.DestinationChainAddress,
 					},
 				},
@@ -436,19 +374,24 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 	log.Debugf("Broadcast response: %v", resp)
 
+	amount, err := convertUint128ToString(opts.Amount)
+	if err != nil {
+		log.WithError(err).Error("Error converting Uint128 to string")
+		return &BridgeLockResponse{}, err
+	}
+
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &BridgeLockResponse{
 		From:   hex.EncodeToString(fromAddr[:]),
-		To:     opts.ToAddress,
+		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
-		Amount: opts.Amount,
+		Amount: amount,
 		TxHash: hash,
 	}
 
 	log.Debugf("Transfer hash: %v", hash)
 	return tr, nil
-
 }
 
 // AddFeeAsset adds a fee asset to the sequencer.
@@ -459,7 +402,6 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	log.Debugf("AddFeeAssetOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -467,15 +409,8 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 		return &FeeAssetResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &FeeAssetResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
@@ -537,7 +472,6 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	log.Debugf("RemoveFeeAssetOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -545,15 +479,8 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 		return &FeeAssetResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &FeeAssetResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
@@ -615,7 +542,6 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	log.Debugf("AddIBCRelayerOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -623,25 +549,12 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		return &IBCRelayerResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &IBCRelayerResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &IBCRelayerResponse{}, err
-	}
-
-	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
 		return &IBCRelayerResponse{}, err
 	}
 
@@ -655,7 +568,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 				Value: &txproto.Action_IbcRelayerChangeAction{
 					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
 						Value: &txproto.IbcRelayerChangeAction_Addition{
-							Addition: ibcRelayerAddress,
+							Addition: opts.IBCRelayerAddress,
 						},
 					},
 				},
@@ -684,7 +597,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		From:              hex.EncodeToString(fromAddr[:]),
 		Nonce:             nonce,
 		TxHash:            hash,
-		IBCRelayerAddress: opts.IBCRelayerAddress,
+		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
 	}
 
 	log.Debugf("Transfer hash: %v", hash)
@@ -699,7 +612,6 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	log.Debugf("RemoveIBCRelayerOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -707,25 +619,12 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		return &IBCRelayerResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &IBCRelayerResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &IBCRelayerResponse{}, err
-	}
-
-	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
 		return &IBCRelayerResponse{}, err
 	}
 
@@ -739,7 +638,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 				Value: &txproto.Action_IbcRelayerChangeAction{
 					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
 						Value: &txproto.IbcRelayerChangeAction_Removal{
-							Removal: ibcRelayerAddress,
+							Removal: opts.IBCRelayerAddress,
 						},
 					},
 				},
@@ -768,7 +667,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		From:              hex.EncodeToString(fromAddr[:]),
 		Nonce:             nonce,
 		TxHash:            hash,
-		IBCRelayerAddress: opts.IBCRelayerAddress,
+		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
 	}
 
 	log.Debugf("Transfer hash: %v", hash)
@@ -783,7 +682,6 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	log.Debugf("Change Sudo Address Opts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -791,15 +689,8 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 		return &ChangeSudoAddressResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &ChangeSudoAddressResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
@@ -807,10 +698,9 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 		return &ChangeSudoAddressResponse{}, err
 	}
 
-	to, err := addressFromText(opts.UpdateAddress)
+	transactionInner, err := hex.DecodeString(opts.UpdateAddress)
 	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.UpdateAddress)
-		return &ChangeSudoAddressResponse{}, err
+		log.WithError(err).Error("Error decoding update address to bytes")
 	}
 
 	tx := &txproto.UnsignedTransaction{
@@ -822,7 +712,9 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 			{
 				Value: &txproto.Action_SudoAddressChangeAction{
 					SudoAddressChangeAction: &txproto.SudoAddressChangeAction{
-						NewAddress: to,
+						NewAddress: &primitives.Address{
+							Inner: transactionInner,
+						},
 					},
 				},
 			},
@@ -865,7 +757,6 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	log.Debugf("Update Validator Opts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -873,37 +764,12 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 		return &UpdateValidatorResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &UpdateValidatorResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &UpdateValidatorResponse{}, err
-	}
-
-	// decode public key
-	pk, err := publicKeyFromText(opts.PubKey)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded public key %v", opts.PubKey)
-		return &UpdateValidatorResponse{}, err
-	}
-	pubKey := &crypto.PublicKey{
-		Sum: &crypto.PublicKey_Ed25519{
-			Ed25519: pk,
-		},
-	}
-
-	power, err := strconv.ParseInt(opts.Power, 10, 64)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding power string to int64 %v", opts.Power)
 		return &UpdateValidatorResponse{}, err
 	}
 
@@ -916,8 +782,8 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 			{
 				Value: &txproto.Action_ValidatorUpdateAction{
 					ValidatorUpdateAction: &abci.ValidatorUpdate{
-						PubKey: pubKey,
-						Power:  power,
+						PubKey: opts.PubKey,
+						Power:  opts.Power,
 					},
 				},
 			},
@@ -944,8 +810,8 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	tr := &UpdateValidatorResponse{
 		From:   hex.EncodeToString(fromAddr[:]),
 		Nonce:  nonce,
-		PubKey: opts.PubKey,
-		Power:  opts.Power,
+		PubKey: opts.PubKey.String(),
+		Power:  fmt.Sprintf("%d", opts.Power),
 		TxHash: hash,
 	}
 	log.Debug(tr)
