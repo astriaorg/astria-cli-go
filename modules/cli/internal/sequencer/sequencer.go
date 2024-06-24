@@ -44,9 +44,6 @@ func CreateAccount(prefix string) (*Account, error) {
 
 // GetBalances returns the balances of an address.
 func GetBalances(address string, sequencerURL string) (*BalancesResponse, error) {
-	address = strip0xPrefix(address)
-	sequencerURL = addPortToURL(sequencerURL)
-
 	log.Debug("Getting balance for address: ", address)
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
 
@@ -56,19 +53,10 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 		return nil, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return nil, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	balances, err := c.GetBalances(ctx, address20)
+	balances, err := c.GetBalances(ctx, address)
 	if err != nil {
 		log.WithError(err).Error("Error getting balance")
 		return nil, err
