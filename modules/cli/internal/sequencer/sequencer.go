@@ -104,8 +104,6 @@ func GetBlock(opts BlockOpts) (*BlockResponse, error) {
 
 // GetBlockheight returns the current blockheight of the sequencer.
 func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
-	sequencerURL = addPortToURL(sequencerURL)
-
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
 
 	c, err := client.NewClient(sequencerURL)
