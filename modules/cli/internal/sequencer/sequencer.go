@@ -15,8 +15,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// CreateAccount creates a new account for the sequencer.
-func CreateAccount() (*Account, error) {
+// CreateAccount creates a new account for the sequencer. The address will be a
+// bech32m encoded string, which is created using the prefix provided.
+func CreateAccount(prefix string) (*Account, error) {
 	signer, err := client.GenerateSigner()
 	if err != nil {
 		log.WithError(err).Error("Failed to generate signer")
@@ -25,7 +26,11 @@ func CreateAccount() (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	addr := hex.EncodeToString(address[:])
+	addr, err := EncodeBech32M(prefix, address)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
 	priv := ed25519.NewKeyFromSeed(seed[:])
 	pub := priv.Public().(ed25519.PublicKey)
 

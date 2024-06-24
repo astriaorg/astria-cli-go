@@ -11,9 +11,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Bech32MAddress struct {
+	Address string
+	Prefix  string
+	Bytes   [20]byte
+}
+
+func (a *Bech32MAddress) ToString() string {
+	return a.Address
+}
+
 // Account is the struct that holds the account information.
 type Account struct {
-	Address    string
+	Address    *Bech32MAddress
 	PublicKey  ed25519.PublicKey
 	PrivateKey ed25519.PrivateKey
 }
@@ -21,13 +31,18 @@ type Account struct {
 // NewAccountFromPrivKey creates a new Account struct from a given private key.
 // It calculates the public key from the private key, generates the address from the public key,
 // and returns a pointer to the new Account struct with the address, public key, and private key set.
-func NewAccountFromPrivKey(privkey ed25519.PrivateKey) *Account {
+func NewAccountFromPrivKey(prefix string, privkey ed25519.PrivateKey) (*Account, error) {
 	pub := privkey.Public().(ed25519.PublicKey)
+	addr, err := addressFromPublicKey(prefix, pub)
+	if err != nil {
+		log.WithError(err).Error("Error creating address from public key")
+		return nil, err
+	}
 	return &Account{
-		Address:    addressFromPublicKey(pub),
+		Address:    addr,
 		PublicKey:  pub,
 		PrivateKey: privkey,
-	}
+	}, nil
 }
 
 // AccountJSON is for representing an `Account` as JSON
@@ -40,7 +55,7 @@ type AccountJSON struct {
 // ToJSONStruct converts an Account into an AccountJSON struct for JSON representation.
 func (a *Account) ToJSONStruct() *AccountJSON {
 	return &AccountJSON{
-		Address:    a.Address,
+		Address:    a.Address.ToString(),
 		PublicKey:  a.PublicKeyString(),
 		PrivateKey: a.PrivateKeyString(),
 	}
@@ -72,7 +87,7 @@ func (a *Account) TableHeader() []string {
 
 func (a *Account) TableRows() [][]string {
 	return [][]string{
-		{a.Address, a.PublicKeyString(), a.PrivateKeyString()},
+		{a.Address.ToString(), a.PublicKeyString(), a.PrivateKeyString()},
 	}
 }
 

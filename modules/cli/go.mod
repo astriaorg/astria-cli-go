@@ -7,6 +7,7 @@ require (
 	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240609195145-373c666381d1.2
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/astria-cli-go/modules/go-sequencer-client v0.0.0-00010101000000-000000000000
+	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -19,11 +20,6 @@ require (
 )
 
 replace github.com/astriaorg/astria-cli-go/modules/go-sequencer-client => ../go-sequencer-client
-
-require (
-	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
-)
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect

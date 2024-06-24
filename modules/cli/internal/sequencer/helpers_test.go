@@ -154,13 +154,15 @@ func TestRollupIdFromText(t *testing.T) {
 }
 
 func TestAddressFromPublicKey(t *testing.T) {
-	expected := "1c0c490f1b5528d8173c5de46d131160e4b2c0c3"
+	// bech32m address encoded from 1c0c490f1b5528d8173c5de46d131160e4b2c0c3 bytes
+	expected := "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
 
 	testFromPrivKey := "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
 
 	from, _ := privateKeyFromText(testFromPrivKey)
 	pub := from.Public().(ed25519.PublicKey)
-	actual := addressFromPublicKey(pub)
+	actual, err := addressFromPublicKey("astria", pub)
+	assert.NoError(t, err)
 
 	assert.Equal(t, expected, actual)
 }

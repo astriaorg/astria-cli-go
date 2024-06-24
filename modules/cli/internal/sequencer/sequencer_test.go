@@ -10,7 +10,7 @@ import (
 )
 
 func TestCreateAccount(t *testing.T) {
-	account, err := sequencer.CreateAccount()
+	account, err := sequencer.CreateAccount("astria")
 	assert.NoError(t, err, "CreateAccount should not return an error on success")
 
 	assert.NotEmpty(t, account.Address, "Address should not be empty")
