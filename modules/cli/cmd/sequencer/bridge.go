@@ -29,14 +29,14 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := addPortToURL(url)
+	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
-	from, err := privateKeyFromText(priv)
+	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
 		return
@@ -47,10 +47,10 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 
 	aid := flagHandler.GetValue("asset-id")
-	assetID := assetIdFromDenom(aid)
+	assetID := AssetIdFromDenom(aid)
 
 	faid := flagHandler.GetValue("fee-asset-id")
-	feeAssetID := assetIdFromDenom(faid)
+	feeAssetID := AssetIdFromDenom(faid)
 
 	sa := flagHandler.GetValue("sudo-address")
 	sudoAddress := addressFromText(sa)
@@ -98,14 +98,14 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := addPortToURL(url)
+	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
-	from, err := privateKeyFromText(priv)
+	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
 		return
@@ -123,10 +123,10 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 
 	aid := flagHandler.GetValue("asset-id")
-	assetID := assetIdFromDenom(aid)
+	assetID := AssetIdFromDenom(aid)
 
 	faid := flagHandler.GetValue("fee-asset-id")
-	feeAssetID := assetIdFromDenom(faid)
+	feeAssetID := AssetIdFromDenom(faid)
 
 	destinationChainAddress := args[2]
 

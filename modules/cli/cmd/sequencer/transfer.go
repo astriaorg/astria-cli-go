@@ -35,14 +35,14 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := addPortToURL(url)
+	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
-	from, err := privateKeyFromText(priv)
+	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
 		return

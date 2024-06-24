@@ -11,28 +11,28 @@ import (
 func TestAddPortToURL(t *testing.T) {
 	t.Run("URL without port", func(t *testing.T) {
 		url := "http://example.com"
-		got := addPortToURL(url)
+		got := AddPortToURL(url)
 		want := "http://example.com:80"
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("URL with port", func(t *testing.T) {
 		url := "http://example.com:80"
-		got := addPortToURL(url)
+		got := AddPortToURL(url)
 		want := "http://example.com:80"
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("https URL without port", func(t *testing.T) {
 		url := "https://example.com"
-		got := addPortToURL(url)
+		got := AddPortToURL(url)
 		want := "https://example.com:443"
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("https URL with port", func(t *testing.T) {
 		url := "https://example.com:443"
-		got := addPortToURL(url)
+		got := AddPortToURL(url)
 		want := "https://example.com:443"
 		assert.Equal(t, want, got)
 	})
@@ -82,7 +82,7 @@ func TestPrivateKeyFromText(t *testing.T) {
 	privkey := "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
 	bytes, _ := hex.DecodeString(privkey)
 	expected := ed25519.NewKeyFromSeed(bytes)
-	actual, err := privateKeyFromText(privkey)
+	actual, err := PrivateKeyFromText(privkey)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }

@@ -336,8 +336,11 @@ func (tr *TransferResponse) TableRows() [][]string {
 }
 
 type FeeAssetOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// SequencerChainID is the chain ID of the sequencer

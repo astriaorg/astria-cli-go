@@ -14,9 +14,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// addPortToURL adds a port to a URL if it doesn't already have one.
+// AddPortToURL adds a port to a URL if it doesn't already have one.
 // The port is needed for use with the Sequencer Client.
-func addPortToURL(url string) string {
+func AddPortToURL(url string) string {
 	// Check if the URL already has a port
 	matched, err := regexp.MatchString(`:\d+$`, url)
 	if err != nil {
@@ -38,9 +38,9 @@ func addPortToURL(url string) string {
 	return url
 }
 
-// privateKeyFromText converts a string representation of a private key to an ed25519.PrivateKey.
+// PrivateKeyFromText converts a string representation of a private key to an ed25519.PrivateKey.
 // It decodes the private key from hex string format and creates a new ed25519.PrivateKey.
-func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
+func PrivateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
 	privKeyBytes, err := hex.DecodeString(privkey)
 	if err != nil {
 		return nil, err
@@ -57,8 +57,8 @@ func addressFromText(addr string) *primproto.Address {
 	}
 }
 
-// assetIdFromDenom returns a hash of a denom string
-func assetIdFromDenom(denom string) []byte {
+// AssetIdFromDenom returns a hash of a denom string
+func AssetIdFromDenom(denom string) []byte {
 	hasher := sha256.New()
 	hasher.Write([]byte(denom))
 	hash := hasher.Sum(nil)

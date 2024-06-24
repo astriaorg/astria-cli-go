@@ -34,7 +34,7 @@ func balancesCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := addPortToURL(url)
+	sequencerURL := AddPortToURL(url)
 
 	address := args[0]
 	if !strings.HasPrefix(DefaultAccountPrefix, address) {

@@ -28,7 +28,7 @@ func blockheightCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := addPortToURL(url)
+	sequencerURL := AddPortToURL(url)
 
 	blockheight, err := sequencer.GetBlockheight(sequencerURL)
 	if err != nil {

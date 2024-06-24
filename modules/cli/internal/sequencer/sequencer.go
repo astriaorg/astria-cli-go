@@ -392,7 +392,6 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	log.Debugf("AddFeeAssetOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -400,17 +399,15 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 		return &FeeAssetResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &FeeAssetResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &FeeAssetResponse{}, err
@@ -470,7 +467,6 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	log.Debugf("RemoveFeeAssetOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -478,17 +474,15 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 		return &FeeAssetResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &FeeAssetResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &FeeAssetResponse{}, err
