@@ -260,11 +260,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rollupID := rollupIdFromText(opts.RollupName)
-	log.Debug("rollup id :", rollupID)
-
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -272,30 +268,13 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 		return &InitBridgeResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &InitBridgeResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &InitBridgeResponse{}, err
-	}
-
-	sudoAddress, err := addressFromText(opts.SudoAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'sudo' address %v to proto", opts.SudoAddress)
-	}
-
-	withdrawerAddress, err := addressFromText(opts.WithdrawerAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'withdrawer' address %v to proto", opts.WithdrawerAddress)
 	}
 
 	// build transaction
@@ -308,11 +287,11 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 			{
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
-						RollupId:          rollupID,
-						AssetId:           assetIdFromDenom(opts.AssetID),
-						FeeAssetId:        assetIdFromDenom(opts.FeeAssetID),
-						SudoAddress:       sudoAddress,
-						WithdrawerAddress: withdrawerAddress,
+						RollupId:          rollupIdFromText(opts.RollupName),
+						AssetId:           opts.AssetID,
+						FeeAssetId:        opts.FeeAssetID,
+						SudoAddress:       opts.SudoAddress,
+						WithdrawerAddress: opts.WithdrawerAddress,
 					},
 				},
 			},

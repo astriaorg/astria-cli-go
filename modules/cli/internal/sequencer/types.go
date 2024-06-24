@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strconv"
 
+	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
+
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -193,22 +195,22 @@ type InitBridgeOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// fromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// RollupName is the name of the rollup to create the bridge account for
 	RollupName string
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
-	AssetID string
+	AssetID []byte
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
-	FeeAssetID string
+	FeeAssetID []byte
 	// SudoAddress specifies the address to use for the bridge account which has
 	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
 	// this bridge account. If this is empty, the sender of the transaction is used.
-	SudoAddress string
+	SudoAddress *primproto.Address
 	// WithdrawerAddress specifies the address that can withdraw funds from this
 	// bridge account. If this is empty, the sender of the transaction is used.
-	WithdrawerAddress string
+	WithdrawerAddress *primproto.Address
 }
 type InitBridgeResponse struct {
 	RollupID string `json:"rollupID"`

@@ -26,25 +26,41 @@ and is the only actor authorized to transfer out of this account.`,
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	printJSON := flagHandler.GetValue("json") == "true"
-	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
-	assetID := flagHandler.GetValue("asset-id")
-	feeAssetID := flagHandler.GetValue("fee-asset-id")
-	sudoAddress := flagHandler.GetValue("sudo-address")
-	withdrawerAddress := flagHandler.GetValue("withdrawer-address")
-
-	rollupName := args[0]
+	sequencerURL := addPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := privateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
+
+	rollupName := args[0]
+
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+
+	aid := flagHandler.GetValue("asset-id")
+	assetID := assetIdFromDenom(aid)
+
+	faid := flagHandler.GetValue("fee-asset-id")
+	feeAssetID := assetIdFromDenom(faid)
+
+	sa := flagHandler.GetValue("sudo-address")
+	sudoAddress := addressFromText(sa)
+
+	wa := flagHandler.GetValue("withdrawer-address")
+	withdrawerAddress := addressFromText(wa)
+
 	opts := sequencer.InitBridgeOpts{
-		SequencerURL:      url,
-		FromKey:           priv,
+		SequencerURL:      sequencerURL,
+		FromKey:           from,
 		RollupName:        rollupName,
 		SequencerChainID:  sequencerChainID,
 		AssetID:           assetID,

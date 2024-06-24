@@ -25,6 +25,7 @@ func init() {
 
 func blockheightCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
 	url := flagHandler.GetValue("sequencer-url")
 	sequencerURL := addPortToURL(url)
 
