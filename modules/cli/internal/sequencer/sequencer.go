@@ -79,11 +79,9 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 
 // GetBlock returns the specific block from the sequencer.
 func GetBlock(opts BlockOpts) (*BlockResponse, error) {
-	sequencerURL := addPortToURL(opts.SequencerURL)
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 
-	log.Debug("Creating CometBFT client with url: ", sequencerURL)
-
-	c, err := client.NewClient(sequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error creating sequencer client")
 		return &BlockResponse{}, err
