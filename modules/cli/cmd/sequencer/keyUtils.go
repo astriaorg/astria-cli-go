@@ -55,7 +55,6 @@ func PrivateKeyFromKeyfile(keyfile string) (string, error) {
 		log.WithError(err).Error("Error decrypting keyfile")
 		return "", err
 	}
-	// account := sequencer.NewAccountFromPrivKey(privkey)
 	return hex.EncodeToString(privkey[:32]), nil
 }
 
