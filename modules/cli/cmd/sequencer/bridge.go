@@ -1,6 +1,8 @@
 package sequencer
 
 import (
+	"strings"
+
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/ui"
@@ -53,9 +55,17 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	feeAssetID := AssetIdFromDenom(faid)
 
 	sa := flagHandler.GetValue("sudo-address")
+	if !strings.HasPrefix(sa, DefaultAccountPrefix) {
+		log.Errorf("sudo address does not have the expected prefix: %s, address: %s", DefaultAccountPrefix, sa)
+		return
+	}
 	sudoAddress := AddressFromText(sa)
 
 	wa := flagHandler.GetValue("withdrawer-address")
+	if !strings.HasPrefix(wa, DefaultAccountPrefix) {
+		log.Errorf("withdrawer address does not have the expected prefix: %s, address: %s", DefaultAccountPrefix, wa)
+		return
+	}
 	withdrawerAddress := AddressFromText(wa)
 
 	opts := sequencer.InitBridgeOpts{

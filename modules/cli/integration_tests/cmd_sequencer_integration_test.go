@@ -56,7 +56,7 @@ func TestTransferFlags(t *testing.T) {
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
+	blockHeightOutput, err := getBlockHeightCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
 	}
@@ -69,7 +69,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial nonce
 	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	nonceOutput, err := getNonceCmd.CombinedOutput()
+	nonceOutput, err := getNonceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
 	}
@@ -82,7 +82,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial balance
 	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	balanceOutput, err := getBalanceCmd.CombinedOutput()
+	balanceOutput, err := getBalanceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
 	}
@@ -97,7 +97,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
 	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", "sequencer-test-chain-0", "--sequencer-url", "http://127.0.0.1:26657")
-	transferOutput, err := transferCmd.CombinedOutput()
+	transferOutput, err := transferCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
 	}
@@ -108,7 +108,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get blockheight after transfer
 	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	blockHeightAfterOutput, err := getBlockHeightAfterCmd.CombinedOutput()
+	blockHeightAfterOutput, err := getBlockHeightAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
 	}
@@ -122,7 +122,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get nonce after transfer
 	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
+	nonceAfterOutput, err := getNonceAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
 	}
@@ -137,7 +137,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get balance after transfer
 	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", "http://127.0.0.1:26657")
-	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
+	balanceAfterOutput, err := getBalanceAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
 	}

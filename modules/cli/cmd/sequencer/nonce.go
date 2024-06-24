@@ -35,7 +35,7 @@ func nonceCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL := AddPortToURL(url)
 
 	address := args[0]
-	if !strings.HasPrefix(DefaultAccountPrefix, address) {
+	if !strings.HasPrefix(address, DefaultAccountPrefix) {
 		log.Errorf("Address does not have the expected prefix: %s, address: %s", DefaultAccountPrefix, address)
 		return
 	}

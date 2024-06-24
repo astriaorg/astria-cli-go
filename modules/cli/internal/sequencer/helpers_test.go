@@ -44,5 +44,5 @@ func TestAddressFromPublicKey(t *testing.T) {
 	actual, err := addressFromPublicKey("astria", pub)
 	assert.NoError(t, err)
 
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, expected, actual.Address)
 }

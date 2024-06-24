@@ -65,14 +65,6 @@ func AssetIdFromDenom(denom string) []byte {
 	return hash
 }
 
-// rollupIdFromText converts a string to a RollupId protobuf.
-func rollupIdFromText(rollup string) *primproto.RollupId {
-	hash := sha256.Sum256([]byte(rollup))
-	return &primproto.RollupId{
-		Inner: hash[:],
-	}
-}
-
 // convertToUint128 converts a string to an Uint128 protobuf
 func convertToUint128(numStr string) (*primproto.Uint128, error) {
 	bigInt := new(big.Int)
