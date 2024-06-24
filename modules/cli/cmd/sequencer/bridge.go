@@ -94,30 +94,50 @@ bridged to a destination chain address if an IBC relayer is running.`,
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerURL := addPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
-	amount := args[0]
-	toAddress := args[1]
-	destinationChainAddress := args[2]
+	from, err := privateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
+
+	amount, err := convertToUint128(args[0])
+	if err != nil {
+		log.WithError(err).Error("Error converting amount to Uint128 proto")
+		return
+	}
+
+	to := args[1]
+	toAddress := addressFromText(to)
+
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
-	assetID := flagHandler.GetValue("asset-id")
-	feeAssetID := flagHandler.GetValue("fee-asset-id")
+
+	aid := flagHandler.GetValue("asset-id")
+	assetID := assetIdFromDenom(aid)
+
+	faid := flagHandler.GetValue("fee-asset-id")
+	feeAssetID := assetIdFromDenom(faid)
+
+	destinationChainAddress := args[2]
+
 	opts := sequencer.BridgeLockOpts{
-		SequencerURL:            url,
-		FromKey:                 priv,
-		ToAddress:               toAddress,
+		SequencerURL:            sequencerURL,
+		FromKey:                 from,
 		Amount:                  amount,
-		DestinationChainAddress: destinationChainAddress,
+		ToAddress:               toAddress,
 		SequencerChainID:        sequencerChainID,
 		AssetID:                 assetID,
 		FeeAssetID:              feeAssetID,
+		DestinationChainAddress: destinationChainAddress,
 	}
 	tx, err := sequencer.BridgeLock(opts)
 	if err != nil {

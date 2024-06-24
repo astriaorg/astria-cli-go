@@ -334,7 +334,6 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	log.Debugf("BridgeLockOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -342,15 +341,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		return &BridgeLockResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &BridgeLockResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
 	nonce, err := c.GetNonce(ctx, fromAddr)
 	if err != nil {
@@ -358,17 +350,6 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		return &BridgeLockResponse{}, err
 	}
 
-	// create transaction
-	amount, err := convertToUint128(opts.Amount)
-	if err != nil {
-		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return &BridgeLockResponse{}, err
-	}
-	to, err := addressFromText(opts.ToAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.ToAddress)
-		return &BridgeLockResponse{}, err
-	}
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
@@ -378,10 +359,10 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 			{
 				Value: &txproto.Action_BridgeLockAction{
 					BridgeLockAction: &txproto.BridgeLockAction{
-						To:                      to,
-						Amount:                  amount,
-						AssetId:                 assetIdFromDenom(opts.AssetID),
-						FeeAssetId:              assetIdFromDenom(opts.FeeAssetID),
+						To:                      opts.ToAddress,
+						Amount:                  opts.Amount,
+						AssetId:                 opts.AssetID,
+						FeeAssetId:              opts.FeeAssetID,
 						DestinationChainAddress: opts.DestinationChainAddress,
 					},
 				},
@@ -408,9 +389,9 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &BridgeLockResponse{
 		From:   hex.EncodeToString(fromAddr[:]),
-		To:     opts.ToAddress,
+		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
-		Amount: opts.Amount,
+		Amount: opts.Amount.String(),
 		TxHash: hash,
 	}
 

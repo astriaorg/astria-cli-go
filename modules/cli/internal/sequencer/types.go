@@ -237,17 +237,17 @@ type BridgeLockOpts struct {
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
+	// Amount is the amount to be locked
+	Amount *primproto.Uint128
 	// ToAddress is the address of the receiver
-	ToAddress string
+	ToAddress *primproto.Address
 	// SequencerChainID is the ID of the sequencer chain to lock asset on
 	SequencerChainID string
 	// AssetID is the name of the asset to lock
-	AssetID string
+	AssetID []byte
 	// FeeAssetID is the name of the asset to use for the transaction fee
-	FeeAssetID string
-	// Amount is the amount to be locked
-	Amount string
+	FeeAssetID []byte
 	// DestinationChainAddress is the address on the destination chain
 	DestinationChainAddress string
 }

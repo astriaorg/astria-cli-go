@@ -4,6 +4,8 @@ import (
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"math/big"
 	"regexp"
 	"strings"
 
@@ -69,4 +71,34 @@ func rollupIdFromText(rollup string) *primproto.RollupId {
 	return &primproto.RollupId{
 		Inner: hash[:],
 	}
+}
+
+// convertToUint128 converts a string to an Uint128 protobuf
+func convertToUint128(numStr string) (*primproto.Uint128, error) {
+	bigInt := new(big.Int)
+
+	// convert the string to a big.Int
+	_, ok := bigInt.SetString(numStr, 10)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert string to big.Int")
+	}
+
+	// check if the number is negative or overflows Uint128
+	if bigInt.Sign() < 0 {
+		return nil, fmt.Errorf("negative number not allowed")
+	} else if bigInt.BitLen() > 128 {
+		return nil, fmt.Errorf("value overflows Uint128")
+	}
+
+	// split the big.Int into two uint64s
+	// convert the big.Int to uint64, which will drop the higher 64 bits
+	lo := bigInt.Uint64()
+	// shift the big.Int to the right by 64 bits and convert to uint64
+	hi := bigInt.Rsh(bigInt, 64).Uint64()
+	uint128 := &primproto.Uint128{
+		Lo: lo,
+		Hi: hi,
+	}
+
+	return uint128, nil
 }
