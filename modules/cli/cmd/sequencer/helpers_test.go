@@ -1,6 +1,8 @@
 package sequencer
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -74,4 +76,13 @@ func TestConvertToUint128(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPrivateKeyFromText(t *testing.T) {
+	privkey := "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
+	bytes, _ := hex.DecodeString(privkey)
+	expected := ed25519.NewKeyFromSeed(bytes)
+	actual, err := privateKeyFromText(privkey)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }

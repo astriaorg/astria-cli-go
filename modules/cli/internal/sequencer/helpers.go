@@ -127,16 +127,16 @@ func publicKeyFromText(addr string) (ed25519.PublicKey, error) {
 	return bytes, nil
 }
 
-// // privateKeyFromText converts a string representation of a private key to an ed25519.PrivateKey.
-// // It decodes the private key from hex string format and creates a new ed25519.PrivateKey.
-// func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
-// 	privKeyBytes, err := hex.DecodeString(privkey)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	from := ed25519.NewKeyFromSeed(privKeyBytes)
-// 	return from, nil
-// }
+// privateKeyFromText converts a string representation of a private key to an ed25519.PrivateKey.
+// It decodes the private key from hex string format and creates a new ed25519.PrivateKey.
+func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
+	privKeyBytes, err := hex.DecodeString(privkey)
+	if err != nil {
+		return nil, err
+	}
+	from := ed25519.NewKeyFromSeed(privKeyBytes)
+	return from, nil
+}
 
 // EncodeBech32M creates a bech32m address from a [20]byte array and string
 // prefix.
