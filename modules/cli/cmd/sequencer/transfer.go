@@ -33,23 +33,43 @@ func init() {
 func transferCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
-	url := flagHandler.GetValue("sequencer-url")
-	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	amount := args[0]
-	to := args[1]
+	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := addPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := privateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
+
+	to := args[1]
+	toAddress := addressFromText(to)
+
+	amount, err := convertToUint128(args[0])
+	if err != nil {
+		log.WithError(err).Error("Error converting amount to Uint128 proto")
+		return
+	}
+
+	assetID := assetIdFromDenom("nria")
+	feeAssetID := assetIdFromDenom("nria")
+
+	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	opts := sequencer.TransferOpts{
-		SequencerURL:     url,
-		FromKey:          priv,
-		ToAddress:        to,
+		AddressPrefix:    DefaultAccountPrefix,
+		SequencerURL:     sequencerURL,
+		FromKey:          from,
+		ToAddress:        toAddress,
 		Amount:           amount,
+		AssetID:          assetID,
+		FeeAssetID:       feeAssetID,
 		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.Transfer(opts)

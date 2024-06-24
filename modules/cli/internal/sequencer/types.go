@@ -288,14 +288,21 @@ func (nr *BridgeLockResponse) TableRows() [][]string {
 
 // TransferOpts are the options for the Transfer function.
 type TransferOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// ToAddress is the address of the receiver
-	ToAddress string
+	ToAddress *primproto.Address
 	// Amount is the amount to be transferred. Using string type to support huge numbers
-	Amount string
+	Amount *primproto.Uint128
+	// AssetID is the name of the asset to lock
+	AssetID []byte
+	// FeeAssetID is the name of the asset to use for the transaction fee
+	FeeAssetID []byte
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }

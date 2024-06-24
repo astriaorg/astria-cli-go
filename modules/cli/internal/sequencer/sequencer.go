@@ -161,7 +161,6 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	defer cancel()
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -169,28 +168,9 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		return &TransferResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &TransferResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
-	// create transaction
-	amount, err := convertToUint128(opts.Amount)
-	if err != nil {
-		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return &TransferResponse{}, err
-	}
-
-	to, err := addressFromText(opts.ToAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding 'to' address %v", opts.ToAddress)
-	}
-	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(prefix, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -201,6 +181,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		return &TransferResponse{}, err
 	}
 	log.Debugf("Nonce: %v", nonce)
+
 	tx := &txproto.UnsignedTransaction{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
@@ -210,10 +191,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 			{
 				Value: &txproto.Action_TransferAction{
 					TransferAction: &txproto.TransferAction{
-						To:         to,
-						Amount:     amount,
-						AssetId:    assetIdFromDenom("nria"),
-						FeeAssetId: assetIdFromDenom("nria"),
+						To:         opts.ToAddress,
+						Amount:     opts.Amount,
+						AssetId:    opts.AssetID,
+						FeeAssetId: opts.FeeAssetID,
 					},
 				},
 			},
@@ -238,10 +219,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &TransferResponse{
-		From:   hex.EncodeToString(fromAddr[:]),
-		To:     opts.ToAddress,
+		From:   addr.Address,
+		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
-		Amount: opts.Amount,
+		Amount: opts.Amount.String(),
 		TxHash: hash,
 	}
 
