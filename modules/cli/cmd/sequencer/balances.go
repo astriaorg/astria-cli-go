@@ -31,11 +31,10 @@ func init() {
 
 func balancesCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
 	sequencerURL := addPortToURL(url)
-
-	printJSON := flagHandler.GetValue("json") == "true"
 
 	address := args[0]
 	if !strings.HasPrefix(DefaultAccountPrefix, address) {

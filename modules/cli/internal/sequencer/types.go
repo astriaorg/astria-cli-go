@@ -192,6 +192,9 @@ func (nr *NonceResponse) TableRows() [][]string {
 
 // InitBridgeOpts are the options for the InitBridge function.
 type InitBridgeOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// fromKey is the private key of the sender
@@ -234,6 +237,9 @@ func (nr *InitBridgeResponse) TableRows() [][]string {
 
 // BridgeLockOpts are the options for the BridgeLock function.
 type BridgeLockOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender

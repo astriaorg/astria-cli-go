@@ -28,11 +28,10 @@ func init() {
 
 func blockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
 	sequencerURL := addPortToURL(url)
-
-	printJSON := flagHandler.GetValue("json") == "true"
 
 	height, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {

@@ -59,6 +59,7 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	withdrawerAddress := addressFromText(wa)
 
 	opts := sequencer.InitBridgeOpts{
+		AddressPrefix:     DefaultAccountPrefix,
 		SequencerURL:      sequencerURL,
 		FromKey:           from,
 		RollupName:        rollupName,
@@ -130,6 +131,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	destinationChainAddress := args[2]
 
 	opts := sequencer.BridgeLockOpts{
+		AddressPrefix:           DefaultAccountPrefix,
 		SequencerURL:            sequencerURL,
 		FromKey:                 from,
 		Amount:                  amount,

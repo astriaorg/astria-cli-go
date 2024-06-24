@@ -129,9 +129,6 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 
 // GetNonce returns the nonce of an address.
 func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
-	address = strip0xPrefix(address)
-	sequencerURL = addPortToURL(sequencerURL)
-
 	log.Debug("Getting nonce for address: ", address)
 	log.Debug("Creating CometBFT client with url: ", sequencerURL)
 
@@ -141,19 +138,10 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 		return &NonceResponse{}, err
 	}
 
-	a, err := hex.DecodeString(address)
-	if err != nil {
-		log.WithError(err).Error("Error decoding hex encoded address")
-		return &NonceResponse{}, err
-	}
-
-	var address20 [20]byte
-	copy(address20[:], a)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	nonce, err := c.GetNonce(ctx, address20)
+	nonce, err := c.GetNonce(ctx, address)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &NonceResponse{}, err
@@ -202,7 +190,12 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 	log.Debugf("Transferring %v to %v", opts.Amount, opts.ToAddress)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(prefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &TransferResponse{}, err
@@ -271,7 +264,12 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &InitBridgeResponse{}, err
@@ -344,7 +342,12 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &BridgeLockResponse{}, err
