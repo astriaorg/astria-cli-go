@@ -375,14 +375,17 @@ func (far *FeeAssetResponse) TableRows() [][]string {
 }
 
 type IBCRelayerOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 	// IBCRelayerAddress is the ibc relayer address that will be added or removed
-	IBCRelayerAddress string
+	IBCRelayerAddress *primproto.Address
 }
 
 type IBCRelayerResponse struct {

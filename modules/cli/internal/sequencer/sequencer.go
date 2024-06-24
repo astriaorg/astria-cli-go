@@ -542,7 +542,6 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	log.Debugf("AddIBCRelayerOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -550,25 +549,17 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		return &IBCRelayerResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &IBCRelayerResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &IBCRelayerResponse{}, err
-	}
-
-	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
 		return &IBCRelayerResponse{}, err
 	}
 
@@ -582,7 +573,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 				Value: &txproto.Action_IbcRelayerChangeAction{
 					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
 						Value: &txproto.IbcRelayerChangeAction_Addition{
-							Addition: ibcRelayerAddress,
+							Addition: opts.IBCRelayerAddress,
 						},
 					},
 				},
@@ -611,7 +602,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		From:              hex.EncodeToString(fromAddr[:]),
 		Nonce:             nonce,
 		TxHash:            hash,
-		IBCRelayerAddress: opts.IBCRelayerAddress,
+		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
 	}
 
 	log.Debugf("Transfer hash: %v", hash)
@@ -626,7 +617,6 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	log.Debugf("RemoveIBCRelayerOpts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -634,25 +624,17 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		return &IBCRelayerResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &IBCRelayerResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &IBCRelayerResponse{}, err
-	}
-
-	ibcRelayerAddress, err := addressFromText(opts.IBCRelayerAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.IBCRelayerAddress)
 		return &IBCRelayerResponse{}, err
 	}
 
@@ -666,7 +648,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 				Value: &txproto.Action_IbcRelayerChangeAction{
 					IbcRelayerChangeAction: &txproto.IbcRelayerChangeAction{
 						Value: &txproto.IbcRelayerChangeAction_Removal{
-							Removal: ibcRelayerAddress,
+							Removal: opts.IBCRelayerAddress,
 						},
 					},
 				},
@@ -695,7 +677,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 		From:              hex.EncodeToString(fromAddr[:]),
 		Nonce:             nonce,
 		TxHash:            hash,
-		IBCRelayerAddress: opts.IBCRelayerAddress,
+		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
 	}
 
 	log.Debugf("Transfer hash: %v", hash)

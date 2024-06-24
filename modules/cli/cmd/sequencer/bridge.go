@@ -53,10 +53,10 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	feeAssetID := AssetIdFromDenom(faid)
 
 	sa := flagHandler.GetValue("sudo-address")
-	sudoAddress := addressFromText(sa)
+	sudoAddress := AddressFromText(sa)
 
 	wa := flagHandler.GetValue("withdrawer-address")
-	withdrawerAddress := addressFromText(wa)
+	withdrawerAddress := AddressFromText(wa)
 
 	opts := sequencer.InitBridgeOpts{
 		AddressPrefix:     DefaultAccountPrefix,
@@ -118,7 +118,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	}
 
 	to := args[1]
-	toAddress := addressFromText(to)
+	toAddress := AddressFromText(to)
 
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 

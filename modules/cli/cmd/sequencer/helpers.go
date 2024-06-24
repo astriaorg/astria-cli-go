@@ -49,9 +49,9 @@ func PrivateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
 	return from, nil
 }
 
-// addressFromText converts a bech32m string representation of an address to an
+// AddressFromText converts a bech32m string representation of an address to an
 // Address protobuf. No validation is done on the input string.
-func addressFromText(addr string) *primproto.Address {
+func AddressFromText(addr string) *primproto.Address {
 	return &primproto.Address{
 		Bech32M: addr,
 	}
