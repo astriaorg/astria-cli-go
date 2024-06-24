@@ -102,3 +102,20 @@ func convertToUint128(numStr string) (*primproto.Uint128, error) {
 
 	return uint128, nil
 }
+
+// strip0xPrefix removes the 0x prefix from a string if present.
+func strip0xPrefix(s string) string {
+	return strings.TrimPrefix(s, "0x")
+}
+
+// PublicKeyFromText converts a hexadecimal string representation of a public
+// key to an ed25519.PublicKey. If the input string is not a valid hexadecimal
+// string, an error will be returned.
+func PublicKeyFromText(addr string) (ed25519.PublicKey, error) {
+	addr = strip0xPrefix(addr)
+	bytes, err := hex.DecodeString(addr)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
+}

@@ -453,14 +453,17 @@ func (c *ChangeSudoAddressResponse) TableRows() [][]string {
 }
 
 type UpdateValidatorOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// PubKey is the public key of the validator being updated
-	PubKey string
+	PubKey ed25519.PublicKey
 	// Power is the new power of the validator
-	Power string
+	Power int64
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }

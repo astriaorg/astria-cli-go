@@ -1,6 +1,8 @@
 package sudo
 
 import (
+	"strconv"
+
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	sequencercmd "github.com/astriaorg/astria-cli-go/modules/cli/cmd/sequencer"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
@@ -21,23 +23,43 @@ var validatorUpdateCmd = &cobra.Command{
 func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := sequencercmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	pubKey := args[0]
-	power := args[1]
+	pk := args[0]
+	pubKey, err := sequencercmd.PublicKeyFromText(pk)
+	if err != nil {
+		log.WithError(err).Error("Error decoding public key")
+		return
+	}
+
+	pow := args[1]
+	power, err := strconv.ParseInt(pow, 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("Error decoding power string to int64 %v", pow)
+		return
+	}
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := sequencercmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		return
+	}
 
 	opts := sequencer.UpdateValidatorOpts{
-		FromKey:          priv,
+		AddressPrefix:    sequencercmd.DefaultAccountPrefix,
+		FromKey:          from,
 		PubKey:           pubKey,
 		Power:            power,
-		SequencerURL:     url,
+		SequencerURL:     sequencerURL,
 		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.UpdateValidator(opts)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
-	"strconv"
+	"fmt"
 	"time"
 
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
@@ -765,7 +765,6 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	log.Debugf("Update Validator Opts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -773,37 +772,17 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 		return &UpdateValidatorResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &UpdateValidatorResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &UpdateValidatorResponse{}, err
-	}
-
-	// decode public key
-	pk, err := publicKeyFromText(opts.PubKey)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded public key %v", opts.PubKey)
-		return &UpdateValidatorResponse{}, err
-	}
-	pubKey := &crypto.PublicKey{
-		Sum: &crypto.PublicKey_Ed25519{
-			Ed25519: pk,
-		},
-	}
-
-	power, err := strconv.ParseInt(opts.Power, 10, 64)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding power string to int64 %v", opts.Power)
 		return &UpdateValidatorResponse{}, err
 	}
 
@@ -816,8 +795,12 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 			{
 				Value: &txproto.Action_ValidatorUpdateAction{
 					ValidatorUpdateAction: &abci.ValidatorUpdate{
-						PubKey: pubKey,
-						Power:  power,
+						PubKey: &crypto.PublicKey{
+							Sum: &crypto.PublicKey_Ed25519{
+								Ed25519: opts.PubKey,
+							},
+						},
+						Power: opts.Power,
 					},
 				},
 			},
@@ -842,10 +825,10 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &UpdateValidatorResponse{
-		From:   hex.EncodeToString(fromAddr[:]),
+		From:   addr.ToString(),
 		Nonce:  nonce,
-		PubKey: opts.PubKey,
-		Power:  opts.Power,
+		PubKey: hex.EncodeToString(opts.PubKey[:]),
+		Power:  fmt.Sprintf("%d", opts.Power),
 		TxHash: hash,
 	}
 	log.Debug(tr)
