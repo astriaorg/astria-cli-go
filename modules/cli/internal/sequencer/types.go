@@ -414,12 +414,15 @@ func (i *IBCRelayerResponse) TableRows() [][]string {
 }
 
 type ChangeSudoAddressOpts struct {
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
 	// SequencerURL is the URL of the sequencer
 	SequencerURL string
 	// FromKey is the private key of the sender
-	FromKey string
+	FromKey ed25519.PrivateKey
 	// ToAddress is the address of the receiver
-	UpdateAddress string
+	UpdateAddress *primproto.Address
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }

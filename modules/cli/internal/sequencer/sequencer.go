@@ -219,7 +219,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &TransferResponse{
-		From:   addr.Address,
+		From:   addr.ToString(),
 		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
 		Amount: opts.Amount.String(),
@@ -372,7 +372,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &BridgeLockResponse{
-		From:   hex.EncodeToString(fromAddr[:]),
+		From:   addr.ToString(),
 		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
 		Amount: opts.Amount.String(),
@@ -449,7 +449,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &FeeAssetResponse{
-		From:       hex.EncodeToString(fromAddr[:]),
+		From:       addr.ToString(),
 		Nonce:      nonce,
 		TxHash:     hash,
 		FeeAssetId: opts.Asset,
@@ -524,7 +524,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &FeeAssetResponse{
-		From:       hex.EncodeToString(fromAddr[:]),
+		From:       addr.ToString(),
 		Nonce:      nonce,
 		TxHash:     hash,
 		FeeAssetId: opts.Asset,
@@ -599,7 +599,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &IBCRelayerResponse{
-		From:              hex.EncodeToString(fromAddr[:]),
+		From:              addr.ToString(),
 		Nonce:             nonce,
 		TxHash:            hash,
 		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
@@ -674,7 +674,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &IBCRelayerResponse{
-		From:              hex.EncodeToString(fromAddr[:]),
+		From:              addr.ToString(),
 		Nonce:             nonce,
 		TxHash:            hash,
 		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
@@ -692,7 +692,6 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	log.Debugf("Change Sudo Address Opts: %v", opts)
 
 	// client
-	opts.SequencerURL = addPortToURL(opts.SequencerURL)
 	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
 	c, err := client.NewClient(opts.SequencerURL)
 	if err != nil {
@@ -700,25 +699,17 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 		return &ChangeSudoAddressResponse{}, err
 	}
 
-	// create signer
-	from, err := privateKeyFromText(opts.FromKey)
-	if err != nil {
-		log.WithError(err).Error("Error decoding private key")
-		return &ChangeSudoAddressResponse{}, err
-	}
-	signer := client.NewSigner(from)
-
 	// Get current address nonce
+	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	nonce, err := c.GetNonce(ctx, fromAddr)
+	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.ToString())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
-		return &ChangeSudoAddressResponse{}, err
-	}
-
-	to, err := addressFromText(opts.UpdateAddress)
-	if err != nil {
-		log.WithError(err).Errorf("Error decoding hex encoded 'to' address %v", opts.UpdateAddress)
 		return &ChangeSudoAddressResponse{}, err
 	}
 
@@ -731,7 +722,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 			{
 				Value: &txproto.Action_SudoAddressChangeAction{
 					SudoAddressChangeAction: &txproto.SudoAddressChangeAction{
-						NewAddress: to,
+						NewAddress: opts.UpdateAddress,
 					},
 				},
 			},
@@ -756,9 +747,9 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &ChangeSudoAddressResponse{
-		From:           hex.EncodeToString(fromAddr[:]),
+		From:           addr.ToString(),
 		Nonce:          nonce,
-		NewSudoAddress: opts.UpdateAddress,
+		NewSudoAddress: opts.UpdateAddress.Bech32M,
 		TxHash:         hash,
 	}
 
