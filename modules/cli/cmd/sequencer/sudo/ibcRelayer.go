@@ -56,7 +56,7 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	}
 	tx, err := sequencer.AddIBCRelayer(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("Error adding IBC relayer")
 		panic(err)
 	}
 
@@ -107,7 +107,7 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	}
 	tx, err := sequencer.RemoveIBCRelayer(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("Error removing IBC relayer")
 		panic(err)
 	}
 

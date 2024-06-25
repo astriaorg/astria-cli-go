@@ -50,7 +50,7 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 	}
 	tx, err := sequencer.ChangeSudoAddress(opts)
 	if err != nil {
-		log.WithError(err).Error("Error minting tokens")
+		log.WithError(err).Error("Error updating sudo address")
 		panic(err)
 	}
 

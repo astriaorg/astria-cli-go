@@ -45,7 +45,7 @@ func blockCmdHandler(c *cobra.Command, args []string) {
 	}
 	block, err := sequencer.GetBlock(opts)
 	if err != nil {
-		log.WithError(err)
+		log.WithError(err).Error("Error getting block")
 		return
 	}
 

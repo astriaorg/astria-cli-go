@@ -81,7 +81,7 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	}
 	bridgeAccount, err := sequencer.InitBridgeAccount(opts)
 	if err != nil {
-		log.WithError(err).Error("Error creating account")
+		log.WithError(err).Error("Error initializing bridge account")
 		panic(err)
 	}
 

@@ -64,7 +64,7 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	}
 	tx, err := sequencer.UpdateValidator(opts)
 	if err != nil {
-		log.WithError(err).Error("Error minting tokens")
+		log.WithError(err).Error("Error updating validator")
 		panic(err)
 	}
 

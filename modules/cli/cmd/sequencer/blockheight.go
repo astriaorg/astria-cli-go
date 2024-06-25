@@ -32,7 +32,7 @@ func blockheightCmdHandler(c *cobra.Command, args []string) {
 
 	blockheight, err := sequencer.GetBlockheight(sequencerURL)
 	if err != nil {
-		log.WithError(err)
+		log.WithError(err).Error("Error getting blockheight")
 		return
 	}
 

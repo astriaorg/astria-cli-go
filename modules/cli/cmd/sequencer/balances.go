@@ -44,7 +44,7 @@ func balancesCmdHandler(c *cobra.Command, args []string) {
 
 	balances, err := sequencer.GetBalances(address, sequencerURL)
 	if err != nil {
-		log.WithError(err).Error("Error getting balance")
+		log.WithError(err).Error("Error getting balances")
 		return
 	}
 

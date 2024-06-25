@@ -55,7 +55,7 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	}
 	tx, err := sequencer.AddFeeAsset(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("Error adding fee asset")
 		panic(err)
 	}
 
@@ -105,7 +105,7 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	}
 	tx, err := sequencer.RemoveFeeAsset(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("Error removing fee asset")
 		panic(err)
 	}
 
