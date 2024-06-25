@@ -152,3 +152,81 @@ func TestTransferAndGetNonce(t *testing.T) {
 	finalBalance := toBalancesAfter[0].Balance
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
 }
+
+func TestAddAndRemoveFeeAssts(t *testing.T) {
+	testAssetName := "testAsset"
+	// add a fee asset
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := addFeeAssetCmd.Output()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = removeFeeAssetCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestRemoveAndAddIBCRelayer(t *testing.T) {
+	// remove an address from the existing IBC relayer set
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	removeIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := removeIBCRelayerCmd.Output()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = addIBCRelayerCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestValidatorUpdate(t *testing.T) {
+	// update the validator power
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	validatorUpdateCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := validatorUpdateCmd.Output()
+	assert.NoError(t, err)
+
+	// revert the validator power
+	validatorUpdateCmd = exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = validatorUpdateCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestGetBlock(t *testing.T) {
+	// get initial blockheight
+	getBlockHeightCmd := exec.Command("../bin/astria-go-testy", "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	blockHeightOutput, err := getBlockHeightCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
+	}
+	var blockHeight sequencer.BlockheightResponse
+	err = json.Unmarshal(blockHeightOutput, &blockHeight)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
+	}
+	initialBlockHeight := blockHeight.Blockheight
+
+	// get a block
+	if initialBlockHeight > 0 {
+		getBlockCmd := exec.Command("../bin/astria-go-testy", "sequencer", "block", "1", "--json", "--sequencer-url", SequencerURL)
+		_, err := getBlockCmd.Output()
+		assert.NoError(t, err)
+	} else {
+		t.Fatalf("Blockheight is 0, cannot get block")
+	}
+}
+
+func TestUpdateSudoAddress(t *testing.T) {
+	// change the sudo address
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := addressChangeCmd.Output()
+	assert.NoError(t, err)
+
+	// useing the old sudo address to try to update the sudo address again, this
+	// will fail becuase the old sudo address is no longer the sudo address
+	failingAddressChangeCmd := exec.Command("../bin/astria-go-testy", "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = failingAddressChangeCmd.Output()
+	assert.Error(t, err)
+}
