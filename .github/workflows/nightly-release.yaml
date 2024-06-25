@@ -54,6 +54,6 @@ jobs:
           goarch: ${{ matrix.goarch }}
           ldflags: >
             -s -w -X github.com/astriaorg/astria-cli-go/modules/cli/cmd.version=${{ env.TAG_NAME }}
-          project_path: "./"
+          project_path: "./modules/cli"
           binary_name: "astria-go"
           release_tag: ${{ env.TAG_NAME }}
