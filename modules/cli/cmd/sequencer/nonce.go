@@ -1,6 +1,9 @@
 package sequencer
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/ui"
@@ -27,12 +30,18 @@ func init() {
 
 func nonceCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	url := flagHandler.GetValue("sequencer-url")
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	address := args[0]
+	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := AddPortToURL(url)
 
-	nonce, err := sequencer.GetNonce(address, url)
+	address := args[0]
+	if !strings.HasPrefix(address, DefaultAddressPrefix) {
+		log.Errorf("Address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, address)
+		panic(fmt.Errorf("address does not have the expected prefix: %s", DefaultAddressPrefix))
+	}
+
+	nonce, err := sequencer.GetNonce(address, sequencerURL)
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		panic(err)

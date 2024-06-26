@@ -10,14 +10,14 @@ import (
 )
 
 func TestCreateAccount(t *testing.T) {
-	account, err := sequencer.CreateAccount()
+	account, err := sequencer.CreateAccount("astria")
 	assert.NoError(t, err, "CreateAccount should not return an error on success")
 
 	assert.NotEmpty(t, account.Address, "Address should not be empty")
 	assert.NotEmpty(t, account.PublicKey, "Public Key should not be empty")
 	assert.NotEmpty(t, account.PrivateKey, "Private Key should not be empty")
 
-	assert.Equal(t, account.Address, account.ToJSONStruct().Address, "Address should match JSON representation")
+	assert.Equal(t, account.Address.Address, account.ToJSONStruct().Address, "Address should match JSON representation")
 	assert.Equal(t, account.PublicKeyString(), account.ToJSONStruct().PublicKey, "Public Key should match JSON representation")
 	assert.Equal(t, account.PrivateKeyString(), account.ToJSONStruct().PrivateKey, "Private Key should match JSON representation")
 

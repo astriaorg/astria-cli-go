@@ -1,6 +1,9 @@
 package sequencer
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/ui"
@@ -29,15 +32,21 @@ func init() {
 
 func balancesCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	url := flagHandler.GetValue("sequencer-url")
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	address := args[0]
+	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := AddPortToURL(url)
 
-	balances, err := sequencer.GetBalances(address, url)
+	address := args[0]
+	if !strings.HasPrefix(address, DefaultAddressPrefix) {
+		log.Errorf("Address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, address)
+		panic(fmt.Errorf("address does not have the expected prefix: %s", DefaultAddressPrefix))
+	}
+
+	balances, err := sequencer.GetBalances(address, sequencerURL)
 	if err != nil {
-		log.WithError(err).Error("Error getting balance")
-		return
+		log.WithError(err).Error("Error getting balances")
+		panic(err)
 	}
 
 	printer := ui.ResultsPrinter{

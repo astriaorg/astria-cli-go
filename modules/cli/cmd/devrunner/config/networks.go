@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+const duskNum = "8"
+const dawnNum = "0"
+
 type BaseConfig struct {
 	// conductor
 	Astria_conductor_celestia_block_time_ms        int    `mapstructure:"astria_conductor_celestia_block_time_ms" toml:"astria_conductor_celestia_block_time_ms"`
@@ -113,7 +116,7 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		Astria_composer_pretty_print:               true,
 		Astria_composer_api_listen_addr:            "0.0.0.0:0",
 		Astria_composer_sequencer_url:              "http://127.0.0.1:26657",
-		Astria_composer_sequencer_chain_id:         "astria-dusk-7",
+		Astria_composer_sequencer_chain_id:         "astria-dusk-" + duskNum,
 		Astria_composer_rollups:                    "astriachain::ws://127.0.0.1:8546",
 		Astria_composer_private_key_file:           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		Astria_composer_max_submit_interval_ms:     2000,
@@ -163,16 +166,16 @@ func DefaultNetworksConfigs() NetworkConfigs {
 			NativeDenom:      "nria",
 		},
 		Dusk: NetworkConfig{
-			SequencerChainId: "astria-dusk-7",
-			SequencerGRPC:    "https://grpc.sequencer.dusk-7.devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dusk-7.devnet.astria.org/",
+			SequencerChainId: "astria-dusk-" + duskNum,
+			SequencerGRPC:    "https://grpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
+			SequencerRPC:     "https://rpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
 			RollupName:       "",
 			NativeDenom:      "nria",
 		},
 		Dawn: NetworkConfig{
-			SequencerChainId: "astria-dawn-0",
-			SequencerGRPC:    "https://grpc.sequencer.dawn-0.devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dawn-0.devnet.astria.org/",
+			SequencerChainId: "astria-dawn-" + dawnNum,
+			SequencerGRPC:    "https://grpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
+			SequencerRPC:     "https://rpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
 			RollupName:       "",
 			NativeDenom:      "ibc/channel0/utia",
 		},

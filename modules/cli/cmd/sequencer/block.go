@@ -28,24 +28,25 @@ func init() {
 
 func blockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	url := flagHandler.GetValue("sequencer-url")
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	h := args[0]
-	height, err := strconv.ParseInt(h, 10, 64)
+	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := AddPortToURL(url)
+
+	height, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
 		log.WithError(err).Error("Error parsing block height to int64")
 		panic(err)
 	}
 
 	opts := sequencer.BlockOpts{
-		SequencerURL: url,
+		SequencerURL: sequencerURL,
 		BlockHeight:  height,
 	}
 	block, err := sequencer.GetBlock(opts)
 	if err != nil {
-		log.WithError(err)
-		return
+		log.WithError(err).Error("Error getting block")
+		panic(err)
 	}
 
 	printer := ui.ResultsPrinter{

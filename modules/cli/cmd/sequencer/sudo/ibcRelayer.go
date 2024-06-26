@@ -27,26 +27,36 @@ var addIBCRelayerCmd = &cobra.Command{
 func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := sequencercmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	address := args[0]
+	ibcAdd := args[0]
+	addIbcAddress := sequencercmd.AddressFromText(ibcAdd)
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := sequencercmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		panic(err)
+	}
 
 	opts := sequencer.IBCRelayerOpts{
-		FromKey:           priv,
-		SequencerURL:      url,
+		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
+		FromKey:           from,
+		SequencerURL:      sequencerURL,
 		SequencerChainID:  chainId,
-		IBCRelayerAddress: address,
+		IBCRelayerAddress: addIbcAddress,
 	}
 	tx, err := sequencer.AddIBCRelayer(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("Error adding IBC relayer")
 		panic(err)
 	}
 
@@ -68,26 +78,36 @@ var removeIBCRelayerCmd = &cobra.Command{
 func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	printJSON := flagHandler.GetValue("json") == "true"
+
 	url := flagHandler.GetValue("sequencer-url")
+	sequencerURL := sequencercmd.AddPortToURL(url)
+
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	address := args[0]
+	ibcRmv := args[0]
+	rmvIbcAddress := sequencercmd.AddressFromText(ibcRmv)
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := sequencercmd.PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		panic(err)
+	}
 
 	opts := sequencer.IBCRelayerOpts{
-		FromKey:           priv,
-		SequencerURL:      url,
+		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
+		FromKey:           from,
+		SequencerURL:      sequencerURL,
 		SequencerChainID:  chainId,
-		IBCRelayerAddress: address,
+		IBCRelayerAddress: rmvIbcAddress,
 	}
 	tx, err := sequencer.RemoveIBCRelayer(opts)
 	if err != nil {
-		log.WithError(err).Error("Error transferring tokens")
+		log.WithError(err).Error("Error removing IBC relayer")
 		panic(err)
 	}
 
