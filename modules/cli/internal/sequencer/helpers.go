@@ -5,18 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"strings"
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
 
 	"github.com/btcsuite/btcd/btcutil/bech32"
 	log "github.com/sirupsen/logrus"
 )
-
-// strip0xPrefix removes the 0x prefix from a string if present.
-func strip0xPrefix(s string) string {
-	return strings.TrimPrefix(s, "0x")
-}
 
 // rollupIdFromText converts a string to a RollupId protobuf.
 func rollupIdFromText(rollup string) *primproto.RollupId {
@@ -31,7 +25,7 @@ func addressFromPublicKey(prefix string, pubkey ed25519.PublicKey) (*Bech32MAddr
 	hash := sha256.Sum256(pubkey)
 	var addr [20]byte
 	copy(addr[:], hash[:20])
-	address, err := EncodeBech32M(prefix, addr)
+	address, err := Bech32MFromBytes(prefix, addr)
 	if err != nil {
 		log.WithError(err).Error("Error encoding address")
 		return nil, err
@@ -50,9 +44,9 @@ func privateKeyFromText(privkey string) (ed25519.PrivateKey, error) {
 	return from, nil
 }
 
-// EncodeBech32M creates a bech32m address from a [20]byte array and string
+// Bech32MFromBytes creates a bech32m address from a [20]byte array and string
 // prefix.
-func EncodeBech32M(prefix string, data [20]byte) (*Bech32MAddress, error) {
+func Bech32MFromBytes(prefix string, data [20]byte) (*Bech32MAddress, error) {
 	// Convert the data from 8-bit groups to 5-bit
 	converted, err := bech32.ConvertBits(data[:], 8, 5, true)
 	if err != nil {

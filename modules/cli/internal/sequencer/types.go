@@ -19,7 +19,7 @@ type Bech32MAddress struct {
 	Bytes   [20]byte
 }
 
-func (a *Bech32MAddress) ToString() string {
+func (a *Bech32MAddress) String() string {
 	return a.Address
 }
 
@@ -57,7 +57,7 @@ type AccountJSON struct {
 // ToJSONStruct converts an Account into an AccountJSON struct for JSON representation.
 func (a *Account) ToJSONStruct() *AccountJSON {
 	return &AccountJSON{
-		Address:    a.Address.ToString(),
+		Address:    a.Address.String(),
 		PublicKey:  a.PublicKeyString(),
 		PrivateKey: a.PrivateKeyString(),
 	}
@@ -89,7 +89,7 @@ func (a *Account) TableHeader() []string {
 
 func (a *Account) TableRows() [][]string {
 	return [][]string{
-		{a.Address.ToString(), a.PublicKeyString(), a.PrivateKeyString()},
+		{a.Address.String(), a.PublicKeyString(), a.PrivateKeyString()},
 	}
 }
 
@@ -421,7 +421,7 @@ type ChangeSudoAddressOpts struct {
 	SequencerURL string
 	// FromKey is the private key of the sender
 	FromKey ed25519.PrivateKey
-	// ToAddress is the address of the receiver
+	// UpdateAddress is the address that will become the new sudo address
 	UpdateAddress *primproto.Address
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string

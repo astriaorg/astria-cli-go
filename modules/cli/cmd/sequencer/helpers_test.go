@@ -86,3 +86,19 @@ func TestPrivateKeyFromText(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
+
+func TestStrip0xPrefix(t *testing.T) {
+	t.Run("with '0x' prefix", func(t *testing.T) {
+		str := "0x1234abcd"
+		got := strip0xPrefix(str)
+		want := "1234abcd"
+		assert.Equal(t, want, got)
+	})
+
+	t.Run("without '0x' prefix", func(t *testing.T) {
+		str := "abcd1234"
+		got := strip0xPrefix(str)
+		want := "abcd1234"
+		assert.Equal(t, want, got)
+	})
+}

@@ -1,6 +1,7 @@
 package sequencer
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
@@ -41,7 +42,7 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	rollupName := args[0]
@@ -55,21 +56,21 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	feeAssetID := AssetIdFromDenom(faid)
 
 	sa := flagHandler.GetValue("sudo-address")
-	if !strings.HasPrefix(sa, DefaultAccountPrefix) {
-		log.Errorf("sudo address does not have the expected prefix: %s, address: %s", DefaultAccountPrefix, sa)
-		return
+	if !strings.HasPrefix(sa, DefaultAddressPrefix) {
+		log.Errorf("sudo address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, sa)
+		panic(fmt.Errorf("sudo address does not have the expected prefix: %s", DefaultAddressPrefix))
 	}
 	sudoAddress := AddressFromText(sa)
 
 	wa := flagHandler.GetValue("withdrawer-address")
-	if !strings.HasPrefix(wa, DefaultAccountPrefix) {
-		log.Errorf("withdrawer address does not have the expected prefix: %s, address: %s", DefaultAccountPrefix, wa)
-		return
+	if !strings.HasPrefix(wa, DefaultAddressPrefix) {
+		log.Errorf("withdrawer address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, wa)
+		panic(fmt.Errorf("withdrawer address does not have the expected prefix: %s", DefaultAddressPrefix))
 	}
 	withdrawerAddress := AddressFromText(wa)
 
 	opts := sequencer.InitBridgeOpts{
-		AddressPrefix:     DefaultAccountPrefix,
+		AddressPrefix:     DefaultAddressPrefix,
 		SequencerURL:      sequencerURL,
 		FromKey:           from,
 		RollupName:        rollupName,
@@ -118,13 +119,13 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	amount, err := convertToUint128(args[0])
 	if err != nil {
 		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return
+		panic(err)
 	}
 
 	to := args[1]
@@ -141,7 +142,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	destinationChainAddress := args[2]
 
 	opts := sequencer.BridgeLockOpts{
-		AddressPrefix:           DefaultAccountPrefix,
+		AddressPrefix:           DefaultAddressPrefix,
 		SequencerURL:            sequencerURL,
 		FromKey:                 from,
 		Amount:                  amount,

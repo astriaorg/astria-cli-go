@@ -44,11 +44,11 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	from, err := sequencercmd.PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	opts := sequencer.IBCRelayerOpts{
-		AddressPrefix:     sequencercmd.DefaultAccountPrefix,
+		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
 		FromKey:           from,
 		SequencerURL:      sequencerURL,
 		SequencerChainID:  chainId,
@@ -95,11 +95,11 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	from, err := sequencercmd.PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	opts := sequencer.IBCRelayerOpts{
-		AddressPrefix:     sequencercmd.DefaultAccountPrefix,
+		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
 		FromKey:           from,
 		SequencerURL:      sequencerURL,
 		SequencerChainID:  chainId,

@@ -45,7 +45,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	to := args[1]
@@ -54,7 +54,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	amount, err := convertToUint128(args[0])
 	if err != nil {
 		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return
+		panic(err)
 	}
 
 	assetID := AssetIdFromDenom("nria")
@@ -63,7 +63,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	opts := sequencer.TransferOpts{
-		AddressPrefix:    DefaultAccountPrefix,
+		AddressPrefix:    DefaultAddressPrefix,
 		SequencerURL:     sequencerURL,
 		FromKey:          from,
 		ToAddress:        toAddress,

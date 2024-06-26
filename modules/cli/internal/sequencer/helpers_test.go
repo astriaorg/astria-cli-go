@@ -8,22 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStrip0xPrefix(t *testing.T) {
-	t.Run("with '0x' prefix", func(t *testing.T) {
-		str := "0x1234abcd"
-		got := strip0xPrefix(str)
-		want := "1234abcd"
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("without '0x' prefix", func(t *testing.T) {
-		str := "abcd1234"
-		got := strip0xPrefix(str)
-		want := "abcd1234"
-		assert.Equal(t, want, got)
-	})
-}
-
 func TestRollupIdFromText(t *testing.T) {
 	rollupID := "steezeburger"
 	actual := rollupIdFromText(rollupID)
