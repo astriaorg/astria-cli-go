@@ -57,8 +57,8 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	assetID := AssetIdFromDenom("nria")
-	feeAssetID := AssetIdFromDenom("nria")
+	asset := "nria"
+	feeAsset := "nria"
 
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
@@ -68,8 +68,8 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		FromKey:          from,
 		ToAddress:        toAddress,
 		Amount:           amount,
-		AssetID:          assetID,
-		FeeAssetID:       feeAssetID,
+		Asset:            asset,
+		FeeAsset:         feeAsset,
 		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.Transfer(opts)

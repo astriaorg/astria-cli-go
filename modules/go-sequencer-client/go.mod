@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240626163506-691883836b9e.2
-	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.1-20240517150110-b4ffcca70a25.1
+	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240627184145-2eaea785eb7d.2
 	github.com/cometbft/cometbft v0.38.0
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/protobuf v1.34.2

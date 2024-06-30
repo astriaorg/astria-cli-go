@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240626163506-691883836b9e.2
-	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240609195145-373c666381d1.2
+	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240627184145-2eaea785eb7d.2
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/astria-cli-go/modules/go-sequencer-client v0.0.0-00010101000000-000000000000
 	github.com/btcsuite/btcd/btcutil v1.1.5

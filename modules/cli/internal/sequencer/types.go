@@ -204,9 +204,9 @@ type InitBridgeOpts struct {
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
 	// AssetID is the name of the asset to bridge
-	AssetID []byte
+	Asset string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
-	FeeAssetID []byte
+	FeeAsset string
 	// SudoAddress specifies the address to use for the bridge account which has
 	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
 	// this bridge account. If this is empty, the sender of the transaction is used.
@@ -251,9 +251,9 @@ type BridgeLockOpts struct {
 	// SequencerChainID is the ID of the sequencer chain to lock asset on
 	SequencerChainID string
 	// AssetID is the name of the asset to lock
-	AssetID []byte
+	Asset string
 	// FeeAssetID is the name of the asset to use for the transaction fee
-	FeeAssetID []byte
+	FeeAsset string
 	// DestinationChainAddress is the address on the destination chain
 	DestinationChainAddress string
 }
@@ -300,9 +300,9 @@ type TransferOpts struct {
 	// Amount is the amount to be transferred. Using string type to support huge numbers
 	Amount *primproto.Uint128
 	// AssetID is the name of the asset to lock
-	AssetID []byte
+	Asset string
 	// FeeAssetID is the name of the asset to use for the transaction fee
-	FeeAssetID []byte
+	FeeAsset string
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }

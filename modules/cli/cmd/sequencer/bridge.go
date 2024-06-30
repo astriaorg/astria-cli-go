@@ -49,11 +49,9 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 
-	aid := flagHandler.GetValue("asset-id")
-	assetID := AssetIdFromDenom(aid)
+	asset := flagHandler.GetValue("asset-id")
 
-	faid := flagHandler.GetValue("fee-asset-id")
-	feeAssetID := AssetIdFromDenom(faid)
+	feeAsset := flagHandler.GetValue("fee-asset-id")
 
 	sa := flagHandler.GetValue("sudo-address")
 	if !strings.HasPrefix(sa, DefaultAddressPrefix) {
@@ -75,8 +73,8 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 		FromKey:           from,
 		RollupName:        rollupName,
 		SequencerChainID:  sequencerChainID,
-		AssetID:           assetID,
-		FeeAssetID:        feeAssetID,
+		Asset:             asset,
+		FeeAsset:          feeAsset,
 		SudoAddress:       sudoAddress,
 		WithdrawerAddress: withdrawerAddress,
 	}
@@ -133,11 +131,9 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 
-	aid := flagHandler.GetValue("asset-id")
-	assetID := AssetIdFromDenom(aid)
+	asset := flagHandler.GetValue("asset-id")
 
-	faid := flagHandler.GetValue("fee-asset-id")
-	feeAssetID := AssetIdFromDenom(faid)
+	feeAsset := flagHandler.GetValue("fee-asset-id")
 
 	destinationChainAddress := args[2]
 
@@ -148,8 +144,8 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 		Amount:                  amount,
 		ToAddress:               toAddress,
 		SequencerChainID:        sequencerChainID,
-		AssetID:                 assetID,
-		FeeAssetID:              feeAssetID,
+		Asset:                   asset,
+		FeeAsset:                feeAsset,
 		DestinationChainAddress: destinationChainAddress,
 	}
 	tx, err := sequencer.BridgeLock(opts)
