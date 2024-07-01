@@ -12,10 +12,6 @@ import (
 
 const DefaultAstriaAsset = "nria"
 
-var (
-	DefaultAstriaAssetID = sha256.Sum256([]byte(DefaultAstriaAsset))
-)
-
 type Signer struct {
 	private ed25519.PrivateKey
 }
@@ -41,12 +37,12 @@ func (s *Signer) SignTransaction(tx *txproto.UnsignedTransaction) (*txproto.Sign
 	for _, action := range tx.Actions {
 		switch v := action.Value.(type) {
 		case *txproto.Action_TransferAction:
-			if len(v.TransferAction.FeeAssetId) == 0 {
-				v.TransferAction.FeeAssetId = DefaultAstriaAssetID[:]
+			if len(v.TransferAction.FeeAsset) == 0 {
+				v.TransferAction.FeeAsset = DefaultAstriaAsset[:]
 			}
 		case *txproto.Action_SequenceAction:
-			if len(v.SequenceAction.FeeAssetId) == 0 {
-				v.SequenceAction.FeeAssetId = DefaultAstriaAssetID[:]
+			if len(v.SequenceAction.FeeAsset) == 0 {
+				v.SequenceAction.FeeAsset = DefaultAstriaAsset[:]
 			}
 		}
 	}

@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -55,14 +54,6 @@ func AddressFromText(addr string) *primproto.Address {
 	return &primproto.Address{
 		Bech32M: addr,
 	}
-}
-
-// AssetIdFromDenom returns a hash of a denom string
-func AssetIdFromDenom(denom string) []byte {
-	hasher := sha256.New()
-	hasher.Write([]byte(denom))
-	hash := hasher.Sum(nil)
-	return hash
 }
 
 // convertToUint128 converts a string to an Uint128 protobuf

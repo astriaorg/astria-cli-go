@@ -65,11 +65,3 @@ func Bech32MFromBytes(prefix string, data [20]byte) (*Bech32MAddress, error) {
 		Bytes:   data,
 	}, nil
 }
-
-// assetIdFromDenom returns a hash of a denom string
-func assetIdFromDenom(denom string) []byte {
-	hasher := sha256.New()
-	hasher.Write([]byte(denom))
-	hash := hasher.Sum(nil)
-	return hash
-}
