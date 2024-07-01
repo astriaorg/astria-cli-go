@@ -44,6 +44,10 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 		log.WithError(err).Error("Error decoding private key")
 		panic(err)
 	}
+	fromAccount, err := sequencer.NewAccountFromPrivKey(DefaultAddressPrefix, from)
+	if err != nil {
+		log.WithError(err).Error("Error constructing address from private key")
+	}
 
 	rollupName := args[0]
 
@@ -53,14 +57,20 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	feeAsset := flagHandler.GetValue("fee-asset")
 
 	sa := flagHandler.GetValue("sudo-address")
-	if !strings.HasPrefix(sa, DefaultAddressPrefix) {
+	if sa == "" {
+		sa = fromAccount.Address.String()
+	}
+	if !strings.HasPrefix(sa, DefaultAddressPrefix) && sa != "" {
 		log.Errorf("sudo address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, sa)
 		panic(fmt.Errorf("sudo address does not have the expected prefix: %s", DefaultAddressPrefix))
 	}
 	sudoAddress := AddressFromText(sa)
 
 	wa := flagHandler.GetValue("withdrawer-address")
-	if !strings.HasPrefix(wa, DefaultAddressPrefix) {
+	if wa == "" {
+		wa = fromAccount.Address.String()
+	}
+	if !strings.HasPrefix(wa, DefaultAddressPrefix) && wa != "" {
 		log.Errorf("withdrawer address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, wa)
 		panic(fmt.Errorf("withdrawer address does not have the expected prefix: %s", DefaultAddressPrefix))
 	}
