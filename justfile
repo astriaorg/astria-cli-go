@@ -9,6 +9,10 @@ build-cli binary_name=default_binary_name:
     cd modules/cli && go build -o ../../bin/{{binary_name}}
 alias b := build-cli
 
+install-cli binary_name=default_binary_name:
+    @just build-cli {{binary_name}}
+    mv bin/{{binary_name}} ~/go/bin/{{binary_name}}
+
 # test go code, minus integration tests
 test:
     cd modules/cli && go test ./...

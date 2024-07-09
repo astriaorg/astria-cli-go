@@ -110,10 +110,10 @@ The following binaries are downloaded:
 
 | App              | Version |
 |------------------|---------|
-| Cometbft         | v0.38.6 |
+| Cometbft         | v0.38.8 |
 | Astria-Sequencer | v0.11.0 |
-| Astria-Conductor | v0.14.0 |
 | Astria-Composer  | v0.6.0  |
+| Astria-Conductor | v0.14.1 |
 
 The `init` command will also run the initialization steps required by CometBFT,
 using the `genesis.json` and `priv_validator_key.json` files in the

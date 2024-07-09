@@ -1,10 +1,10 @@
 package sequencer
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/keys"
-	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -55,8 +55,7 @@ func PrivateKeyFromKeyfile(keyfile string) (string, error) {
 		log.WithError(err).Error("Error decrypting keyfile")
 		return "", err
 	}
-	account := sequencer.NewAccountFromPrivKey(privkey)
-	return account.PrivateKeyString(), nil
+	return hex.EncodeToString(privkey[:32]), nil
 }
 
 // PrivateKeyFromKeyringAddress retrieves the private key from the keyring for a given keyring address.

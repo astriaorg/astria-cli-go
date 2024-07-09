@@ -3,10 +3,11 @@ module github.com/astriaorg/astria-cli-go/modules/cli
 go 1.22.2
 
 require (
-	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240607202648-0eefaac9f5b8.2
-	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240609195145-373c666381d1.2
+	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240626163506-691883836b9e.2
+	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240627184145-2eaea785eb7d.2
 	github.com/99designs/keyring v1.2.2
 	github.com/astriaorg/astria-cli-go/modules/go-sequencer-client v0.0.0-00010101000000-000000000000
+	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -19,11 +20,6 @@ require (
 )
 
 replace github.com/astriaorg/astria-cli-go/modules/go-sequencer-client => ../go-sequencer-client
-
-require (
-	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
-)
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
@@ -39,7 +35,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.7
+	github.com/cometbft/cometbft v0.38.9
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/cosmos/gogoproto v1.5.0 // indirect

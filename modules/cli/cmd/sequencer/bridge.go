@@ -1,6 +1,9 @@
 package sequencer
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/ui"
@@ -26,35 +29,67 @@ and is the only actor authorized to transfer out of this account.`,
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	printJSON := flagHandler.GetValue("json") == "true"
-	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
-	assetID := flagHandler.GetValue("asset-id")
-	feeAssetID := flagHandler.GetValue("fee-asset-id")
-	sudoAddress := flagHandler.GetValue("sudo-address")
-	withdrawerAddress := flagHandler.GetValue("withdrawer-address")
-
-	rollupName := args[0]
+	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
+	from, err := PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		panic(err)
+	}
+	fromAccount, err := sequencer.NewAccountFromPrivKey(DefaultAddressPrefix, from)
+	if err != nil {
+		log.WithError(err).Error("Error constructing address from private key")
+	}
+
+	rollupName := args[0]
+
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+
+	sa := flagHandler.GetValue("sudo-address")
+	if sa == "" {
+		sa = fromAccount.Address.String()
+	}
+	if !strings.HasPrefix(sa, DefaultAddressPrefix) && sa != "" {
+		log.Errorf("sudo address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, sa)
+		panic(fmt.Errorf("sudo address does not have the expected prefix: %s", DefaultAddressPrefix))
+	}
+	sudoAddress := AddressFromText(sa)
+
+	wa := flagHandler.GetValue("withdrawer-address")
+	if wa == "" {
+		wa = fromAccount.Address.String()
+	}
+	if !strings.HasPrefix(wa, DefaultAddressPrefix) && wa != "" {
+		log.Errorf("withdrawer address does not have the expected prefix: %s, address: %s", DefaultAddressPrefix, wa)
+		panic(fmt.Errorf("withdrawer address does not have the expected prefix: %s", DefaultAddressPrefix))
+	}
+	withdrawerAddress := AddressFromText(wa)
+
 	opts := sequencer.InitBridgeOpts{
-		SequencerURL:      url,
-		FromKey:           priv,
+		AddressPrefix:     DefaultAddressPrefix,
+		SequencerURL:      sequencerURL,
+		FromKey:           from,
 		RollupName:        rollupName,
 		SequencerChainID:  sequencerChainID,
-		AssetID:           assetID,
-		FeeAssetID:        feeAssetID,
+		Asset:             asset,
+		FeeAsset:          feeAsset,
 		SudoAddress:       sudoAddress,
 		WithdrawerAddress: withdrawerAddress,
 	}
 	bridgeAccount, err := sequencer.InitBridgeAccount(opts)
 	if err != nil {
-		log.WithError(err).Error("Error creating account")
+		log.WithError(err).Error("Error initializing bridge account")
 		panic(err)
 	}
 
@@ -78,30 +113,48 @@ bridged to a destination chain address if an IBC relayer is running.`,
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := flagHandler.GetValue("sequencer-url")
-	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
 		log.WithError(err).Error("Could not get private key from flags")
 		panic(err)
 	}
-	amount := args[0]
-	toAddress := args[1]
-	destinationChainAddress := args[2]
+	from, err := PrivateKeyFromText(priv)
+	if err != nil {
+		log.WithError(err).Error("Error decoding private key")
+		panic(err)
+	}
+
+	amount, err := convertToUint128(args[0])
+	if err != nil {
+		log.WithError(err).Error("Error converting amount to Uint128 proto")
+		panic(err)
+	}
+
+	to := args[1]
+	toAddress := AddressFromText(to)
+
 	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
-	assetID := flagHandler.GetValue("asset-id")
-	feeAssetID := flagHandler.GetValue("fee-asset-id")
+
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+
+	destinationChainAddress := args[2]
+
 	opts := sequencer.BridgeLockOpts{
-		SequencerURL:            url,
-		FromKey:                 priv,
-		ToAddress:               toAddress,
+		AddressPrefix:           DefaultAddressPrefix,
+		SequencerURL:            sequencerURL,
+		FromKey:                 from,
 		Amount:                  amount,
-		DestinationChainAddress: destinationChainAddress,
+		ToAddress:               toAddress,
 		SequencerChainID:        sequencerChainID,
-		AssetID:                 assetID,
-		FeeAssetID:              feeAssetID,
+		Asset:                   asset,
+		FeeAsset:                feeAsset,
+		DestinationChainAddress: destinationChainAddress,
 	}
 	tx, err := sequencer.BridgeLock(opts)
 	if err != nil {
@@ -122,8 +175,8 @@ func init() {
 	bridgeCmd.AddCommand(bridgeInitCmd)
 	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
 	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
-	bifh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset id of the asset we want to bridge.")
-	bifh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The fee asset id of the asset used for fees.")
+	bifh.BindStringFlag("asset", DefaultAsset, "The name of the asset we want to bridge.")
+	bifh.BindStringFlag("fee-asset", DefaultFeeAsset, "The name of the asset used for fees.")
 	bifh.BindStringFlag("sudo-address", "", "Set the sudo address to use for the bridge account. The address of the sender is used if this is not set.")
 	bifh.BindStringFlag("withdrawer-address", "", "Set the withdrawer address to use for the bridge account. The address of the sender is used if this is not set.")
 
@@ -139,8 +192,8 @@ func init() {
 	bridgeCmd.AddCommand(bridgeLockCmd)
 	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
 	blfh.BindStringFlag("sequencer-chain-id", DefaultSequencerChainID, "The chain ID of the sequencer.")
-	blfh.BindStringFlag("asset-id", DefaultBridgeAssetID, "The asset to be locked and transferred.")
-	blfh.BindStringFlag("fee-asset-id", DefaultBridgeFeeAssetID, "The asset used to pay the transaction fee.")
+	blfh.BindStringFlag("asset", DefaultAsset, "The asset to be locked and transferred.")
+	blfh.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used to pay the transaction fee.")
 
 	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
 	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to lock assets on.")

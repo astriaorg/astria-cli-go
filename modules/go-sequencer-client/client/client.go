@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
 
 	"github.com/cometbft/cometbft/rpc/client"
@@ -48,8 +47,9 @@ func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransact
 	return c.client.BroadcastTxSync(ctx, bytes)
 }
 
-func (c *Client) GetBalances(ctx context.Context, addr [20]byte) ([]*BalanceResponse, error) {
-	resp, err := c.client.ABCIQueryWithOptions(ctx, fmt.Sprintf("accounts/balance/%x", addr), []byte{}, client.ABCIQueryOptions{
+func (c *Client) GetBalances(ctx context.Context, addr string) ([]*BalanceResponse, error) {
+	query := "accounts/balance/" + addr
+	resp, err := c.client.ABCIQueryWithOptions(ctx, query, []byte{}, client.ABCIQueryOptions{
 		Height: 0,
 		Prove:  false,
 	})
@@ -70,8 +70,9 @@ func (c *Client) GetBalances(ctx context.Context, addr [20]byte) ([]*BalanceResp
 	return balanceResponseFromProto(protoBalanceResp), nil
 }
 
-func (c *Client) GetNonce(ctx context.Context, addr [20]byte) (uint32, error) {
-	resp, err := c.client.ABCIQueryWithOptions(ctx, fmt.Sprintf("accounts/nonce/%x", addr), []byte{}, client.ABCIQueryOptions{
+func (c *Client) GetNonce(ctx context.Context, addr string) (uint32, error) {
+	query := "accounts/nonce/" + addr
+	resp, err := c.client.ABCIQueryWithOptions(ctx, query, []byte{}, client.ABCIQueryOptions{
 		Height: 0,
 		Prove:  false,
 	})
