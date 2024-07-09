@@ -193,10 +193,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 			{
 				Value: &txproto.Action_TransferAction{
 					TransferAction: &txproto.TransferAction{
-						To:         opts.ToAddress,
-						Amount:     opts.Amount,
-						AssetId:    opts.AssetID,
-						FeeAssetId: opts.FeeAssetID,
+						To:       opts.ToAddress,
+						Amount:   opts.Amount,
+						Asset:    opts.Asset,
+						FeeAsset: opts.FeeAsset,
 					},
 				},
 			},
@@ -269,8 +269,8 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
 						RollupId:          rollupIdFromText(opts.RollupName),
-						AssetId:           opts.AssetID,
-						FeeAssetId:        opts.FeeAssetID,
+						Asset:             opts.Asset,
+						FeeAsset:          opts.FeeAsset,
 						SudoAddress:       opts.SudoAddress,
 						WithdrawerAddress: opts.WithdrawerAddress,
 					},
@@ -347,8 +347,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      opts.ToAddress,
 						Amount:                  opts.Amount,
-						AssetId:                 opts.AssetID,
-						FeeAssetId:              opts.FeeAssetID,
+						Asset:                   opts.Asset,
+						FeeAsset:                opts.FeeAsset,
 						DestinationChainAddress: opts.DestinationChainAddress,
 					},
 				},
@@ -425,7 +425,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 				Value: &txproto.Action_FeeAssetChangeAction{
 					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
 						Value: &txproto.FeeAssetChangeAction_Addition{
-							Addition: assetIdFromDenom(opts.Asset),
+							Addition: opts.Asset,
 						},
 					},
 				},
@@ -500,7 +500,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 				Value: &txproto.Action_FeeAssetChangeAction{
 					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
 						Value: &txproto.FeeAssetChangeAction_Removal{
-							Removal: assetIdFromDenom(opts.Asset),
+							Removal: opts.Asset,
 						},
 					},
 				},
