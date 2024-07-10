@@ -19,7 +19,7 @@ type Bech32MAddress struct {
 	Bytes   [20]byte
 }
 
-func (a *Bech32MAddress) ToString() string {
+func (a *Bech32MAddress) String() string {
 	return a.Address
 }
 
@@ -57,7 +57,7 @@ type AccountJSON struct {
 // ToJSONStruct converts an Account into an AccountJSON struct for JSON representation.
 func (a *Account) ToJSONStruct() *AccountJSON {
 	return &AccountJSON{
-		Address:    a.Address.ToString(),
+		Address:    a.Address.String(),
 		PublicKey:  a.PublicKeyString(),
 		PrivateKey: a.PrivateKeyString(),
 	}
@@ -89,7 +89,7 @@ func (a *Account) TableHeader() []string {
 
 func (a *Account) TableRows() [][]string {
 	return [][]string{
-		{a.Address.ToString(), a.PublicKeyString(), a.PrivateKeyString()},
+		{a.Address.String(), a.PublicKeyString(), a.PrivateKeyString()},
 	}
 }
 
@@ -203,10 +203,10 @@ type InitBridgeOpts struct {
 	RollupName string
 	// SequencerChainID is the ID of the sequencer chain to create the bridge account on
 	SequencerChainID string
-	// AssetID is the name of the asset to bridge
-	AssetID []byte
+	// Asset is the name of the asset to bridge
+	Asset string
 	// FeeAssetID is the name of the fee asset to use for the transaction fee
-	FeeAssetID []byte
+	FeeAsset string
 	// SudoAddress specifies the address to use for the bridge account which has
 	// sudo capabilities; ie. it can change the sudo and withdrawer addresses for
 	// this bridge account. If this is empty, the sender of the transaction is used.
@@ -250,10 +250,10 @@ type BridgeLockOpts struct {
 	ToAddress *primproto.Address
 	// SequencerChainID is the ID of the sequencer chain to lock asset on
 	SequencerChainID string
-	// AssetID is the name of the asset to lock
-	AssetID []byte
+	// Asset is the name of the asset to lock
+	Asset string
 	// FeeAssetID is the name of the asset to use for the transaction fee
-	FeeAssetID []byte
+	FeeAsset string
 	// DestinationChainAddress is the address on the destination chain
 	DestinationChainAddress string
 }
@@ -299,10 +299,10 @@ type TransferOpts struct {
 	ToAddress *primproto.Address
 	// Amount is the amount to be transferred. Using string type to support huge numbers
 	Amount *primproto.Uint128
-	// AssetID is the name of the asset to lock
-	AssetID []byte
-	// FeeAssetID is the name of the asset to use for the transaction fee
-	FeeAssetID []byte
+	// Asset is the name of the asset to lock
+	Asset string
+	// FeeAsset is the name of the asset to use for the transaction fee
+	FeeAsset string
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string
 }
@@ -421,7 +421,7 @@ type ChangeSudoAddressOpts struct {
 	SequencerURL string
 	// FromKey is the private key of the sender
 	FromKey ed25519.PrivateKey
-	// ToAddress is the address of the receiver
+	// UpdateAddress is the address that will become the new sudo address
 	UpdateAddress *primproto.Address
 	// SequencerChainID is the chain ID of the sequencer
 	SequencerChainID string

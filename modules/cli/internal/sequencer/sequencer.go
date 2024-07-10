@@ -28,7 +28,7 @@ func CreateAccount(prefix string) (*Account, error) {
 
 	log.Debugf("Address bytes: %s", hex.EncodeToString(address[:]))
 
-	addr, err := EncodeBech32M(prefix, address)
+	addr, err := Bech32MFromBytes(prefix, address)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -172,12 +172,12 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &TransferResponse{}, err
@@ -193,10 +193,10 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 			{
 				Value: &txproto.Action_TransferAction{
 					TransferAction: &txproto.TransferAction{
-						To:         opts.ToAddress,
-						Amount:     opts.Amount,
-						AssetId:    opts.AssetID,
-						FeeAssetId: opts.FeeAssetID,
+						To:       opts.ToAddress,
+						Amount:   opts.Amount,
+						Asset:    opts.Asset,
+						FeeAsset: opts.FeeAsset,
 					},
 				},
 			},
@@ -221,7 +221,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &TransferResponse{
-		From:   addr.ToString(),
+		From:   addr.String(),
 		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
 		Amount: opts.Amount.String(),
@@ -247,12 +247,12 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &InitBridgeResponse{}, err
@@ -269,8 +269,8 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 				Value: &txproto.Action_InitBridgeAccountAction{
 					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
 						RollupId:          rollupIdFromText(opts.RollupName),
-						AssetId:           opts.AssetID,
-						FeeAssetId:        opts.FeeAssetID,
+						Asset:             opts.Asset,
+						FeeAsset:          opts.FeeAsset,
 						SudoAddress:       opts.SudoAddress,
 						WithdrawerAddress: opts.WithdrawerAddress,
 					},
@@ -325,12 +325,12 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &BridgeLockResponse{}, err
@@ -347,8 +347,8 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 					BridgeLockAction: &txproto.BridgeLockAction{
 						To:                      opts.ToAddress,
 						Amount:                  opts.Amount,
-						AssetId:                 opts.AssetID,
-						FeeAssetId:              opts.FeeAssetID,
+						Asset:                   opts.Asset,
+						FeeAsset:                opts.FeeAsset,
 						DestinationChainAddress: opts.DestinationChainAddress,
 					},
 				},
@@ -374,7 +374,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &BridgeLockResponse{
-		From:   addr.ToString(),
+		From:   addr.String(),
 		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
 		Amount: opts.Amount.String(),
@@ -404,12 +404,12 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &FeeAssetResponse{}, err
@@ -425,7 +425,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 				Value: &txproto.Action_FeeAssetChangeAction{
 					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
 						Value: &txproto.FeeAssetChangeAction_Addition{
-							Addition: assetIdFromDenom(opts.Asset),
+							Addition: opts.Asset,
 						},
 					},
 				},
@@ -451,7 +451,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &FeeAssetResponse{
-		From:       addr.ToString(),
+		From:       addr.String(),
 		Nonce:      nonce,
 		TxHash:     hash,
 		FeeAssetId: opts.Asset,
@@ -479,12 +479,12 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &FeeAssetResponse{}, err
@@ -500,7 +500,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 				Value: &txproto.Action_FeeAssetChangeAction{
 					FeeAssetChangeAction: &txproto.FeeAssetChangeAction{
 						Value: &txproto.FeeAssetChangeAction_Removal{
-							Removal: assetIdFromDenom(opts.Asset),
+							Removal: opts.Asset,
 						},
 					},
 				},
@@ -526,7 +526,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &FeeAssetResponse{
-		From:       addr.ToString(),
+		From:       addr.String(),
 		Nonce:      nonce,
 		TxHash:     hash,
 		FeeAssetId: opts.Asset,
@@ -554,12 +554,12 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &IBCRelayerResponse{}, err
@@ -601,7 +601,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &IBCRelayerResponse{
-		From:              addr.ToString(),
+		From:              addr.String(),
 		Nonce:             nonce,
 		TxHash:            hash,
 		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
@@ -629,12 +629,12 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &IBCRelayerResponse{}, err
@@ -676,7 +676,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &IBCRelayerResponse{
-		From:              addr.ToString(),
+		From:              addr.String(),
 		Nonce:             nonce,
 		TxHash:            hash,
 		IBCRelayerAddress: opts.IBCRelayerAddress.Bech32M,
@@ -704,12 +704,12 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
-		return nil, err
+		return &ChangeSudoAddressResponse{}, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &ChangeSudoAddressResponse{}, err
@@ -749,7 +749,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &ChangeSudoAddressResponse{
-		From:           addr.ToString(),
+		From:           addr.String(),
 		Nonce:          nonce,
 		NewSudoAddress: opts.UpdateAddress.Bech32M,
 		TxHash:         hash,
@@ -777,12 +777,12 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := EncodeBech32M(opts.AddressPrefix, fromAddr)
+	addr, err := Bech32MFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
 	}
-	nonce, err := c.GetNonce(ctx, addr.ToString())
+	nonce, err := c.GetNonce(ctx, addr.String())
 	if err != nil {
 		log.WithError(err).Error("Error getting nonce")
 		return &UpdateValidatorResponse{}, err
@@ -827,7 +827,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	tr := &UpdateValidatorResponse{
-		From:   addr.ToString(),
+		From:   addr.String(),
 		Nonce:  nonce,
 		PubKey: hex.EncodeToString(opts.PubKey[:]),
 		Power:  fmt.Sprintf("%d", opts.Power),

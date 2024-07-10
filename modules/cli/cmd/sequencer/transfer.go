@@ -25,6 +25,8 @@ func init() {
 	flagHandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flagHandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
+	flagHandler.BindStringFlag("asset", DefaultAsset, "The asset to be transferred.")
+	flagHandler.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used for paying fees.")
 
 	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
 	transferCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
@@ -45,7 +47,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	from, err := PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	to := args[1]
@@ -54,22 +56,22 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	amount, err := convertToUint128(args[0])
 	if err != nil {
 		log.WithError(err).Error("Error converting amount to Uint128 proto")
-		return
+		panic(err)
 	}
 
-	assetID := AssetIdFromDenom("nria")
-	feeAssetID := AssetIdFromDenom("nria")
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
 
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
 	opts := sequencer.TransferOpts{
-		AddressPrefix:    DefaultAccountPrefix,
+		AddressPrefix:    DefaultAddressPrefix,
 		SequencerURL:     sequencerURL,
 		FromKey:          from,
 		ToAddress:        toAddress,
 		Amount:           amount,
-		AssetID:          assetID,
-		FeeAssetID:       feeAssetID,
+		Asset:            asset,
+		FeeAsset:         feeAsset,
 		SequencerChainID: chainId,
 	}
 	tx, err := sequencer.Transfer(opts)

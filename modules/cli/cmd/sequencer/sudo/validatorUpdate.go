@@ -33,14 +33,14 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	pubKey, err := sequencercmd.PublicKeyFromText(pk)
 	if err != nil {
 		log.WithError(err).Error("Error decoding public key")
-		return
+		panic(err)
 	}
 
 	pow := args[1]
 	power, err := strconv.ParseInt(pow, 10, 64)
 	if err != nil {
 		log.WithError(err).Errorf("Error decoding power string to int64 %v", pow)
-		return
+		panic(err)
 	}
 
 	priv, err := sequencercmd.GetPrivateKeyFromFlags(c)
@@ -51,11 +51,11 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	from, err := sequencercmd.PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	opts := sequencer.UpdateValidatorOpts{
-		AddressPrefix:    sequencercmd.DefaultAccountPrefix,
+		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		PubKey:           pubKey,
 		Power:            power,

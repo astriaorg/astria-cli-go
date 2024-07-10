@@ -38,11 +38,11 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 	from, err := sequencercmd.PrivateKeyFromText(priv)
 	if err != nil {
 		log.WithError(err).Error("Error decoding private key")
-		return
+		panic(err)
 	}
 
 	opts := sequencer.ChangeSudoAddressOpts{
-		AddressPrefix:    sequencercmd.DefaultAccountPrefix,
+		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		UpdateAddress:    toAddress,
 		SequencerURL:     sequencerURL,
