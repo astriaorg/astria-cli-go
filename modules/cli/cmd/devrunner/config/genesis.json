@@ -23,7 +23,7 @@
   },
   "validators": [
     {
-      "address": "astria1xnlvg0rle2u6auane79t4p27g8hxnj36ja960z",
+      "address": "36B4C386F431C45A30CED70DB22286EDEC943D76",
       "pub_key": {
         "type": "tendermint/PubKeyEd25519",
         "value": "iHh+KduNUkfGrfrJkJtW5rJwXDEgsuOIXo7IqkFqEPE="
