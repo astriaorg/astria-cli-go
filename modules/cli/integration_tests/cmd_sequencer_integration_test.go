@@ -18,6 +18,7 @@ import (
 const TestFromPrivKey = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
 const TestFromAddress = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
 const TestTo = "astria1xnlvg0rle2u6auane79t4p27g8hxnj36ja960z"
+const TestToPubKey = "88787e29db8d5247c6adfac9909b56e6b2705c3120b2e3885e8ec8aa416a10f1"
 const TransferAmount = 535353
 const SequencerURL = "http://127.0.0.1:26657"
 const SequencerChainID = "sequencer-test-chain-0"
@@ -151,4 +152,82 @@ func TestTransferAndGetNonce(t *testing.T) {
 	expectedFinalBalance := big.NewInt(0).Add(initialBalance, big.NewInt(TransferAmount))
 	finalBalance := toBalancesAfter[0].Balance
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
+}
+
+func TestAddAndRemoveFeeAssts(t *testing.T) {
+	testAssetName := "testAsset"
+	// add a fee asset
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := addFeeAssetCmd.Output()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = removeFeeAssetCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestRemoveAndAddIBCRelayer(t *testing.T) {
+	// remove an address from the existing IBC relayer set
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	removeIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := removeIBCRelayerCmd.Output()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = addIBCRelayerCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestValidatorUpdate(t *testing.T) {
+	// update the validator power
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	validatorUpdateCmd := exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := validatorUpdateCmd.Output()
+	assert.NoError(t, err)
+
+	// revert the validator power
+	validatorUpdateCmd = exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = validatorUpdateCmd.Output()
+	assert.NoError(t, err)
+}
+
+func TestGetBlock(t *testing.T) {
+	// get initial blockheight
+	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	blockHeightOutput, err := getBlockHeightCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
+	}
+	var blockHeight sequencer.BlockheightResponse
+	err = json.Unmarshal(blockHeightOutput, &blockHeight)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
+	}
+	initialBlockHeight := blockHeight.Blockheight
+
+	// get a block
+	if initialBlockHeight > 0 {
+		getBlockCmd := exec.Command(TestBinPath, "sequencer", "block", "1", "--json", "--sequencer-url", SequencerURL)
+		_, err := getBlockCmd.Output()
+		assert.NoError(t, err)
+	} else {
+		t.Fatalf("Blockheight is 0, cannot get block")
+	}
+}
+
+func TestUpdateSudoAddress(t *testing.T) {
+	// change the sudo address
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := addressChangeCmd.Output()
+	assert.NoError(t, err)
+
+	// useing the old sudo address to try to update the sudo address again, this
+	// will fail becuase the old sudo address is no longer the sudo address
+	failingAddressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = failingAddressChangeCmd.Output()
+	assert.Error(t, err)
 }
