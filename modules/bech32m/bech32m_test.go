@@ -37,7 +37,7 @@ func TestEncodeFromPublicKey(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	prefix, addr, err := Decode(bech32MAddress)
+	prefix, addr, err := DecodeFromString(bech32MAddress)
 	assert.Nil(t, err)
 	assert.Equal(t, prefix, testPrefix)
 	assert.Equal(t, bech32MAddressBytes, hex.EncodeToString(addr[:]))

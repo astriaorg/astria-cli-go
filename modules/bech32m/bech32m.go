@@ -90,10 +90,10 @@ func EncodeFromPublicKey(prefix string, pubkey ed25519.PublicKey) (*Bech32MAddre
 	return address, nil
 }
 
-// Decode decodes a bech32m string into a string prefix and the underlying
+// DecodeFromString decodes a bech32m string into a string prefix and the underlying
 // [20]byte array originally used to encode the address. It also checks if the
 // address is a bech32m address and not a different bech32 version.
-func Decode(address string) (string, [20]byte, error) {
+func DecodeFromString(address string) (string, [20]byte, error) {
 	prefix, bytes, version, err := bech32.DecodeGeneric(address)
 	if err != nil {
 		var defaultBytes [20]byte
