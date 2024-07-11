@@ -48,7 +48,7 @@ func Verify(address string) error {
 		return fmt.Errorf("address must have prefix")
 	}
 	if len(byteAddress) != 20 {
-		return fmt.Errorf("address must have resolve to 20 byte address, got %d", len(byteAddress))
+		return fmt.Errorf("address must decode to a 20 length byte array: got len %d", len(byteAddress))
 	}
 
 	return nil
