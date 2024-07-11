@@ -30,9 +30,9 @@ func (a *Bech32MAddress) Bytes() [20]byte {
 	return a.bytes
 }
 
-// Verify verifies that a string in a valid bech32m address. It
+// Validate verifies that a string in a valid bech32m address. It
 // will return nil if the address is valid, otherwise it will return an error.
-func Verify(address string) error {
+func Validate(address string) error {
 	prefix, byteAddress, version, err := bech32.DecodeGeneric(address)
 	if err != nil {
 		return fmt.Errorf("address must be a bech32 encoded string")
@@ -54,9 +54,9 @@ func Verify(address string) error {
 	return nil
 }
 
-// Encode creates a *Bech32MAddress from a [20]byte array and string
+// EncodeFromBytes creates a *Bech32MAddress from a [20]byte array and string
 // prefix.
-func Encode(prefix string, data [20]byte) (*Bech32MAddress, error) {
+func EncodeFromBytes(prefix string, data [20]byte) (*Bech32MAddress, error) {
 	// Convert the data from 8-bit groups to 5-bit
 	convertedBytes, err := bech32.ConvertBits(data[:], 8, 5, true)
 	if err != nil {
@@ -76,49 +76,13 @@ func Encode(prefix string, data [20]byte) (*Bech32MAddress, error) {
 	}, nil
 }
 
-// EncodeFromString converts a bech32m string address into a *Bech32MAddress.
-func EncodeFromString(address string) (*Bech32MAddress, error) {
-	prefix, bytes, err := bech32.Decode(address)
-	if err != nil {
-		return nil, fmt.Errorf("input address must be a bech32 encoded string")
-	}
-	convertedBytes, err := bech32.ConvertBits(bytes, 5, 8, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert address bytes to 8 bit")
-	}
-
-	var addrBytes [20]byte
-	copy(addrBytes[:], convertedBytes)
-
-	return &Bech32MAddress{
-		address: address,
-		prefix:  prefix,
-		bytes:   addrBytes,
-	}, nil
-}
-
 // EncodeFromPublicKey takes an ed25519 public key and string prefix and encodes
 // them into a *Bech32MAddress.
 func EncodeFromPublicKey(prefix string, pubkey ed25519.PublicKey) (*Bech32MAddress, error) {
 	hash := sha256.Sum256(pubkey)
 	var addr [20]byte
 	copy(addr[:], hash[:20])
-	address, err := Encode(prefix, addr)
-	if err != nil {
-		log.WithError(err).Error("Error encoding address")
-		return nil, err
-	}
-	return address, nil
-}
-
-// EncodeFromPrivateKey takes an ed25519 private key and string prefix and
-// encodes them into a *Bech32MAddress.
-func EncodeFromPrivateKey(prefix string, privkey ed25519.PrivateKey) (*Bech32MAddress, error) {
-	pubkey := privkey.Public().(ed25519.PublicKey)
-	hash := sha256.Sum256(pubkey)
-	var addr [20]byte
-	copy(addr[:], hash[:20])
-	address, err := Encode(prefix, addr)
+	address, err := EncodeFromBytes(prefix, addr)
 	if err != nil {
 		log.WithError(err).Error("Error encoding address")
 		return nil, err

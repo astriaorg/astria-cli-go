@@ -29,7 +29,7 @@ func CreateAccount(prefix string) (*Account, error) {
 
 	log.Debugf("Address bytes: %s", hex.EncodeToString(address[:]))
 
-	addr, err := bech32m.Encode(prefix, address)
+	addr, err := bech32m.EncodeFromBytes(prefix, address)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -173,7 +173,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -248,7 +248,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -326,7 +326,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -405,7 +405,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -480,7 +480,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -555,7 +555,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -630,7 +630,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
@@ -705,7 +705,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return &ChangeSudoAddressResponse{}, err
@@ -778,7 +778,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	// Get current address nonce
 	signer := client.NewSigner(opts.FromKey)
 	fromAddr := signer.Address()
-	addr, err := bech32m.Encode(opts.AddressPrefix, fromAddr)
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
 	if err != nil {
 		log.WithError(err).Error("Failed to encode address")
 		return nil, err
