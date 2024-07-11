@@ -26,6 +26,8 @@ test-cov:
     cd modules/cli && go tool cover -html=coverage.out
     cd modules/go-sequencer-client && go test ./... -coverprofile=coverage.out
     cd modules/go-sequencer-client && go tool cover -html=coverage.out
+    cd modules/bech32m && go test ./... -coverprofile=coverage.out
+    cd modules/mech32m && go tool cover -html=coverage.out
 
 # run unit and integration tests, and tests that require tty.
 test-all: test test-integration-cli
@@ -51,6 +53,7 @@ cleanup-integration-tests:
 fmt:
     cd modules/cli && go fmt ./...
     cd modules/go-sequencer-client && go fmt ./...
+    cd modules/bech32m && go fmt ./...
 alias f := fmt
 
 default_lang := 'all'
@@ -68,6 +71,7 @@ alias l := lint
 _lint-go:
     cd modules/cli && golangci-lint run
     cd modules/go-sequencer-client && golangci-lint run
+    cd modules/bech32m && golangci-lint run
 
 [no-exit-message]
 _lint-md:

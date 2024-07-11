@@ -14,8 +14,8 @@ const fromPubAddress = "astria1x66v8ph5x8z95vxw6uxmyg5xahkfg0tk8lvrvf"
 const pubKey = "88787e29db8d5247c6adfac9909b56e6b2705c3120b2e3885e8ec8aa416a10f1"
 const prefix = "astria"
 
-func TestBech32MAddressFromString(t *testing.T) {
-	addr, _ := Bech32MAddressFromString(bech32MAddress)
+func TestEncodeFromString(t *testing.T) {
+	addr, _ := EncodeFromString(bech32MAddress)
 	bytes, _ := hex.DecodeString(bech32MAddressBytes)
 
 	var len20Bytes [20]byte
@@ -26,32 +26,32 @@ func TestBech32MAddressFromString(t *testing.T) {
 	assert.Equal(t, len20Bytes, addr.Bytes())
 }
 
-func TestVerifyBech32MAddress(t *testing.T) {
-	verify := VerifyBech32MAddress(bech32MAddress)
+func TestVerify(t *testing.T) {
+	verify := Verify(bech32MAddress)
 	assert.Nil(t, verify)
 }
-func TestBech32MAddressFromBytes(t *testing.T) {
+func TestEncode(t *testing.T) {
 	bytes, _ := hex.DecodeString(bech32MAddressBytes)
 	var addrBytes [20]byte
 	copy(addrBytes[:], bytes)
-	addr, _ := Bech32MAddressFromBytes(prefix, addrBytes)
+	addr, _ := Encode(prefix, addrBytes)
 
 	assert.Equal(t, bech32MAddress, addr.String())
 	assert.Equal(t, prefix, addr.Prefix())
 	assert.Equal(t, addrBytes, addr.Bytes())
 }
 
-func TestAddressFromPublicKey(t *testing.T) {
+func TestEncodeFromPublicKey(t *testing.T) {
 	bytes, _ := hex.DecodeString(pubKey)
-	addr, _ := Bech32MAddressFromPublicKey(prefix, bytes)
+	addr, _ := EncodeFromPublicKey(prefix, bytes)
 
 	assert.Equal(t, fromPubAddress, addr.String())
 	assert.Equal(t, prefix, addr.Prefix())
 }
 
-func TestAddressFromPrivateKey(t *testing.T) {
+func TestEncodeFromPrivateKey(t *testing.T) {
 	privBytes, _ := hex.DecodeString(bech32MAddressPrivKey)
-	addr, _ := Bech32MAddressFromPrivateKey(prefix, privBytes)
+	addr, _ := EncodeFromPrivateKey(prefix, privBytes)
 
 	assert.Equal(t, bech32MAddress, addr.String())
 	assert.Equal(t, prefix, addr.Prefix())
