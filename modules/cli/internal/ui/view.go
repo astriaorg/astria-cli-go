@@ -137,8 +137,12 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 			// we want the down key to increment the selected index,
 			// bc top pane starts at 0
 			mv.incrementSelectedPaneIdx()
+			a.RefreshView(nil)
+
 		case tcell.KeyUp:
 			mv.decrementSelectedPaneIdx()
+			a.RefreshView(nil)
+
 		case tcell.KeyEnter:
 			a.SetView("fullscreen", mv.processPanes[mv.selectedPaneIdx])
 		default:
@@ -221,9 +225,6 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 		SetChangedFunc(func() {
 			fv.tApp.Draw()
 		})
-	// update the shared state for the process pane
-	fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
-	fv.processPane.SetIsWordWrap(fv.s.GetIsWordWrap())
 	flex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(info, 4, 0, true).
 		AddItem(fv.processPane.GetTextView(), 0, 1, true).

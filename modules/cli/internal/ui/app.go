@@ -87,6 +87,7 @@ func (a *App) SetView(view string, p Props) {
 // newly rendered view as the root.
 func (a *App) RefreshView(p Props) {
 	a.Application.SetInputCapture(nil)
+	a.Application.SetMouseCapture(nil)
 	a.Application.SetInputCapture(a.view.GetKeyboard(a))
 	a.Application.SetRoot(a.view.Render(p), true)
 }
