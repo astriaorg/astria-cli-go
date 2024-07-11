@@ -114,8 +114,7 @@ func EncodeFromPublicKey(prefix string, pubkey ed25519.PublicKey) (*Bech32MAddre
 // EncodeFromPrivateKey takes an ed25519 private key and string prefix and
 // encodes them into a *Bech32MAddress.
 func EncodeFromPrivateKey(prefix string, privkey ed25519.PrivateKey) (*Bech32MAddress, error) {
-	from := ed25519.NewKeyFromSeed(privkey)
-	pubkey := from.Public().(ed25519.PublicKey)
+	pubkey := privkey.Public().(ed25519.PublicKey)
 	hash := sha256.Sum256(pubkey)
 	var addr [20]byte
 	copy(addr[:], hash[:20])

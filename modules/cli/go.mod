@@ -6,8 +6,8 @@ require (
 	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240626163506-691883836b9e.2
 	buf.build/gen/go/astria/protocol-apis/protocolbuffers/go v1.34.2-20240627184145-2eaea785eb7d.2
 	github.com/99designs/keyring v1.2.2
+	github.com/astriaorg/astria-cli-go/modules/bech32m v0.0.0-00010101000000-000000000000
 	github.com/astriaorg/astria-cli-go/modules/go-sequencer-client v0.0.0-00010101000000-000000000000
-	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pterm/pterm v0.12.79
@@ -19,7 +19,11 @@ require (
 	golang.org/x/crypto v0.24.0
 )
 
+require github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
+
 replace github.com/astriaorg/astria-cli-go/modules/go-sequencer-client => ../go-sequencer-client
+
+replace github.com/astriaorg/astria-cli-go/modules/bech32m => ../bech32m
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
