@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	primproto "buf.build/gen/go/astria/primitives/protocolbuffers/go/astria/primitive/v1"
-
+	"github.com/astriaorg/astria-cli-go/modules/bech32m"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,7 +25,7 @@ func (a *Bech32MAddress) String() string {
 
 // Account is the struct that holds the account information.
 type Account struct {
-	Address    *Bech32MAddress
+	Address    *bech32m.Bech32MAddress
 	PublicKey  ed25519.PublicKey
 	PrivateKey ed25519.PrivateKey
 }
@@ -35,7 +35,7 @@ type Account struct {
 // and returns a pointer to the new Account struct with the address, public key, and private key set.
 func NewAccountFromPrivKey(prefix string, privkey ed25519.PrivateKey) (*Account, error) {
 	pub := privkey.Public().(ed25519.PublicKey)
-	addr, err := addressFromPublicKey(prefix, pub)
+	addr, err := bech32m.EncodeFromPublicKey(prefix, pub)
 	if err != nil {
 		log.WithError(err).Error("Error creating address from public key")
 		return nil, err
