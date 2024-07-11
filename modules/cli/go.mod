@@ -19,8 +19,6 @@ require (
 	golang.org/x/crypto v0.24.0
 )
 
-require github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
-
 replace github.com/astriaorg/astria-cli-go/modules/go-sequencer-client => ../go-sequencer-client
 
 replace github.com/astriaorg/astria-cli-go/modules/bech32m => ../bech32m
@@ -33,6 +31,7 @@ require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3 // indirect
+	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
