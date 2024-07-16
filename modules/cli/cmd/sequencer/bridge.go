@@ -76,7 +76,10 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	}
 	withdrawerAddress := AddressFromText(wa)
 
+	async := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.InitBridgeOpts{
+		Async:             async,
 		AddressPrefix:     DefaultAddressPrefix,
 		SequencerURL:      sequencerURL,
 		FromKey:           from,
@@ -145,7 +148,10 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 
 	destinationChainAddress := args[2]
 
+	async := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.BridgeLockOpts{
+		Async:                   async,
 		AddressPrefix:           DefaultAddressPrefix,
 		SequencerURL:            sequencerURL,
 		FromKey:                 from,
@@ -181,6 +187,8 @@ func init() {
 	bifh.BindStringFlag("withdrawer-address", "", "Set the withdrawer address to use for the bridge account. The address of the sender is used if this is not set.")
 
 	bifh.BindBoolFlag("json", false, "Output bridge account as JSON.")
+	bifh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
+
 	bifh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account on.")
 
 	bifh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
@@ -196,6 +204,7 @@ func init() {
 	blfh.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used to pay the transaction fee.")
 
 	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
+	blfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to lock assets on.")
 
 	blfh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")

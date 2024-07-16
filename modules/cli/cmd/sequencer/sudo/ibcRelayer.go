@@ -47,7 +47,10 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	async := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.IBCRelayerOpts{
+		Async:             async,
 		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
 		FromKey:           from,
 		SequencerURL:      sequencerURL,
@@ -98,7 +101,10 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	async := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.IBCRelayerOpts{
+		Async:             async,
 		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
 		FromKey:           from,
 		SequencerURL:      sequencerURL,
@@ -125,6 +131,7 @@ func init() {
 	aibfh := cmd.CreateCliFlagHandler(addIBCRelayerCmd, cmd.EnvPrefix)
 	aibfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
 	aibfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
+	aibfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	aibfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	aibfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	aibfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
@@ -137,6 +144,7 @@ func init() {
 	ribfh := cmd.CreateCliFlagHandler(removeIBCRelayerCmd, cmd.EnvPrefix)
 	ribfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove the relayer address from.")
 	ribfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
+	ribfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	ribfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	ribfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	ribfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
