@@ -50,7 +50,7 @@ func NewClient(url string) (*Client, error) {
 
 // BroadcastTx broadcasts a transaction. If async is true, the function will
 // return immediately. The response seen is the generated data used for
-// submitting the transaction. It does not confirmed that that data has been
+// submitting the transaction. It does not confirm that the data has been
 // included on chain. If async is false, the function will wait for the
 // transaction to be seen on the network.
 func (c *Client) BroadcastTx(ctx context.Context, tx *txproto.SignedTransaction, async bool) (*coretypes.ResultBroadcastTx, error) {
