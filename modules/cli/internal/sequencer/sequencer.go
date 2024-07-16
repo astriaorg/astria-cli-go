@@ -27,7 +27,7 @@ func CreateAccount(prefix string) (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	log.Debugf("Address bytes: %s", hex.EncodeToString(address[:]))
+	log.Debugf("Address as hex: %x", address[:])
 
 	addr, err := bech32m.EncodeFromBytes(prefix, address)
 	if err != nil {

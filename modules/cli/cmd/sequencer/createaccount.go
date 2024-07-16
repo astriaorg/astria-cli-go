@@ -92,6 +92,8 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 
 		// clear the private key. we don't want to print it since we are secure here
 		account.PrivateKey = nil
+	} else {
+		log.Debug("Private Key Bytes: ", account.PrivateKey)
 	}
 
 	printer := ui.ResultsPrinter{
