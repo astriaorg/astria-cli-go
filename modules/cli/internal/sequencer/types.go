@@ -192,6 +192,8 @@ func (nr *NonceResponse) TableRows() [][]string {
 
 // InitBridgeOpts are the options for the InitBridge function.
 type InitBridgeOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
@@ -237,6 +239,8 @@ func (nr *InitBridgeResponse) TableRows() [][]string {
 
 // BridgeLockOpts are the options for the BridgeLock function.
 type BridgeLockOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
@@ -288,6 +292,8 @@ func (nr *BridgeLockResponse) TableRows() [][]string {
 
 // TransferOpts are the options for the Transfer function.
 type TransferOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
@@ -331,11 +337,13 @@ func (tr *TransferResponse) TableHeader() []string {
 
 func (tr *TransferResponse) TableRows() [][]string {
 	return [][]string{
-		{tr.From, tr.To, strconv.Itoa(int(tr.Nonce)), tr.Amount, tr.TxHash},
+		{tr.From, tr.To, tr.Amount, strconv.Itoa(int(tr.Nonce)), tr.TxHash},
 	}
 }
 
 type FeeAssetOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
@@ -375,6 +383,8 @@ func (far *FeeAssetResponse) TableRows() [][]string {
 }
 
 type IBCRelayerOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
@@ -414,6 +424,8 @@ func (i *IBCRelayerResponse) TableRows() [][]string {
 }
 
 type ChangeSudoAddressOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
@@ -453,6 +465,8 @@ func (c *ChangeSudoAddressResponse) TableRows() [][]string {
 }
 
 type UpdateValidatorOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	Async bool
 	// AddressPrefix is the prefix that will be used when generating the address
 	// from the FromKey private key.
 	AddressPrefix string
