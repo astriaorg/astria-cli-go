@@ -178,7 +178,7 @@ func downloadAndUnpack(url string, packageName string, placePath string) {
 	}
 
 	// Delete the .tar.gz file
-	// TODO: should this be configuratble?
+	// TODO: should this be configurable?
 	err = os.Remove(dest)
 	if err != nil {
 		log.Fatalf("Failed to delete downloaded %s.tar.gz file: %v", packageName, err)

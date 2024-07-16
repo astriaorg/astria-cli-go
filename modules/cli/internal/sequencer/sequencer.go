@@ -214,18 +214,19 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	// broadcast tx
 	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
-		log.WithError(err).Error("Error broadcasting transaction syncronously")
+		log.WithError(err).Error("Error broadcasting transaction")
 		return &TransferResponse{}, err
 	}
 	log.Debugf("Broadcast response: %v", resp)
 
 	// response
 	hash := hex.EncodeToString(resp.Hash)
+	amount := fmt.Sprint(client.ProtoU128ToBigInt(opts.Amount))
 	tr := &TransferResponse{
 		From:   addr.String(),
 		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
-		Amount: opts.Amount.String(),
+		Amount: amount,
 		TxHash: hash,
 	}
 
