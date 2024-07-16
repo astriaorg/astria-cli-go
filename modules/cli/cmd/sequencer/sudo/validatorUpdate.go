@@ -54,10 +54,10 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.UpdateValidatorOpts{
-		Async:            async,
+		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		PubKey:           pubKey,

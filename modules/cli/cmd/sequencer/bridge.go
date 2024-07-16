@@ -76,10 +76,10 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	}
 	withdrawerAddress := AddressFromText(wa)
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.InitBridgeOpts{
-		Async:             async,
+		IsAsync:           isAsync,
 		AddressPrefix:     DefaultAddressPrefix,
 		SequencerURL:      sequencerURL,
 		FromKey:           from,
@@ -148,10 +148,10 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 
 	destinationChainAddress := args[2]
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.BridgeLockOpts{
-		Async:                   async,
+		IsAsync:                 isAsync,
 		AddressPrefix:           DefaultAddressPrefix,
 		SequencerURL:            sequencerURL,
 		FromKey:                 from,

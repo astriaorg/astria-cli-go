@@ -47,10 +47,10 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.IBCRelayerOpts{
-		Async:             async,
+		IsAsync:           isAsync,
 		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
 		FromKey:           from,
 		SequencerURL:      sequencerURL,
@@ -101,10 +101,10 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.IBCRelayerOpts{
-		Async:             async,
+		IsAsync:           isAsync,
 		AddressPrefix:     sequencercmd.DefaultAddressPrefix,
 		FromKey:           from,
 		SequencerURL:      sequencerURL,

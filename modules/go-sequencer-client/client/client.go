@@ -86,10 +86,10 @@ func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransact
 
 	// Start the WebSocket client
 	err = client.Start()
+	defer client.Stop()
 	if err != nil {
 		log.Fatalf("Failed to start WebSocket client: %v", err)
 	}
-	defer client.Stop()
 
 	result, resultErr := c.client.BroadcastTxSync(ctx, bytes)
 

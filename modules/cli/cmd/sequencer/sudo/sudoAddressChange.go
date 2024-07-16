@@ -41,10 +41,10 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.ChangeSudoAddressOpts{
-		Async:            async,
+		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		UpdateAddress:    toAddress,

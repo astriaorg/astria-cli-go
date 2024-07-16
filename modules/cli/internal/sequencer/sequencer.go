@@ -212,7 +212,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction syncronously")
 		return &TransferResponse{}, err
@@ -288,7 +288,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 
 	// broadcast transaction
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &InitBridgeResponse{}, err
@@ -365,7 +365,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &BridgeLockResponse{}, err
@@ -442,7 +442,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &FeeAssetResponse{}, err
@@ -517,7 +517,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &FeeAssetResponse{}, err
@@ -592,7 +592,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &IBCRelayerResponse{}, err
@@ -667,7 +667,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &IBCRelayerResponse{}, err
@@ -740,7 +740,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &ChangeSudoAddressResponse{}, err
@@ -818,7 +818,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTx(ctx, signed, opts.Async)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &UpdateValidatorResponse{}, err

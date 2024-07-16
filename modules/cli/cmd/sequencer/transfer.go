@@ -65,10 +65,10 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.TransferOpts{
-		Async:            async,
+		IsAsync:          isAsync,
 		AddressPrefix:    DefaultAddressPrefix,
 		SequencerURL:     sequencerURL,
 		FromKey:          from,

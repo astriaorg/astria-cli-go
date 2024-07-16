@@ -46,10 +46,10 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.FeeAssetOpts{
-		Async:            async,
+		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
@@ -99,10 +99,10 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	async := flagHandler.GetValue("async") == "true"
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.FeeAssetOpts{
-		Async:            async,
+		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
