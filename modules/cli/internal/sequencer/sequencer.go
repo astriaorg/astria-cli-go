@@ -214,7 +214,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	// broadcast tx
 	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
-		log.WithError(err).Error("Error broadcasting transaction syncronously")
+		log.WithError(err).Error("Error broadcasting transaction synchronously")
 		return &TransferResponse{}, err
 	}
 	log.Debugf("Broadcast response: %v", resp)
