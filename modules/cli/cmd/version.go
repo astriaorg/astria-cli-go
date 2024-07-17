@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/config"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,12 @@ func printVersion() {
 	if version == "" {
 		version = "development"
 	}
-	fmt.Println(version)
+	fmt.Println("astria-go:", version)
+	fmt.Println("  Default Service Versions:")
+	fmt.Println("  cometbft:        ", "v"+config.Cometbft_version)
+	fmt.Println("  astria-sequencer:", "v"+config.Astria_sequencer_version)
+	fmt.Println("  astria-composer: ", "v"+config.Astria_composer_version)
+	fmt.Println("  astria-conductor:", "v"+config.Astria_conductor_version)
 }
 
 func init() {
