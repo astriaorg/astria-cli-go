@@ -58,7 +58,7 @@ func TestTransferFlags(t *testing.T) {
 
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
-	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
 	blockHeightOutput, err := getBlockHeightCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
@@ -71,7 +71,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	initialBlockHeight := blockHeight.Blockheight
 
 	// get initial nonce
-	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
+	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
 	nonceOutput, err := getNonceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
@@ -84,7 +84,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	initialNonce := nonce.Nonce
 
 	// get initial balance
-	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
+	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
 	balanceOutput, err := getBalanceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
@@ -110,7 +110,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// get blockheight after transfer
-	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
 	blockHeightAfterOutput, err := getBlockHeightAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
@@ -124,7 +124,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Greaterf(t, finalBlockHeight, initialBlockHeight, "Blockheight should increase")
 
 	// get nonce after transfer
-	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
+	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
 	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
@@ -139,7 +139,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Equal(t, expectedFinalNonce, finalNonce)
 
 	// get balance after transfer
-	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
+	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
 	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
