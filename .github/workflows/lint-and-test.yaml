@@ -41,7 +41,11 @@ jobs:
         run: go test ./... -skip TestProcessPane
         working-directory: modules/cli
       - name: Integration Test Go
-        run: just test-integration
+        run: |
+          # run dev runner and test-integration
+          just run dev init
+          just run dev run > /dev/null
+          just test-integration
 # FIXME - sequencer client tests are empty
 #      - name: Test Go (go-sequencer-client)
 #        run: go test ./...
