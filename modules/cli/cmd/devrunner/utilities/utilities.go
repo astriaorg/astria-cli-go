@@ -16,8 +16,8 @@ func CopyFile(src, dst string) error {
 	}
 	defer sourceFile.Close()
 
-	// Open the destination file for writing.
-	// Create the file if it does not exist, truncate it if it does.
+	// open the destination file for writing.
+	// create the file if it does not exist, truncate it if it does.
 	destFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func CopyFile(src, dst string) error {
 		return err
 	}
 
-	// Ensure that any writes made to the destination file are committed to stable storage.
+	// ensure that any writes made to the destination file are committed to stable storage.
 	err = destFile.Sync()
 	return err
 }
@@ -47,13 +47,13 @@ func PathExists(path string) bool {
 		return false
 	}
 
-	// Check if it's a regular file
+	// check if it's a regular file
 	if !fileInfo.Mode().IsRegular() {
 		log.WithField("path", path).Error("The path is not a regular file")
 		return false
 	}
 
-	// Check if the file is executable
+	// check if the file is executable
 	if fileInfo.Mode().Perm()&0111 == 0 {
 		log.WithField("path", path).Error("The file is not executable")
 

@@ -56,21 +56,21 @@ var embeddedDevPrivKey embed.FS
 
 // CreateComposerDevPrivKeyFile creates a new composer_dev_priv_key file in the specified directory.
 func CreateComposerDevPrivKeyFile(dir string) {
-	// Read the content from the embedded file
+	// read the content from the embedded file
 	devPrivKeyData, err := fs.ReadFile(embeddedDevPrivKey, "composer_dev_priv_key")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 		panic(err)
 	}
 
-	// Specify the path for the new file
+	// specify the path for the new file
 	newDevPrivKeyPath := filepath.Join(dir, "composer_dev_priv_key")
 
 	_, err = os.Stat(newDevPrivKeyPath)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", newDevPrivKeyPath)
 	} else {
-		// Create a new file
+		// create a new file
 		newDevPrivKeyFile, err := os.Create(newDevPrivKeyPath)
 		if err != nil {
 			log.Fatalf("failed to create new file: %v", err)
@@ -78,7 +78,7 @@ func CreateComposerDevPrivKeyFile(dir string) {
 		}
 		defer newDevPrivKeyFile.Close()
 
-		// Write the data to the new file
+		// write the data to the new file
 		_, err = newDevPrivKeyFile.Write(devPrivKeyData)
 		if err != nil {
 			log.Fatalf("failed to write data to new file: %v", err)
@@ -99,13 +99,13 @@ var embeddedCometbftValidatorFile embed.FS
 // network name and local default denomination to update the chain id and
 // default denom for the local sequencer network.
 func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNativeDenom string) {
-	// Read the content from the embedded file
+	// read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 		panic(err)
 	}
-	// Unmarshal JSON into a map to update sequencer chain id
+	// unmarshal JSON into a map to update sequencer chain id
 	var data map[string]interface{}
 	if err := json.Unmarshal(genesisData, &data); err != nil {
 		log.Fatalf("Error unmarshaling JSON: %s", err)
@@ -124,14 +124,14 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 		log.Fatalf("Error marshaling updated data to JSON: %s", err)
 	}
 
-	// Read the content from the embedded file
+	// read the content from the embedded file
 	validatorData, err := fs.ReadFile(embeddedCometbftValidatorFile, "priv_validator_key.json")
 	if err != nil {
 		log.Fatalf("failed to read embedded file: %v", err)
 		panic(err)
 	}
 
-	// Specify the path for the new file
+	// specify the path for the new file
 	newGenesisPath := filepath.Join(path, "genesis.json")
 	newValidatorPath := filepath.Join(path, "priv_validator_key.json")
 
@@ -139,7 +139,7 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", newGenesisPath)
 	} else {
-		// Create a new file
+		// create a new file
 		newGenesisFile, err := os.Create(newGenesisPath)
 		if err != nil {
 			log.Fatalf("failed to create new file: %v", err)
@@ -147,7 +147,7 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 		}
 		defer newGenesisFile.Close()
 
-		// Write the data to the new file
+		// write the data to the new file
 		_, err = newGenesisFile.Write(genesisData)
 		if err != nil {
 			log.Fatalf("failed to write data to new file: %v", err)
@@ -240,30 +240,30 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, conf
 // replaceInFile replaces oldValue with newValue in the file at filename.
 // it is used here to update the block time in the cometbft config.toml file.
 func replaceInFile(filename, oldValue, newValue string) error {
-	// Read the original file.
+	// read the original file.
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("failed to read the file: %w", err)
 	}
 
-	// Perform the replacement.
+	// perform the replacement.
 	modifiedContent := strings.ReplaceAll(string(content), oldValue, newValue)
 
-	// Write the modified content to a new temporary file.
+	// write the modified content to a new temporary file.
 	tmpFilename := filename + ".tmp"
 	if err := os.WriteFile(tmpFilename, []byte(modifiedContent), 0666); err != nil {
 		return fmt.Errorf("failed to write to temporary file: %w", err)
 	}
 
-	// Rename the original file to filename.bak.
+	// rename the original file to filename.bak.
 	backupFilename := filename + ".bak"
 	if err := os.Rename(filename, backupFilename); err != nil {
 		return fmt.Errorf("failed to rename original file to backup: %w", err)
 	}
 
-	// Rename the temporary file to the original file name.
+	// rename the temporary file to the original file name.
 	if err := os.Rename(tmpFilename, filename); err != nil {
-		// Attempt to restore the original file if renaming fails.
+		// attempt to restore the original file if renaming fails.
 		err := os.Rename(backupFilename, filename)
 		if err != nil {
 			return err
@@ -279,7 +279,7 @@ func replaceInFile(filename, oldValue, newValue string) error {
 func MergeConfigs(configs ...[]string) []string {
 	mergedMap := make(map[string]string)
 
-	// Helper function to add slices to the map
+	// helper function to add slices to the map
 	addSliceToMap := func(slice []string) {
 		for _, item := range slice {
 			keyVal := strings.SplitN(item, "=", 2)
@@ -295,7 +295,7 @@ func MergeConfigs(configs ...[]string) []string {
 		addSliceToMap(config)
 	}
 
-	// Convert the map back to a slice
+	// convert the map back to a slice
 	var result []string
 	for key, value := range mergedMap {
 		result = append(result, key+"="+value)

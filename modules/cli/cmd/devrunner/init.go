@@ -87,21 +87,21 @@ func runInitialization(c *cobra.Command, args []string) {
 
 // downloadFile downloads a file from the specified URL to the given local path.
 func downloadFile(url, filepath string) error {
-	// Get the data
+	// get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	// Create the file
+	// create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	// Write the body to file
+	// write downloaded data to a file
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
@@ -153,31 +153,31 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 }
 
 func downloadAndUnpack(url string, packageName string, placePath string) {
-	// Check if the file already exists
+	// check if the file already exists
 	if _, err := os.Stat(filepath.Join(placePath, packageName)); err == nil {
 		log.Infof("%s already exists. Skipping download.\n", packageName)
 		return
 	}
 	log.Infof("Downloading: (%s, %s)\n", packageName, url)
 
-	// Download the file
+	// download the file
 	dest := filepath.Join(placePath, packageName+".tar.gz")
 	if err := downloadFile(url, dest); err != nil {
 		panic(err)
 	}
-	// Open the downloaded .tar.gz file
+	// open the downloaded .tar.gz file
 	file, err := os.Open(dest)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	// Extract the contents
+	// extract the contents
 	if err := extractTarGz(placePath, file); err != nil {
 		panic(err)
 	}
 
-	// Delete the .tar.gz file
+	// delete the .tar.gz file
 	// TODO: should this be configurable?
 	err = os.Remove(dest)
 	if err != nil {

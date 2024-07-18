@@ -48,7 +48,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
-	// Remove the config files
+	// remove the config files
 	err = os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftGenesisFilename))
 	if err != nil {
 		fmt.Println("Error removing file:", err)
@@ -129,7 +129,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 
 	log.Infof("Resetting state for instance '%s'", instance)
 
-	// Remove the state files for sequencer and Cometbft
+	// remove the state files for sequencer and Cometbft
 	err = os.RemoveAll(dataDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
