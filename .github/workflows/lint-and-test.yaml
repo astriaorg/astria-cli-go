@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - name: Install just
+        uses: taiki-e/install-action@just
       - uses: actions/setup-go@v4
         with:
           go-version: 1.22.0
@@ -38,6 +40,9 @@ jobs:
         #  no solutions have worked so far https://github.com/actions/runner/issues/241
         run: go test ./... -skip TestProcessPane
         working-directory: modules/cli
+      - name: Integration Test Go
+        run: just test-integration
+# FIXME - sequencer client tests are empty
 #      - name: Test Go (go-sequencer-client)
 #        run: go test ./...
 #        working-directory: modules/go-sequencer-client
