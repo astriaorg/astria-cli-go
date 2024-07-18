@@ -56,7 +56,33 @@ func TestTransferFlags(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestRemoveAndAddIBCRelayer(t *testing.T) {
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+
+	// remove an address from the existing IBC relayer set
+	removeIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := removeIBCRelayerCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = addIBCRelayerCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// test asynchronously
+	// remove an address from the existing IBC relayer set
+	removeIBCRelayerCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = removeIBCRelayerCmdAsync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = addIBCRelayerCmdAsync.CombinedOutput()
+	assert.NoError(t, err)
+}
+
 func TestTransferAndGetNonce(t *testing.T) {
+	time.Sleep(2 * time.Second)
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
 	// FIXME - using Output (vs CombinedOutput) only returns Stdout, but using CombinedOutput returns all logging as well,
@@ -111,7 +137,6 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// wait for transaction to be processed
 	// FIXME - this could be flaky. can we check for the tx?
-	time.Sleep(2 * time.Second)
 
 	// get blockheight after transfer
 	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
@@ -185,19 +210,6 @@ func TestAddAndRemoveFeeAssets(t *testing.T) {
 	// remove a fee asset
 	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
 	_, err = removeFeeAssetCmd.CombinedOutput()
-	assert.NoError(t, err)
-}
-
-func TestRemoveAndAddIBCRelayerAsync(t *testing.T) {
-	// remove an address from the existing IBC relayer set
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	removeIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err := removeIBCRelayerCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// add same address back to the IBC relayer set
-	addIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = addIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
 
