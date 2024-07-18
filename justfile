@@ -39,7 +39,7 @@ alias ti := test-integration
 # run integrations tests. requires running geth + cometbft + astria core.
 test-integration-cli:
     just build-cli astria-go-testy
-    cd modules/cli/integration_tests && go test ./... -tags=integration_tests -count=1
+    cd modules/cli/integration_tests && go test -v ./... -tags=integration_tests -count=1
     rm ./bin/astria-go-testy
 
 # run integration tests for go-sequencer-client. requires running geth + cometbft + astria core.
