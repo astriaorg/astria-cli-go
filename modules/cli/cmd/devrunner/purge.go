@@ -41,7 +41,7 @@ func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 
 	log.Infof("Deleting binaries for instance '%s'", instance)
 
-	// Remove the state files for sequencer and Cometbft
+	// remove the state files for sequencer and Cometbft
 	err = os.RemoveAll(binDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
@@ -76,7 +76,7 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 
 	log.Infof("Deleting instance '%s'", instance)
 
-	// Remove the state files for sequencer and Cometbft
+	// remove the state files for sequencer and Cometbft
 	err = os.RemoveAll(instanceDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)

@@ -221,19 +221,19 @@ func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) 
 		log.Infof("%s already exists. Skipping initialization.\n", path)
 		return
 	}
-	// Create an instance of the Config struct with some data
+	// create an instance of the Config struct with some data
 	config := DefaultNetworksConfigs()
 	config.Local.NativeDenom = localNativeDenom
 	config.Local.SequencerChainId = localSequencerChainId
 
-	// Open a file for writing
+	// open a file for writing
 	file, err := os.Create(path)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	// Encode the struct to TOML and write to the file
+	// encode the struct to TOML and write to the file
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
 	}
@@ -251,17 +251,17 @@ func CreateBaseConfig(path, instance string) {
 		log.Infof("%s already exists. Skipping initialization.\n", path)
 		return
 	}
-	// Create an instance of the Config struct with some data
+	// create an instance of the Config struct with some data
 	config := NewBaseConfig(instance)
 
-	// Open a file for writing
+	// open a file for writing
 	file, err := os.Create(path)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	// Encode the struct to TOML and write to the file
+	// encode the struct to TOML and write to the file
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
 	}
@@ -295,7 +295,7 @@ func (b BaseConfig) ToSlice() []string {
 	typ := reflect.TypeOf(b)
 
 	var output []string
-	// Ensure the provided variable is a struct
+	// ensure the provided variable is a struct
 	for i := 0; i < val.NumField(); i++ {
 		field := typ.Field(i)
 		value := val.Field(i)
