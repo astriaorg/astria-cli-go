@@ -59,7 +59,11 @@ func TestTransferFlags(t *testing.T) {
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
-	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
+	// FIXME - using Output (vs CombinedOutput) only returns Stdout, but using CombinedOutput returns all logging as well,
+	//  which can break json marshalling. how can we use CombinedOutput so that we get stderr info in case something fails?
+	//  would rather not do any crazy string filtering/matching, but might be a good idea for the test.
+	//  could also use jq in the test? probably best option.
+	blockHeightOutput, err := getBlockHeightCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
 	}
@@ -72,7 +76,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial nonce
 	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
-	nonceOutput, err := getNonceCmd.CombinedOutput()
+	nonceOutput, err := getNonceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
 	}
@@ -85,7 +89,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial balance
 	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
-	balanceOutput, err := getBalanceCmd.CombinedOutput()
+	balanceOutput, err := getBalanceCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
 	}
@@ -111,7 +115,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get blockheight after transfer
 	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
-	blockHeightAfterOutput, err := getBlockHeightAfterCmd.CombinedOutput()
+	blockHeightAfterOutput, err := getBlockHeightAfterCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
 	}
