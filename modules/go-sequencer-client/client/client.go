@@ -77,6 +77,14 @@ func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransact
 		return nil, err
 	}
 	result, resultErr := c.client.BroadcastTxSync(ctx, bytes)
+	if resultErr != nil {
+		return result, resultErr
+	}
+	// must check result.Code because cometbft doesn't return an error on tx failure
+	if result.Code != 0 {
+		fmt.Println(result)
+		return result, errors.New(result.Log)
+	}
 
 	// Create a new RPC client
 	wsClient, err := http.New(c.websocket, "/websocket")
@@ -109,6 +117,8 @@ func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransact
 		log.Debug("Tx Event: ", event)
 		break
 	}
+
+	// FIXME - is add asset fee something that should have sync option?
 
 	return result, resultErr
 }

@@ -15,7 +15,7 @@ func TestGetBalance(t *testing.T) {
 	c, err := client.NewClient("http://localhost:26657")
 	require.NoError(t, err)
 
-	balance, err := c.GetBalances(context.Background(), [20]byte{})
+	balance, err := c.GetBalances(context.Background(), "astria1hj8pc8vwcvrr7wswjulemzls4cm9mj5w5858df")
 	require.NoError(t, err)
 	require.Empty(t, balance)
 }
@@ -24,7 +24,7 @@ func TestGetNonce(t *testing.T) {
 	c, err := client.NewClient("http://localhost:26657")
 	require.NoError(t, err)
 
-	nonce, err := c.GetNonce(context.Background(), [20]byte{})
+	nonce, err := c.GetNonce(context.Background(), "astria1hj8pc8vwcvrr7wswjulemzls4cm9mj5w5858df")
 	require.NoError(t, err)
 	require.Equal(t, nonce, uint32(0))
 }
