@@ -82,7 +82,6 @@ func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransact
 	}
 	// must check result.Code because cometbft doesn't return an error on tx failure
 	if result.Code != 0 {
-		fmt.Println(result)
 		return result, errors.New(result.Log)
 	}
 

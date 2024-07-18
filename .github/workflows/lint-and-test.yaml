@@ -44,7 +44,7 @@ jobs:
         run: |
           # run dev runner and test-integration
           just run dev init
-          just run dev run > /dev/null
+          screen -d -m just run dev run
           sleep 5
           just test-integration
 # FIXME - sequencer client tests are empty
