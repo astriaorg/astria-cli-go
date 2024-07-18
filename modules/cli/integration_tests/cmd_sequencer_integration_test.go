@@ -158,12 +158,28 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
 }
 
-func TestAddAndRemoveFeeAssetsAsync(t *testing.T) {
-	testAssetName := "testAsset"
-	// add a fee asset
+func TestAddAndRemoveFeeAssets(t *testing.T) {
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+
+	// test synchronously first
+	// FIXME - originally had a separate test for this, but tests run concurrently and caused issues with
+	//  TXs hanging. due to nonce issue?
+
+	// add a fee asset
+	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
+	_, err := addFeeAssetCmdSync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
+	_, err = removeFeeAssetCmdSync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// NOTE - test synchronously
+	// add a fee asset
+	testAssetName := "testAsset"
 	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err := addFeeAssetCmd.CombinedOutput()
+	_, err = addFeeAssetCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// remove a fee asset
