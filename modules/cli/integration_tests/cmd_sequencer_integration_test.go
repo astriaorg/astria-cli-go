@@ -59,7 +59,7 @@ func TestTransferFlags(t *testing.T) {
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
-	blockHeightOutput, err := getBlockHeightCmd.Output()
+	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
 	}
@@ -72,7 +72,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial nonce
 	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
-	nonceOutput, err := getNonceCmd.Output()
+	nonceOutput, err := getNonceCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
 	}
@@ -85,7 +85,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get initial balance
 	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL, "--log-level=debug")
-	balanceOutput, err := getBalanceCmd.Output()
+	balanceOutput, err := getBalanceCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
 	}
@@ -159,12 +159,12 @@ func TestAddAndRemoveFeeAssetsAsync(t *testing.T) {
 	// add a fee asset
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err := addFeeAssetCmd.Output()
+	_, err := addFeeAssetCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// remove a fee asset
 	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = removeFeeAssetCmd.Output()
+	_, err = removeFeeAssetCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
 
@@ -172,12 +172,12 @@ func TestRemoveAndAddIBCRelayerAsync(t *testing.T) {
 	// remove an address from the existing IBC relayer set
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	removeIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err := removeIBCRelayerCmd.Output()
+	_, err := removeIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// add same address back to the IBC relayer set
 	addIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = addIBCRelayerCmd.Output()
+	_, err = addIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
 
@@ -185,19 +185,19 @@ func TestValidatorUpdateAsync(t *testing.T) {
 	// update the validator power
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	validatorUpdateCmd := exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err := validatorUpdateCmd.Output()
+	_, err := validatorUpdateCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// revert the validator power
 	validatorUpdateCmd = exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = validatorUpdateCmd.Output()
+	_, err = validatorUpdateCmd.CombinedOutput()
 	assert.NoError(t, err)
 }
 
 func TestGetBlock(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
-	blockHeightOutput, err := getBlockHeightCmd.Output()
+	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
 	}
@@ -211,7 +211,7 @@ func TestGetBlock(t *testing.T) {
 	// get a block
 	if initialBlockHeight > 0 {
 		getBlockCmd := exec.Command(TestBinPath, "sequencer", "block", "1", "--json", "--sequencer-url", SequencerURL)
-		_, err := getBlockCmd.Output()
+		_, err := getBlockCmd.CombinedOutput()
 		assert.NoError(t, err)
 	} else {
 		t.Fatalf("Blockheight is 0, cannot get block")
@@ -222,12 +222,12 @@ func TestUpdateSudoAddressAsync(t *testing.T) {
 	// change the sudo address
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err := addressChangeCmd.Output()
+	_, err := addressChangeCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// using the old sudo address to try to update the sudo address again, this
 	// will fail because the old sudo address is no longer the sudo address
 	failingAddressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = failingAddressChangeCmd.Output()
+	_, err = failingAddressChangeCmd.CombinedOutput()
 	assert.Error(t, err)
 }
