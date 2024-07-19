@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/big"
 	"regexp"
+	"strings"
+	"time"
 
 	accountsproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/accounts/v1alpha1"
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
@@ -85,41 +87,29 @@ func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransact
 		return result, errors.New(result.Log)
 	}
 
-	// Create a new RPC client
-	wsClient, err := http.New(c.websocket, "/websocket")
-	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
-	}
-	// close the client on function exit
-	defer func(wsClient *http.HTTP) {
-		err := wsClient.Stop()
+	// wait for the tx to be included in a block
+	retryCount := 50
+	retryInterval := 250 * time.Millisecond
+	for i := 0; i < retryCount; i++ {
+		t, err := c.client.Tx(ctx, result.Hash, true)
 		if err != nil {
-			log.Fatalf("Failed to stop WebSocket client: %v", err)
+			// manually ignore error that says tx not found
+			if strings.HasPrefix(err.Error(), "error in json rpc client, with http response metadata: (Status: 200 OK, Protocol HTTP/1.1). RPC error -32603") {
+				log.Debug("tx not found, retrying...")
+				// wait a short amount of time between retries
+				time.Sleep(retryInterval)
+				continue
+			} else {
+				return result, err
+			}
+
 		}
-	}(wsClient)
-
-	// Start the WebSocket client
-	err = wsClient.Start()
-	if err != nil {
-		log.Fatalf("Failed to start WebSocket client: %v", err)
+		if t != nil {
+			return result, nil
+		}
 	}
 
-	// Subscribe to transaction events
-	query := fmt.Sprintf("tm.event = 'Tx' AND tx.hash = '%X'", result.Hash)
-	out, err := wsClient.Subscribe(ctx, "clientID", query)
-	if err != nil {
-		log.Fatalf("Failed to subscribe to events: %v", err)
-	}
-
-	// Wait for and handle results from the channel
-	for event := range out {
-		log.Debug("Tx Event: ", event)
-		break
-	}
-
-	// FIXME - is add asset fee something that should have sync option?
-
-	return result, resultErr
+	return result, fmt.Errorf("tx %s not found after %d retries", result.Hash, retryCount)
 }
 
 func (c *Client) GetBalances(ctx context.Context, addr string) ([]*BalanceResponse, error) {

@@ -35,12 +35,12 @@ func TestAddAndRemoveFeeAssets(t *testing.T) {
 	//  TXs hanging. due to nonce issue?
 
 	// add a fee asset
-	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
-	_, err := addFeeAssetCmdSync.CombinedOutput()
+	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	res, err := addFeeAssetCmdSync.CombinedOutput()
 	assert.NoError(t, err)
 
 	// remove a fee asset
-	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
+	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
 	_, err = removeFeeAssetCmdSync.CombinedOutput()
 	assert.NoError(t, err)
 
@@ -251,7 +251,7 @@ func TestUpdateSudoAddress(t *testing.T) {
 	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
 	_, err := addressChangeCmd.CombinedOutput()
 	assert.NoError(t, err)
-	
+
 	// async
 	// change the sudo address
 	addressChangeCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
