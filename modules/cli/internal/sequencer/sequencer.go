@@ -218,7 +218,6 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 		return &TransferResponse{}, err
 	}
 	log.Debugf("Broadcast response: %v", resp)
-
 	// response
 	hash := hex.EncodeToString(resp.Hash)
 	amount := fmt.Sprint(client.ProtoU128ToBigInt(opts.Amount))
