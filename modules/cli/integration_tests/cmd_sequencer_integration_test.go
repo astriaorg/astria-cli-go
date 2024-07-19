@@ -25,6 +25,139 @@ const SequencerChainID = "sequencer-test-chain-0"
 
 const TestBinPath = "../../../bin/astria-go-testy"
 
+// NOTE - the ordering of these tests matters
+
+func TestAddAndRemoveFeeAssets(t *testing.T) {
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+
+	// test synchronously first
+	// FIXME - originally had a separate test for this, but tests run concurrently and caused issues with
+	//  TXs hanging. due to nonce issue?
+
+	// add a fee asset
+	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
+	_, err := addFeeAssetCmdSync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
+	_, err = removeFeeAssetCmdSync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// NOTE - test synchronously
+	// add a fee asset
+	testAssetName := "testAsset"
+	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = addFeeAssetCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = removeFeeAssetCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// wait a bit for async tx to be processed
+	time.Sleep(2 * time.Second)
+}
+
+func TestTransferAndGetNonce(t *testing.T) {
+	// get initial blockheight
+	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	// FIXME - using Output (vs CombinedOutput) only returns Stdout, but using CombinedOutput returns all logging as well,
+	//  which can break json marshalling. how can we use CombinedOutput so that we get stderr info in case something fails?
+	//  would rather not do any crazy string filtering/matching, but might be a good idea for the test.
+	//  could also use jq in the test? probably best option.
+	blockHeightOutput, err := getBlockHeightCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
+	}
+	var blockHeight sequencer.BlockheightResponse
+	err = json.Unmarshal(blockHeightOutput, &blockHeight)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
+	}
+	initialBlockHeight := blockHeight.Blockheight
+
+	// get initial nonce
+	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
+	nonceOutput, err := getNonceCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
+	}
+	var nonce sequencer.NonceResponse
+	err = json.Unmarshal(nonceOutput, &nonce)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal nonce json output: %v", err)
+	}
+	initialNonce := nonce.Nonce
+
+	// get initial balance
+	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
+	balanceOutput, err := getBalanceCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
+	}
+	var toBalances sequencer.BalancesResponse
+	err = json.Unmarshal(balanceOutput, &toBalances)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal balance json output: %v", err)
+	}
+	initialBalance := toBalances[0].Balance
+
+	// transfer
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	amtStr := fmt.Sprintf("%d", TransferAmount)
+	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", SequencerChainID, "--sequencer-url", SequencerURL)
+	transferOutput, err := transferCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
+	}
+
+	// get blockheight after transfer
+	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	blockHeightAfterOutput, err := getBlockHeightAfterCmd.Output()
+	if err != nil {
+		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
+	}
+	var blockHeightAfter sequencer.BlockheightResponse
+	err = json.Unmarshal(blockHeightAfterOutput, &blockHeightAfter)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
+	}
+	finalBlockHeight := blockHeightAfter.Blockheight
+	assert.Greaterf(t, finalBlockHeight, initialBlockHeight, "Blockheight should increase")
+
+	// get nonce after transfer
+	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
+	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
+	}
+	var nonceAfter sequencer.NonceResponse
+	err = json.Unmarshal(nonceAfterOutput, &nonceAfter)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal nonce json output: %v", err)
+	}
+	finalNonce := nonceAfter.Nonce
+	expectedFinalNonce := initialNonce + 1
+	assert.Equal(t, expectedFinalNonce, finalNonce)
+
+	// get balance after transfer
+	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
+	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
+	}
+	var toBalancesAfter sequencer.BalancesResponse
+	err = json.Unmarshal(balanceAfterOutput, &toBalancesAfter)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal balance json output: %v", err)
+	}
+	expectedFinalBalance := big.NewInt(0).Add(initialBalance, big.NewInt(TransferAmount))
+	finalBalance := toBalancesAfter[0].Balance
+	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
+}
+
 func TestCreateaccount(t *testing.T) {
 	createaccountCmd := exec.Command(TestBinPath, "sequencer", "createaccount", "--insecure", "--json")
 	createaccountOutput, err := createaccountCmd.CombinedOutput()
@@ -57,7 +190,6 @@ func TestTransferFlags(t *testing.T) {
 }
 
 func TestRemoveAndAddIBCRelayer(t *testing.T) {
-	// FIXME - this test hangs whenever it is run after TestTransferAndGetNonce, why??
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 
 	// remove an address from the existing IBC relayer set
@@ -119,162 +251,12 @@ func TestUpdateSudoAddress(t *testing.T) {
 	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
 	_, err := addressChangeCmd.CombinedOutput()
 	assert.NoError(t, err)
-
-	// using the old sudo address to try to update the sudo address again, this
-	// will fail because the old sudo address is no longer the sudo address
-	//failingAddressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	//_, err = failingAddressChangeCmd.CombinedOutput()
-	//assert.Error(t, err)
-
+	
 	// async
 	// change the sudo address
 	addressChangeCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
 	_, err = addressChangeCmdAsync.CombinedOutput()
 	assert.NoError(t, err)
-	//
-	//// using the old sudo address to try to update the sudo address again, this
-	//// will fail because the old sudo address is no longer the sudo address
-	//failingAddressChangeCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	//_, err = failingAddressChangeCmdAsync.CombinedOutput()
-	//assert.Error(t, err)
-	//
-	//// wait a bit for async tx to be processed
-	//time.Sleep(2 * time.Second)
-}
-
-func TestTransferAndGetNonce(t *testing.T) {
-	time.Sleep(2 * time.Second)
-	// get initial blockheight
-	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
-	// FIXME - using Output (vs CombinedOutput) only returns Stdout, but using CombinedOutput returns all logging as well,
-	//  which can break json marshalling. how can we use CombinedOutput so that we get stderr info in case something fails?
-	//  would rather not do any crazy string filtering/matching, but might be a good idea for the test.
-	//  could also use jq in the test? probably best option.
-	blockHeightOutput, err := getBlockHeightCmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
-	}
-	var blockHeight sequencer.BlockheightResponse
-	err = json.Unmarshal(blockHeightOutput, &blockHeight)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
-	}
-	initialBlockHeight := blockHeight.Blockheight
-
-	// get initial nonce
-	getNonceCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
-	nonceOutput, err := getNonceCmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to get nonce: %s, %v", nonceOutput, err)
-	}
-	var nonce sequencer.NonceResponse
-	err = json.Unmarshal(nonceOutput, &nonce)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal nonce json output: %v", err)
-	}
-	initialNonce := nonce.Nonce
-
-	// get initial balance
-	getBalanceCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
-	balanceOutput, err := getBalanceCmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to get balance: %s, %v", balanceOutput, err)
-	}
-	var toBalances sequencer.BalancesResponse
-	err = json.Unmarshal(balanceOutput, &toBalances)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal balance json output: %v", err)
-	}
-	initialBalance := toBalances[0].Balance
-
-	// transfer
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	amtStr := fmt.Sprintf("%d", TransferAmount)
-	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", SequencerChainID, "--sequencer-url", SequencerURL)
-	transferOutput, err := transferCmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
-	}
-
-	// wait for transaction to be processed
-	// FIXME - this could be flaky. can we check for the tx?
-
-	// get blockheight after transfer
-	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
-	blockHeightAfterOutput, err := getBlockHeightAfterCmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightAfterOutput, err)
-	}
-	var blockHeightAfter sequencer.BlockheightResponse
-	err = json.Unmarshal(blockHeightAfterOutput, &blockHeightAfter)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal blockheight json output: %v", err)
-	}
-	finalBlockHeight := blockHeightAfter.Blockheight
-	assert.Greaterf(t, finalBlockHeight, initialBlockHeight, "Blockheight should increase")
-
-	// get nonce after transfer
-	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
-	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
-	}
-	var nonceAfter sequencer.NonceResponse
-	err = json.Unmarshal(nonceAfterOutput, &nonceAfter)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal nonce json output: %v", err)
-	}
-	finalNonce := nonceAfter.Nonce
-	expectedFinalNonce := initialNonce + 1
-	assert.Equal(t, expectedFinalNonce, finalNonce)
-
-	// get balance after transfer
-	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
-	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
-	}
-	var toBalancesAfter sequencer.BalancesResponse
-	err = json.Unmarshal(balanceAfterOutput, &toBalancesAfter)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal balance json output: %v", err)
-	}
-	expectedFinalBalance := big.NewInt(0).Add(initialBalance, big.NewInt(TransferAmount))
-	finalBalance := toBalancesAfter[0].Balance
-	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
-}
-
-func TestAddAndRemoveFeeAssets(t *testing.T) {
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-
-	// test synchronously first
-	// FIXME - originally had a separate test for this, but tests run concurrently and caused issues with
-	//  TXs hanging. due to nonce issue?
-
-	// add a fee asset
-	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
-	_, err := addFeeAssetCmdSync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// remove a fee asset
-	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--log-level=debug")
-	_, err = removeFeeAssetCmdSync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// NOTE - test synchronously
-	// add a fee asset
-	testAssetName := "testAsset"
-	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = addFeeAssetCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// remove a fee asset
-	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = removeFeeAssetCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// wait a bit for async tx to be processed
-	time.Sleep(2 * time.Second)
 }
 
 func TestGetBlock(t *testing.T) {
