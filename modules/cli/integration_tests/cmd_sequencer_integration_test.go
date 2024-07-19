@@ -30,8 +30,6 @@ const TestBinPath = "../../../bin/astria-go-testy"
 func TestAddAndRemoveFeeAssets(t *testing.T) {
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	// test synchronously first
-	// FIXME - originally had a separate test for this, but tests run concurrently and caused issues with
-	//  TXs hanging. due to nonce issue?
 
 	// add a fee asset
 	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
