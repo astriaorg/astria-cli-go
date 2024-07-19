@@ -27,7 +27,7 @@ func CreateAccount(prefix string) (*Account, error) {
 	address := signer.Address()
 	seed := signer.Seed()
 
-	log.Debugf("Address bytes: %s", hex.EncodeToString(address[:]))
+	log.Debugf("Address as hex: %x", address[:])
 
 	addr, err := bech32m.EncodeFromBytes(prefix, address)
 	if err != nil {
@@ -56,7 +56,7 @@ func GetBalances(address string, sequencerURL string) (*BalancesResponse, error)
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	balances, err := c.GetBalances(ctx, address)
@@ -90,7 +90,7 @@ func GetBlock(opts BlockOpts) (*BlockResponse, error) {
 		return &BlockResponse{}, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	block, err := c.GetBlock(ctx, &opts.BlockHeight)
@@ -115,7 +115,7 @@ func GetBlockheight(sequencerURL string) (*BlockheightResponse, error) {
 		return &BlockheightResponse{}, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	blockheight, err := c.GetBlockHeight(ctx)
@@ -141,7 +141,7 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 		return &NonceResponse{}, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	nonce, err := c.GetNonce(ctx, address)
@@ -160,7 +160,7 @@ func GetNonce(address string, sequencerURL string) (*NonceResponse, error) {
 // Transfer transfers an amount from one address to another.
 // It returns the hash of the transaction.
 func Transfer(opts TransferOpts) (*TransferResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// client
@@ -212,20 +212,20 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &TransferResponse{}, err
 	}
 	log.Debugf("Broadcast response: %v", resp)
-
 	// response
 	hash := hex.EncodeToString(resp.Hash)
+	amount := fmt.Sprint(client.ProtoU128ToBigInt(opts.Amount))
 	tr := &TransferResponse{
 		From:   addr.String(),
 		To:     opts.ToAddress.Bech32M,
 		Nonce:  nonce,
-		Amount: opts.Amount.String(),
+		Amount: amount,
 		TxHash: hash,
 	}
 
@@ -234,7 +234,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 }
 
 func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// client
@@ -288,7 +288,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 
 	// broadcast transaction
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &InitBridgeResponse{}, err
@@ -310,7 +310,7 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 
 // BridgeLock locks tokens on the source chain and initiates a cross-chain transfer to the destination chain.
 func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("BridgeLockOpts: %v", opts)
@@ -365,7 +365,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &BridgeLockResponse{}, err
@@ -389,7 +389,7 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 
 // AddFeeAsset adds a fee asset to the sequencer.
 func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("AddFeeAssetOpts: %v", opts)
@@ -442,7 +442,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &FeeAssetResponse{}, err
@@ -464,7 +464,7 @@ func AddFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 
 // RemoveFeeAsset removes a fee asset from the sequencer.
 func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("RemoveFeeAssetOpts: %v", opts)
@@ -517,7 +517,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &FeeAssetResponse{}, err
@@ -539,7 +539,7 @@ func RemoveFeeAsset(opts FeeAssetOpts) (*FeeAssetResponse, error) {
 
 // AddIBCRelayer adds an IBC Relayer address to the sequencer.
 func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("AddIBCRelayerOpts: %v", opts)
@@ -592,7 +592,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &IBCRelayerResponse{}, err
@@ -614,7 +614,7 @@ func AddIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 
 // RemoveIBCRelayer removes an IBC Relayer address from the sequencer.
 func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("RemoveIBCRelayerOpts: %v", opts)
@@ -667,7 +667,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &IBCRelayerResponse{}, err
@@ -689,7 +689,7 @@ func RemoveIBCRelayer(opts IBCRelayerOpts) (*IBCRelayerResponse, error) {
 
 // ChangeSudoAddress changes the sudo address.
 func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("Change Sudo Address Opts: %v", opts)
@@ -740,7 +740,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &ChangeSudoAddressResponse{}, err
@@ -762,7 +762,7 @@ func ChangeSudoAddress(opts ChangeSudoAddressOpts) (*ChangeSudoAddressResponse, 
 
 // UpdateValidator changes the power of a validator.
 func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	log.Debugf("Update Validator Opts: %v", opts)
@@ -818,7 +818,7 @@ func UpdateValidator(opts UpdateValidatorOpts) (*UpdateValidatorResponse, error)
 	}
 
 	// broadcast tx
-	resp, err := c.BroadcastTxSync(ctx, signed)
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
 	if err != nil {
 		log.WithError(err).Error("Error broadcasting transaction")
 		return &UpdateValidatorResponse{}, err

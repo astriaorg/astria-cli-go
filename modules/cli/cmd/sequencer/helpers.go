@@ -16,7 +16,7 @@ import (
 // AddPortToURL adds a port to a URL if it doesn't already have one.
 // The port is needed for use with the Sequencer Client.
 func AddPortToURL(url string) string {
-	// Check if the URL already has a port
+	// check if the URL already has a port
 	matched, err := regexp.MatchString(`:\d+$`, url)
 	if err != nil {
 		log.WithError(err).Error("Error matching string")

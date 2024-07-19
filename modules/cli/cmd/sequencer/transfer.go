@@ -27,6 +27,7 @@ func init() {
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
 	flagHandler.BindStringFlag("asset", DefaultAsset, "The asset to be transferred.")
 	flagHandler.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used for paying fees.")
+	flagHandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 
 	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
 	transferCmd.MarkFlagsMutuallyExclusive("keyfile", "keyring-address", "privkey")
@@ -64,7 +65,10 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 
 	chainId := flagHandler.GetValue("sequencer-chain-id")
 
+	isAsync := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.TransferOpts{
+		IsAsync:          isAsync,
 		AddressPrefix:    DefaultAddressPrefix,
 		SequencerURL:     sequencerURL,
 		FromKey:          from,
