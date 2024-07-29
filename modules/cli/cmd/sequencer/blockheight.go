@@ -19,7 +19,7 @@ func init() {
 	SequencerCmd.AddCommand(blockheightCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(blockheightCmd, cmd.EnvPrefix)
-	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultDuskSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 }
 

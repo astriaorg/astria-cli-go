@@ -22,7 +22,7 @@ func init() {
 	SequencerCmd.AddCommand(blockCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(blockCmd, cmd.EnvPrefix)
-	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the block from.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultDuskSequencerURL, "The URL of the sequencer to retrieve the block from.")
 	flagHandler.BindBoolFlag("json", false, "Output the block in JSON format.")
 }
 

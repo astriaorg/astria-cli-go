@@ -20,13 +20,14 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(transferCmd, cmd.EnvPrefix)
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
-	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
-	flagHandler.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultDuskSequencerURL, "The URL of the sequencer.")
+	flagHandler.BindStringPFlag("sequencer-chain-id", "c", DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
 	flagHandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flagHandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
 	flagHandler.BindStringFlag("asset", DefaultAsset, "The asset to be transferred.")
 	flagHandler.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used for paying fees.")
+	flagHandler.BindStringFlag("network", "local", "Configure the values to target a specific network.")
 	flagHandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 
 	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
@@ -34,10 +35,26 @@ func init() {
 }
 
 func transferCmdHandler(c *cobra.Command, args []string) {
+
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	changed := flagHandler.GetChanged("network")
+	network := flagHandler.GetValue("network")
+	var networkSettings SequencerNetworkConfig
+	if changed {
+		networkSettings = GetSequencerNetworkSettingsFromConfig(network)
+	} else {
+		log.Info("Network defaults not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	var url string
+	if changed && !flagHandler.GetChanged("sequencer-url") {
+		url = networkSettings.SequencerURL
+	} else {
+		url = flagHandler.GetValue("sequencer-url")
+	}
 	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
@@ -60,10 +77,32 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	asset := flagHandler.GetValue("asset")
-	feeAsset := flagHandler.GetValue("fee-asset")
+	var asset string
+	if changed && !flagHandler.GetChanged("asset") {
+		asset = networkSettings.Asset
+	} else {
+		asset = flagHandler.GetValue("asset")
+	}
 
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	var feeAsset string
+	if changed && !flagHandler.GetChanged("fee-asset") {
+		feeAsset = networkSettings.FeeAsset
+	} else {
+		feeAsset = flagHandler.GetValue("fee-asset")
+	}
+
+	// var chainId string
+	// if changed && !flagHandler.GetChanged("sequencer-chain-id") {
+	// 	chainId = networkSettings.SequencerChainId
+	// } else {
+	// 	chainId = flagHandler.GetValue("sequencer-chain-id")
+	// }
+	chainId := ChooseFlagValue(
+		changed,
+		flagHandler.GetChanged("sequencer-chain-id"),
+		networkSettings.SequencerChainId,
+		flagHandler.GetValue("sequencer-chain-id"),
+	)
 
 	isAsync := flagHandler.GetValue("async") == "true"
 

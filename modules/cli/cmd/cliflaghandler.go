@@ -133,3 +133,15 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	log.Debugf("%s flag is not set, using default: %s", flagName, value)
 	return value
 }
+
+// GetChanged returns true if the flag has been changed from its default value.
+func (f *CliFlagHandler) GetChanged(flagName string) bool {
+	// confirm the flag exists
+	flag := f.Cmd.Flags().Lookup(flagName)
+	if flag == nil {
+		log.Errorf("Flag '%s' doesn't exist. Has it been bound?", flagName)
+		panic(fmt.Sprintf("getValue: flag doesn't exist: %s", flagName))
+	}
+
+	return f.Cmd.Flags().Changed(flagName)
+}
