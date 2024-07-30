@@ -90,6 +90,7 @@ func init() {
 	sudoCmd.AddCommand(sudoAddressChangeCmd)
 
 	flaghandler := cmd.CreateCliFlagHandler(sudoAddressChangeCmd, cmd.EnvPrefix)
+	flaghandler.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flaghandler.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	flaghandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to update the sudo address on.")

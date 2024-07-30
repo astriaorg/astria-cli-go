@@ -171,6 +171,7 @@ func init() {
 	feeAssetCmd.AddCommand(addFeeAssetCmd)
 
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
+	afafh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	afafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to add fee asset to.")
 	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	afafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
@@ -184,6 +185,7 @@ func init() {
 	feeAssetCmd.AddCommand(removeFeeAssetCmd)
 
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
+	rfafh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	rfafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to remove fee asset from.")
 	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	rfafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")

@@ -173,6 +173,7 @@ func init() {
 	IBCRelayerCmd.AddCommand(addIBCRelayerCmd)
 
 	aibfh := cmd.CreateCliFlagHandler(addIBCRelayerCmd, cmd.EnvPrefix)
+	aibfh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	aibfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to add the relayer address to.")
 	aibfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	aibfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
@@ -186,6 +187,7 @@ func init() {
 	IBCRelayerCmd.AddCommand(removeIBCRelayerCmd)
 
 	ribfh := cmd.CreateCliFlagHandler(removeIBCRelayerCmd, cmd.EnvPrefix)
+	ribfh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	ribfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to remove the relayer address from.")
 	ribfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	ribfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
