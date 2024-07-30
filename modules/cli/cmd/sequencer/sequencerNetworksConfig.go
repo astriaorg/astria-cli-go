@@ -79,31 +79,42 @@ func LoadSequencerNetworkConfigsOrPanic(path string) SequencerNetworkConfigs {
 	return config
 }
 
-// CreateSequencerNetworkConfigs creates a networks configuration file at the
-// given path. It will skip initialization if the file already exists. It will
-// return an error if the file cannot be created or written to.
-func CreateSequencerNetworkConfigs(path string) error {
+// BuildSequencerNetworkConfigsFilepath returns the path to the sequencer
+// networks configuration file. The file is located in the user's home directory
+// in the default Astria config directory (~/.astria/).
+func BuildSequencerNetworkConfigsFilepath() string {
+	homePath, err := os.UserHomeDir()
+	if err != nil {
+		log.WithError(err).Error("Error getting home dir")
+		panic(err)
+	}
+	return filepath.Join(homePath, DefaultConfigDirName, DefaultSequencerNetworksConfigFilename)
+}
 
+// CreateSequencerNetworkConfigs creates a sequencer networks configuration file at the
+// given path. It will skip initialization if the file already exists. It will
+// panic if the file cannot be created or if there is an error encoding the
+// NetworksConfigs struct to a file.
+func CreateSequencerNetworkConfigs(path string) {
 	_, err := os.Stat(path)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", path)
-		return nil
+		return
 	}
 
 	config := DefaultNetworksConfigs()
 
 	file, err := os.Create(path)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer file.Close()
 
 	// encode the struct to TOML and write to the file
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
-		return err
+		panic(err)
 	}
 	log.Infof("New network config file created successfully: %s\n", path)
-	return nil
 }
 
 // GetSequencerNetworkSettingsFromConfig returns the SequencerNetworkConfig for
@@ -111,23 +122,8 @@ func CreateSequencerNetworkConfigs(path string) error {
 // config file exists, creates it if it does not, and then loads the config.
 // It will panic if the network is not one of 'local', 'dusk', 'dawn', or
 // 'mainnet', or if the config file cannot be created or loaded.
-func GetSequencerNetworkSettingsFromConfig(network string) SequencerNetworkConfig {
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	sequencerConfigPath := filepath.Join(homePath, DefaultConfigDirName, DefaultSequencerNetworksConfigFilename)
-
-	log.Info("Network flag changed")
-
-	err = CreateSequencerNetworkConfigs(sequencerConfigPath)
-	if err != nil {
-		log.WithError(err).Error("Error creating sequencer networks config file")
-		panic(err)
-	}
-
-	sequencerConfig := LoadSequencerNetworkConfigsOrPanic(sequencerConfigPath)
+func GetSequencerNetworkSettingsFromConfig(network, path string) SequencerNetworkConfig {
+	sequencerConfig := LoadSequencerNetworkConfigsOrPanic(path)
 
 	var networkSettings SequencerNetworkConfig
 	switch network {
@@ -146,8 +142,24 @@ func GetSequencerNetworkSettingsFromConfig(network string) SequencerNetworkConfi
 	return networkSettings
 }
 
-// TODO: Add a description for this function.
+// ChooseFlagValue returns the value of the flag based on the usage of the
+// specified flag and the usage of the network config flag.
 func ChooseFlagValue(networksChange bool, flagChange bool, configValue string, flagValue string) string {
+	// There are four possible scenarios for setting a flag's value:
+	// 1. network flag hasn't changed & flag hasn't changed
+	//    -> return the flag default value
+	// 2. network flag hasn't changed & flag has changed
+	//    -> return the flag value
+	// 3. network flag has changed & flag hasn't changed
+	//    -> return the network config value
+	// 4. network flag has changed & flag has changed
+	//    -> return the flag value
+	//
+	// Using Cobra, situations 1, 2, and 4 are already handled.
+	// If situation 3 occurs, the network config value needs to be handled
+	// specifically.
+	// The logic below will return the config value if situation 3 occurs,
+	// otherwise it will return the flag value output by Cobra.
 	if networksChange && !flagChange {
 		return configValue
 	} else {

@@ -38,23 +38,25 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	changed := flagHandler.GetChanged("network")
+	networkDefaultsUsed := flagHandler.GetChanged("network")
 	network := flagHandler.GetValue("network")
 	var networkSettings SequencerNetworkConfig
-	if changed {
-		networkSettings = GetSequencerNetworkSettingsFromConfig(network)
+	if networkDefaultsUsed {
+		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
+		CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
 	} else {
 		log.Info("Network defaults not specified. Using flag values.")
 	}
 
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	var url string
-	if changed && !flagHandler.GetChanged("sequencer-url") {
-		url = networkSettings.SequencerURL
-	} else {
-		url = flagHandler.GetValue("sequencer-url")
-	}
+	url := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
@@ -77,28 +79,22 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	var asset string
-	if changed && !flagHandler.GetChanged("asset") {
-		asset = networkSettings.Asset
-	} else {
-		asset = flagHandler.GetValue("asset")
-	}
+	asset := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("asset"),
+		networkSettings.Asset,
+		flagHandler.GetValue("asset"),
+	)
 
-	var feeAsset string
-	if changed && !flagHandler.GetChanged("fee-asset") {
-		feeAsset = networkSettings.FeeAsset
-	} else {
-		feeAsset = flagHandler.GetValue("fee-asset")
-	}
+	feeAsset := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("fee-asset"),
+		networkSettings.FeeAsset,
+		flagHandler.GetValue("fee-asset"),
+	)
 
-	// var chainId string
-	// if changed && !flagHandler.GetChanged("sequencer-chain-id") {
-	// 	chainId = networkSettings.SequencerChainId
-	// } else {
-	// 	chainId = flagHandler.GetValue("sequencer-chain-id")
-	// }
 	chainId := ChooseFlagValue(
-		changed,
+		networkDefaultsUsed,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
