@@ -63,6 +63,8 @@ type BaseConfig struct {
 	Astria_composer_no_metrics                 bool   `mapstructure:"astria_composer_no_metrics" toml:"astria_composer_no_metrics"`
 	Astria_composer_metrics_http_listener_addr string `mapstructure:"astria_composer_metrics_http_listener_addr" toml:"astria_composer_metrics_http_listener_addr"`
 	Astria_composer_grpc_addr                  string `mapstructure:"astria_composer_grpc_addr" toml:"astria_composer_grpc_addr"`
+	Astria_composer_sequencer_address_prefix   string `mapstructure:"astria_composer_sequencer_address_prefix" toml:"astria_composer_sequencer_address_prefix"`
+	Astria_composer_fee_asset                  string `mapstructure:"astria_composer_fee_asset" toml:"astria_composer_fee_asset"`
 
 	// global
 	No_color string `mapstructure:"no_color" toml:"no_color"`
@@ -125,6 +127,8 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		Astria_composer_no_metrics:                 true,
 		Astria_composer_metrics_http_listener_addr: "127.0.0.1:9000",
 		Astria_composer_grpc_addr:                  "0.0.0.0:0",
+		Astria_composer_sequencer_address_prefix:   "astria",
+		Astria_composer_fee_asset:                  "nria",
 
 		No_color: "",
 
