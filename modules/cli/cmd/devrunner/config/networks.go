@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const duskNum = "8"
+const duskNum = "9"
 const dawnNum = "0"
 
 type BaseConfig struct {
