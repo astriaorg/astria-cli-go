@@ -29,9 +29,26 @@ and is the only actor authorized to transfer out of this account.`,
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	networkDefaultsUsed := flagHandler.GetChanged("network")
+	var networkSettings SequencerNetworkConfig
+	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
+		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
+		CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	} else {
+		log.Info("Target network not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	url := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
@@ -51,10 +68,26 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 
 	rollupName := args[0]
 
-	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	sequencerChainID := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-chain-id"),
+		networkSettings.SequencerChainId,
+		flagHandler.GetValue("sequencer-chain-id"),
+	)
 
-	asset := flagHandler.GetValue("asset")
-	feeAsset := flagHandler.GetValue("fee-asset")
+	asset := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("asset"),
+		networkSettings.Asset,
+		flagHandler.GetValue("asset"),
+	)
+
+	feeAsset := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("fee-asset"),
+		networkSettings.FeeAsset,
+		flagHandler.GetValue("fee-asset"),
+	)
 
 	sa := flagHandler.GetValue("sudo-address")
 	if sa == "" {
@@ -116,9 +149,26 @@ bridged to a destination chain address if an IBC relayer is running.`,
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	networkDefaultsUsed := flagHandler.GetChanged("network")
+	var networkSettings SequencerNetworkConfig
+	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
+		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
+		CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	} else {
+		log.Info("Target network not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	url := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := AddPortToURL(url)
 
 	priv, err := GetPrivateKeyFromFlags(c)
@@ -141,10 +191,26 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	to := args[1]
 	toAddress := AddressFromText(to)
 
-	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	sequencerChainID := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-chain-id"),
+		networkSettings.SequencerChainId,
+		flagHandler.GetValue("sequencer-chain-id"),
+	)
 
-	asset := flagHandler.GetValue("asset")
-	feeAsset := flagHandler.GetValue("fee-asset")
+	asset := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("asset"),
+		networkSettings.Asset,
+		flagHandler.GetValue("asset"),
+	)
+
+	feeAsset := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("fee-asset"),
+		networkSettings.FeeAsset,
+		flagHandler.GetValue("fee-asset"),
+	)
 
 	destinationChainAddress := args[2]
 

@@ -45,7 +45,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		CreateSequencerNetworkConfigs(networksConfigPath)
 		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
 	} else {
-		log.Info("Network defaults not specified. Using flag values.")
+		log.Info("Target network not specified. Using flag values.")
 	}
 
 	printJSON := flagHandler.GetValue("json") == "true"

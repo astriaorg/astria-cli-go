@@ -22,12 +22,34 @@ var validatorUpdateCmd = &cobra.Command{
 
 func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	networkDefaultsUsed := flagHandler.GetChanged("network")
+	var networkSettings sequencercmd.SequencerNetworkConfig
+	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
+		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
+		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	} else {
+		log.Info("Target network not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	url := sequencercmd.ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	chainId := sequencercmd.ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-chain-id"),
+		networkSettings.SequencerChainId,
+		flagHandler.GetValue("sequencer-chain-id"),
+	)
 
 	pk := args[0]
 	pubKey, err := sequencercmd.PublicKeyFromText(pk)

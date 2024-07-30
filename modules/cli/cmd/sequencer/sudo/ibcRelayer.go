@@ -26,12 +26,34 @@ var addIBCRelayerCmd = &cobra.Command{
 
 func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	networkDefaultsUsed := flagHandler.GetChanged("network")
+	var networkSettings sequencercmd.SequencerNetworkConfig
+	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
+		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
+		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	} else {
+		log.Info("Target network not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	url := sequencercmd.ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	chainId := sequencercmd.ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-chain-id"),
+		networkSettings.SequencerChainId,
+		flagHandler.GetValue("sequencer-chain-id"),
+	)
 
 	ibcAdd := args[0]
 	addIbcAddress := sequencercmd.AddressFromText(ibcAdd)
@@ -80,12 +102,34 @@ var removeIBCRelayerCmd = &cobra.Command{
 
 func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	networkDefaultsUsed := flagHandler.GetChanged("network")
+	var networkSettings sequencercmd.SequencerNetworkConfig
+	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
+		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
+		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	} else {
+		log.Info("Target network not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	url := sequencercmd.ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	chainId := sequencercmd.ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-chain-id"),
+		networkSettings.SequencerChainId,
+		flagHandler.GetValue("sequencer-chain-id"),
+	)
 
 	ibcRmv := args[0]
 	rmvIbcAddress := sequencercmd.AddressFromText(ibcRmv)

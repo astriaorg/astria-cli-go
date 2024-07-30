@@ -28,9 +28,26 @@ func init() {
 
 func blockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	networkDefaultsUsed := flagHandler.GetChanged("network")
+	var networkSettings SequencerNetworkConfig
+	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
+		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
+		CreateSequencerNetworkConfigs(networksConfigPath)
+		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	} else {
+		log.Info("Target network not specified. Using flag values.")
+	}
+
 	printJSON := flagHandler.GetValue("json") == "true"
 
-	url := flagHandler.GetValue("sequencer-url")
+	url := ChooseFlagValue(
+		networkDefaultsUsed,
+		flagHandler.GetChanged("sequencer-url"),
+		networkSettings.SequencerURL,
+		flagHandler.GetValue("sequencer-url"),
+	)
 	sequencerURL := AddPortToURL(url)
 
 	height, err := strconv.ParseInt(args[0], 10, 64)
