@@ -35,7 +35,6 @@ func init() {
 }
 
 func transferCmdHandler(c *cobra.Command, args []string) {
-
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	networkDefaultsUsed := flagHandler.GetChanged("network")

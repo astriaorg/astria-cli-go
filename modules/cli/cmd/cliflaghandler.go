@@ -140,7 +140,7 @@ func (f *CliFlagHandler) GetChanged(flagName string) bool {
 	flag := f.Cmd.Flags().Lookup(flagName)
 	if flag == nil {
 		log.Errorf("Flag '%s' doesn't exist. Has it been bound?", flagName)
-		panic(fmt.Sprintf("getValue: flag doesn't exist: %s", flagName))
+		panic(fmt.Sprintf("getChanged: flag doesn't exist: %s", flagName))
 	}
 
 	return f.Cmd.Flags().Changed(flagName)
