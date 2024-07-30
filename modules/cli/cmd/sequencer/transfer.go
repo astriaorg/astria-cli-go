@@ -39,9 +39,9 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	networkDefaultsUsed := flagHandler.GetChanged("network")
-	network := flagHandler.GetValue("network")
 	var networkSettings SequencerNetworkConfig
 	if networkDefaultsUsed {
+		network := flagHandler.GetValue("network")
 		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
 		CreateSequencerNetworkConfigs(networksConfigPath)
 		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
