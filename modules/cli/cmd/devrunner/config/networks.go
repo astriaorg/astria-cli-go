@@ -57,13 +57,13 @@ type BaseConfig struct {
 	Astria_composer_sequencer_chain_id         string `mapstructure:"astria_composer_sequencer_chain_id" toml:"astria_composer_sequencer_chain_id"`
 	Astria_composer_rollups                    string `mapstructure:"astria_composer_rollups" toml:"astria_composer_rollups"`
 	Astria_composer_private_key_file           string `mapstructure:"astria_composer_private_key_file" toml:"astria_composer_private_key_file"`
+	Astria_composer_sequencer_address_prefix   string `mapstructure:"astria_composer_sequencer_address_prefix" toml:"astria_composer_sequencer_address_prefix"`
 	Astria_composer_max_submit_interval_ms     int    `mapstructure:"astria_composer_max_submit_interval_ms" toml:"astria_composer_max_submit_interval_ms"`
 	Astria_composer_max_bytes_per_bundle       int    `mapstructure:"astria_composer_max_bytes_per_bundle" toml:"astria_composer_max_bytes_per_bundle"`
 	Astria_composer_bundle_queue_capacity      int    `mapstructure:"astria_composer_bundle_queue_capacity" toml:"astria_composer_bundle_queue_capacity"`
 	Astria_composer_no_metrics                 bool   `mapstructure:"astria_composer_no_metrics" toml:"astria_composer_no_metrics"`
 	Astria_composer_metrics_http_listener_addr string `mapstructure:"astria_composer_metrics_http_listener_addr" toml:"astria_composer_metrics_http_listener_addr"`
 	Astria_composer_grpc_addr                  string `mapstructure:"astria_composer_grpc_addr" toml:"astria_composer_grpc_addr"`
-	Astria_composer_sequencer_address_prefix   string `mapstructure:"astria_composer_sequencer_address_prefix" toml:"astria_composer_sequencer_address_prefix"`
 	Astria_composer_fee_asset                  string `mapstructure:"astria_composer_fee_asset" toml:"astria_composer_fee_asset"`
 
 	// global
@@ -121,13 +121,13 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		Astria_composer_sequencer_chain_id:         "astria-dusk-" + duskNum,
 		Astria_composer_rollups:                    "astriachain::ws://127.0.0.1:8546",
 		Astria_composer_private_key_file:           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
+		Astria_composer_sequencer_address_prefix:   "astria",
 		Astria_composer_max_submit_interval_ms:     2000,
 		Astria_composer_max_bytes_per_bundle:       200000,
 		Astria_composer_bundle_queue_capacity:      40000,
 		Astria_composer_no_metrics:                 true,
 		Astria_composer_metrics_http_listener_addr: "127.0.0.1:9000",
 		Astria_composer_grpc_addr:                  "0.0.0.0:0",
-		Astria_composer_sequencer_address_prefix:   "astria",
 		Astria_composer_fee_asset:                  "nria",
 
 		No_color: "",
