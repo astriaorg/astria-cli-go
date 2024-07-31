@@ -119,8 +119,6 @@ func CreateSequencerNetworkConfigs(path string) {
 // GetSequencerNetworkSettingsFromConfig returns the SequencerNetworkConfig for
 // the given network. The function automatically checks if the sequencer network
 // config file exists, creates it if it does not, and then loads the config.
-// It will panic if the network is not one of 'local', 'dusk', 'dawn', or
-// 'mainnet', or if the config file cannot be created or loaded.
 func GetSequencerNetworkSettingsFromConfig(network, path string) SequencerNetworkConfig {
 	sequencerConfig := LoadSequencerNetworkConfigsOrPanic(path)
 
