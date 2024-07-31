@@ -15,6 +15,8 @@ import (
 type CliFlagHandler struct {
 	Cmd       *cobra.Command
 	EnvPrefix string
+
+	configOverrideFlag string
 }
 
 // CreateCliFlagHandler creates a new CliFlagHandler.
@@ -23,6 +25,11 @@ func CreateCliFlagHandler(c *cobra.Command, envPrefix string) *CliFlagHandler {
 		Cmd:       c,
 		EnvPrefix: envPrefix,
 	}
+}
+
+// TODO - desicription
+func (f *CliFlagHandler) SetConfigOverrideFlag(flagName string) {
+	f.configOverrideFlag = flagName
 }
 
 // BindStringFlag binds a string flag to a cobra flag and viper env var handler for a
@@ -144,4 +151,35 @@ func (f *CliFlagHandler) GetChanged(flagName string) bool {
 	}
 
 	return f.Cmd.Flags().Changed(flagName)
+}
+
+// TODO - desicription
+func (f *CliFlagHandler) GetValueOrOverride(flagName, overrideValue string) string {
+	if f.configOverrideFlag == "" {
+		log.Fatal("GetValueOrOverride: config override flag is empty. Has it been bound?")
+		panic("config override flag is empty")
+	}
+	overrideFlagUsed := f.GetChanged(f.configOverrideFlag)
+	regularFlagUsed := f.GetChanged(flagName)
+
+	// There are four possible scenarios for overridding a flag's value:
+	// 1. The override flag hasn't changed & the regular flag hasn't changed
+	//    -> return the flag default value
+	// 2. The override flag hasn't changed & the regular flag has changed
+	//    -> return the flag value
+	// 3. The override flag has changed & the regular flag hasn't changed
+	//    -> return the network config value
+	// 4. The override flag has changed & the regular flag has changed
+	//    -> return the flag value
+	//
+	// Using Cobra, situations 1, 2, and 4 are already handled.
+	// If situation 3 occurs, the network config value needs to be handled
+	// specifically.
+	// The logic below will return the config value if situation 3 occurs,
+	// otherwise it will return the flag value output by Cobra.
+	if overrideFlagUsed && !regularFlagUsed {
+		return overrideValue
+	} else {
+		return f.GetValue(flagName)
+	}
 }

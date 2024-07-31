@@ -27,6 +27,8 @@ func init() {
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
 	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
+
+	flagHandler.SetConfigOverrideFlag("network")
 }
 
 func nonceCmdHandler(c *cobra.Command, args []string) {
@@ -34,10 +36,11 @@ func nonceCmdHandler(c *cobra.Command, args []string) {
 
 	networkConfig := GetNetworkConfigFromFlags(flagHandler)
 
-	sequencerURL := networkConfig.SequencerURL
-	if flagHandler.GetChanged("sequencer-url") {
-		sequencerURL = flagHandler.GetValue("sequencer-url")
-	}
+	sequencerURL := flagHandler.GetValueOrOverride("sequencer-url", networkConfig.SequencerURL)
+	// sequencerURL := networkConfig.SequencerURL
+	// if flagHandler.GetChanged("sequencer-url") {
+	// 	sequencerURL = flagHandler.GetValue("sequencer-url")
+	// }
 	sequencerURL = AddPortToURL(sequencerURL)
 
 	printJSON := flagHandler.GetValue("json") == "true"
