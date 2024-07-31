@@ -19,33 +19,15 @@ var sudoAddressChangeCmd = &cobra.Command{
 }
 
 func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-
-	useNetworkPreset := flagHandler.GetChanged("network")
-	var networkSettings sequencercmd.SequencerNetworkConfig
-	if useNetworkPreset {
-		network := flagHandler.GetValue("network")
-		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
-		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
-		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	}
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := sequencercmd.GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := sequencercmd.ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-url"),
-		networkSettings.SequencerURL,
-		flagHandler.GetValue("sequencer-url"),
-	)
-	sequencerURL := sequencercmd.AddPortToURL(url)
-
-	chainId := sequencercmd.ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-chain-id"),
-		networkSettings.SequencerChainId,
-		flagHandler.GetValue("sequencer-chain-id"),
-	)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = sequencercmd.AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	to := args[0]
 	toAddress := sequencercmd.AddressFromText(to)
@@ -61,15 +43,13 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	isAsync := flagHandler.GetValue("async") == "true"
-
 	opts := sequencer.ChangeSudoAddressOpts{
 		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		UpdateAddress:    toAddress,
 		SequencerURL:     sequencerURL,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 	}
 	tx, err := sequencer.ChangeSudoAddress(opts)
 	if err != nil {

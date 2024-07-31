@@ -43,7 +43,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL = AddPortToURL(sequencerURL)
 	asset := flagHandler.GetValue("asset")
 	feeAsset := flagHandler.GetValue("fee-asset")
-	chainID := flagHandler.GetValue("sequencer-chain-id")
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
 
 	printJSON := flagHandler.GetValue("json") == "true"
 
@@ -78,7 +78,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		Amount:           amount,
 		Asset:            asset,
 		FeeAsset:         feeAsset,
-		SequencerChainID: chainID,
+		SequencerChainID: sequencerChainID,
 	}
 	tx, err := sequencer.Transfer(opts)
 	if err != nil {

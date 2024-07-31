@@ -28,26 +28,17 @@ and is the only actor authorized to transfer out of this account.`,
 }
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-
-	useNetworkPreset := flagHandler.GetChanged("network")
-	var networkSettings SequencerNetworkConfig
-	if useNetworkPreset {
-		network := flagHandler.GetValue("network")
-		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
-		CreateSequencerNetworkConfigs(networksConfigPath)
-		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	}
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-url"),
-		networkSettings.SequencerURL,
-		flagHandler.GetValue("sequencer-url"),
-	)
-	sequencerURL := AddPortToURL(url)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -65,27 +56,6 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	}
 
 	rollupName := args[0]
-
-	sequencerChainID := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-chain-id"),
-		networkSettings.SequencerChainId,
-		flagHandler.GetValue("sequencer-chain-id"),
-	)
-
-	asset := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("asset"),
-		networkSettings.Asset,
-		flagHandler.GetValue("asset"),
-	)
-
-	feeAsset := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("fee-asset"),
-		networkSettings.FeeAsset,
-		flagHandler.GetValue("fee-asset"),
-	)
 
 	sa := flagHandler.GetValue("sudo-address")
 	if sa == "" {
@@ -106,8 +76,6 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 		panic(fmt.Errorf("withdrawer address does not have the expected prefix: %s", DefaultAddressPrefix))
 	}
 	withdrawerAddress := AddressFromText(wa)
-
-	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.InitBridgeOpts{
 		IsAsync:           isAsync,
@@ -146,26 +114,17 @@ bridged to a destination chain address if an IBC relayer is running.`,
 }
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-
-	useNetworkPreset := flagHandler.GetChanged("network")
-	var networkSettings SequencerNetworkConfig
-	if useNetworkPreset {
-		network := flagHandler.GetValue("network")
-		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
-		CreateSequencerNetworkConfigs(networksConfigPath)
-		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	}
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-url"),
-		networkSettings.SequencerURL,
-		flagHandler.GetValue("sequencer-url"),
-	)
-	sequencerURL := AddPortToURL(url)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -187,30 +146,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	to := args[1]
 	toAddress := AddressFromText(to)
 
-	sequencerChainID := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-chain-id"),
-		networkSettings.SequencerChainId,
-		flagHandler.GetValue("sequencer-chain-id"),
-	)
-
-	asset := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("asset"),
-		networkSettings.Asset,
-		flagHandler.GetValue("asset"),
-	)
-
-	feeAsset := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("fee-asset"),
-		networkSettings.FeeAsset,
-		flagHandler.GetValue("fee-asset"),
-	)
-
 	destinationChainAddress := args[2]
-
-	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.BridgeLockOpts{
 		IsAsync:                 isAsync,

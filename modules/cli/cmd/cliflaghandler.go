@@ -27,7 +27,10 @@ func CreateCliFlagHandler(c *cobra.Command, envPrefix string) *CliFlagHandler {
 	}
 }
 
-// CreateCliFlagHandlerWithUseConfigFlag creates a new CliFlagHandler.
+// CreateCliFlagHandlerWithUseConfigFlag creates a new CliFlagHandler with a
+// specified config override flag. When the config flag is set, that will
+// trigger the flag handler to use the config preset values instead of the flag
+// defaults.
 func CreateCliFlagHandlerWithUseConfigFlag(c *cobra.Command, envPrefix string, configOverrideFlag string) *CliFlagHandler {
 	return &CliFlagHandler{
 		Cmd:           c,

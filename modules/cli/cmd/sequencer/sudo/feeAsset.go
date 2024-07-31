@@ -25,33 +25,15 @@ var addFeeAssetCmd = &cobra.Command{
 }
 
 func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-
-	useNetworkPreset := flagHandler.GetChanged("network")
-	var networkSettings sequencercmd.SequencerNetworkConfig
-	if useNetworkPreset {
-		network := flagHandler.GetValue("network")
-		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
-		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
-		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	}
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := sequencercmd.GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := sequencercmd.ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-url"),
-		networkSettings.SequencerURL,
-		flagHandler.GetValue("sequencer-url"),
-	)
-	sequencerURL := sequencercmd.AddPortToURL(url)
-
-	chainId := sequencercmd.ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-chain-id"),
-		networkSettings.SequencerChainId,
-		flagHandler.GetValue("sequencer-chain-id"),
-	)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = sequencercmd.AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	asset := args[0]
 
@@ -66,14 +48,12 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	isAsync := flagHandler.GetValue("async") == "true"
-
 	opts := sequencer.FeeAssetOpts{
 		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 		Asset:            asset,
 	}
 	tx, err := sequencer.AddFeeAsset(opts)
@@ -98,33 +78,15 @@ var removeFeeAssetCmd = &cobra.Command{
 }
 
 func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-
-	useNetworkPreset := flagHandler.GetChanged("network")
-	var networkSettings sequencercmd.SequencerNetworkConfig
-	if useNetworkPreset {
-		network := flagHandler.GetValue("network")
-		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
-		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
-		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	}
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := sequencercmd.GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := sequencercmd.ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-url"),
-		networkSettings.SequencerURL,
-		flagHandler.GetValue("sequencer-url"),
-	)
-	sequencerURL := sequencercmd.AddPortToURL(url)
-
-	chainId := sequencercmd.ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-chain-id"),
-		networkSettings.SequencerChainId,
-		flagHandler.GetValue("sequencer-chain-id"),
-	)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = sequencercmd.AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	asset := args[0]
 
@@ -139,14 +101,12 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	isAsync := flagHandler.GetValue("async") == "true"
-
 	opts := sequencer.FeeAssetOpts{
 		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 		Asset:            asset,
 	}
 	tx, err := sequencer.RemoveFeeAsset(opts)
