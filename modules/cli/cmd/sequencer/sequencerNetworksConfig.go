@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pelletier/go-toml/v2"
@@ -96,7 +97,7 @@ func BuildSequencerNetworkConfigsFilepath() string {
 func CreateSequencerNetworkConfigs(path string) {
 	_, err := os.Stat(path)
 	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", path)
+		log.Debugf("%s already exists. Skipping initialization.\n", path)
 		return
 	}
 
@@ -124,15 +125,28 @@ func GetSequencerNetworkSettingsFromConfig(network, path string) SequencerNetwor
 	sequencerConfig := LoadSequencerNetworkConfigsOrPanic(path)
 
 	if _, ok := sequencerConfig.Configs[network]; !ok {
-		log.Fatalf("Network not found in config file: %s", network)
+		log.Fatalf("Network %s not found in config file at %s", network, path)
 		panic("Network not found in config file")
 	}
 
 	return sequencerConfig.Configs[network]
 }
 
+// GetNetworkConfigFromFlags returns a SequencerNetworkConfig based on the
+// network flag value. It will create the network config file if it does not
+// exist, and then load the config.
+func GetNetworkConfigFromFlags(flagHandler *cmd.CliFlagHandler) SequencerNetworkConfig {
+	network := flagHandler.GetValue("network")
+	networksConfigPath := BuildSequencerNetworkConfigsFilepath()
+	CreateSequencerNetworkConfigs(networksConfigPath)
+	networkSettings := GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+
+	return networkSettings
+}
+
 // ChooseFlagValue returns the value of the flag based on the usage of the
 // specified flag and the usage of the network config flag.
+// TODO - delete after all the commands are refactored
 func ChooseFlagValue(networksChange bool, flagChange bool, configValue string, flagValue string) string {
 	// There are four possible scenarios for setting a flag's value:
 	// 1. network flag hasn't changed & flag hasn't changed

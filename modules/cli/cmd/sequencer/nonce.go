@@ -32,24 +32,15 @@ func init() {
 func nonceCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	useNetworkPreset := flagHandler.GetChanged("network")
-	var networkSettings SequencerNetworkConfig
-	if useNetworkPreset {
-		network := flagHandler.GetValue("network")
-		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
-		CreateSequencerNetworkConfigs(networksConfigPath)
-		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+
+	sequencerURL := networkConfig.SequencerURL
+	if flagHandler.GetChanged("sequencer-url") {
+		sequencerURL = flagHandler.GetValue("sequencer-url")
 	}
+	sequencerURL = AddPortToURL(sequencerURL)
 
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := ChooseFlagValue(
-		useNetworkPreset,
-		flagHandler.GetChanged("sequencer-url"),
-		networkSettings.SequencerURL,
-		flagHandler.GetValue("sequencer-url"),
-	)
-	sequencerURL := AddPortToURL(url)
 
 	address := args[0]
 	if !strings.HasPrefix(address, DefaultAddressPrefix) {
