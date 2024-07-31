@@ -31,25 +31,25 @@ type SequencerNetworkConfigs struct {
 func GetSequencerNetworkConfigsPresets() SequencerNetworkConfigs {
 	return SequencerNetworkConfigs{
 		Configs: map[string]SequencerNetworkConfig{
-			"Local": {
+			"local": {
 				SequencerChainId: "sequencer-test-chain-0",
 				SequencerURL:     "http://127.0.0.1:26657",
 				Asset:            "nria",
 				FeeAsset:         "nria",
 			},
-			"Dusk": {
+			"dusk": {
 				SequencerChainId: DefaultSequencerChainID,
 				SequencerURL:     DefaultSequencerURL,
 				Asset:            "nria",
 				FeeAsset:         "nria",
 			},
-			"Dawn": {
+			"dawn": {
 				SequencerChainId: "astria-dawn-0",
 				SequencerURL:     "https://rpc.sequencer.dawn-0.devnet.astria.org",
 				Asset:            "ibc/channel0/utia",
 				FeeAsset:         "ibc/channel0/utia",
 			},
-			"Mainnet": {
+			"mainnet": {
 				SequencerChainId: "astria",
 				SequencerURL:     "https://rpc.sequencer.astria.org/",
 				Asset:            "ibc/channel0/utia",

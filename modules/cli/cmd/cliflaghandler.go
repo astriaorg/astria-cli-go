@@ -13,9 +13,8 @@ import (
 
 // CliFlagHandler is a struct that handles the binding of flags and the retrieval of the flag's string value
 type CliFlagHandler struct {
-	Cmd       *cobra.Command
-	EnvPrefix string
-
+	Cmd                *cobra.Command
+	EnvPrefix          string
 	configOverrideFlag string
 }
 
@@ -27,8 +26,18 @@ func CreateCliFlagHandler(c *cobra.Command, envPrefix string) *CliFlagHandler {
 	}
 }
 
+// CreateCliFlagHandler creates a new CliFlagHandler.
+func CreateCliFlagHandlerWithOverrideFlag(c *cobra.Command, envPrefix string, configOverrideFlag string) *CliFlagHandler {
+	return &CliFlagHandler{
+		Cmd:                c,
+		EnvPrefix:          envPrefix,
+		configOverrideFlag: configOverrideFlag,
+	}
+}
+
 // TODO - desicription
 func (f *CliFlagHandler) SetConfigOverrideFlag(flagName string) {
+	log.Debugf("Setting config override flag to: %s", flagName)
 	f.configOverrideFlag = flagName
 }
 
