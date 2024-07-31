@@ -257,7 +257,7 @@ func getFlagPath(c *cobra.Command, flag string, serviceName string, defaultValue
 // endpoint. Being able to connect to the gRPC server is a requirement for both
 // the Conductor and Composer services.
 func getSequencerOKCallback(config []string) func() bool {
-	// Get the sequencer gRPC address from the environment
+	// get the sequencer gRPC address from the environment
 	var seqGRPCAddr string
 	for _, envVar := range config {
 		if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
@@ -267,9 +267,9 @@ func getSequencerOKCallback(config []string) func() bool {
 	}
 	seqGRPCHealthURL := "http://" + seqGRPCAddr + "/health"
 
-	// Return the anonymous callback function
+	// return the anonymous callback function
 	return func() bool {
-		// Make the HTTP request
+		// make the HTTP request
 		seqResp, err := http.Get(seqGRPCHealthURL)
 		if err != nil {
 			log.WithError(err).Debug("Startup callback check to sequencer gRPC /health did not succeed")
@@ -277,7 +277,7 @@ func getSequencerOKCallback(config []string) func() bool {
 		}
 		defer seqResp.Body.Close()
 
-		// Check status code
+		// check status code
 		if seqResp.StatusCode == 200 {
 			log.Debug("Sequencer gRPC server started")
 			return true
@@ -294,7 +294,7 @@ func getSequencerOKCallback(config []string) func() bool {
 // endpoint. Being able to connect to the rpc server is a requirement for both
 // the Conductor and Composer services.
 func getCometbftOKCallback(config []string) func() bool {
-	// Get the CometBFT rpc address from the environment
+	// get the CometBFT rpc address from the environment
 	var seqRPCAddr string
 	for _, envVar := range config {
 		if strings.HasPrefix(envVar, "ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL") {
@@ -304,9 +304,9 @@ func getCometbftOKCallback(config []string) func() bool {
 	}
 	cometbftRPCHealthURL := seqRPCAddr + "/health"
 
-	// Return the anonymous callback function
+	// return the anonymous callback function
 	return func() bool {
-		// Make the HTTP request
+		// make the HTTP request
 		cometbftResp, err := http.Get(cometbftRPCHealthURL)
 		if err != nil {
 			log.WithError(err).Debug("Startup callback check to CometBFT rpc /health did not succeed")
@@ -314,7 +314,7 @@ func getCometbftOKCallback(config []string) func() bool {
 		}
 		defer cometbftResp.Body.Close()
 
-		// Check status code
+		// check status code
 		if cometbftResp.StatusCode == 200 {
 			log.Debug("CometBFT rpc server started")
 			return true

@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const duskNum = "8"
+const duskNum = "9"
 const dawnNum = "0"
 
 type BaseConfig struct {
@@ -57,12 +57,14 @@ type BaseConfig struct {
 	Astria_composer_sequencer_chain_id         string `mapstructure:"astria_composer_sequencer_chain_id" toml:"astria_composer_sequencer_chain_id"`
 	Astria_composer_rollups                    string `mapstructure:"astria_composer_rollups" toml:"astria_composer_rollups"`
 	Astria_composer_private_key_file           string `mapstructure:"astria_composer_private_key_file" toml:"astria_composer_private_key_file"`
+	Astria_composer_sequencer_address_prefix   string `mapstructure:"astria_composer_sequencer_address_prefix" toml:"astria_composer_sequencer_address_prefix"`
 	Astria_composer_max_submit_interval_ms     int    `mapstructure:"astria_composer_max_submit_interval_ms" toml:"astria_composer_max_submit_interval_ms"`
 	Astria_composer_max_bytes_per_bundle       int    `mapstructure:"astria_composer_max_bytes_per_bundle" toml:"astria_composer_max_bytes_per_bundle"`
 	Astria_composer_bundle_queue_capacity      int    `mapstructure:"astria_composer_bundle_queue_capacity" toml:"astria_composer_bundle_queue_capacity"`
 	Astria_composer_no_metrics                 bool   `mapstructure:"astria_composer_no_metrics" toml:"astria_composer_no_metrics"`
 	Astria_composer_metrics_http_listener_addr string `mapstructure:"astria_composer_metrics_http_listener_addr" toml:"astria_composer_metrics_http_listener_addr"`
 	Astria_composer_grpc_addr                  string `mapstructure:"astria_composer_grpc_addr" toml:"astria_composer_grpc_addr"`
+	Astria_composer_fee_asset                  string `mapstructure:"astria_composer_fee_asset" toml:"astria_composer_fee_asset"`
 
 	// global
 	No_color string `mapstructure:"no_color" toml:"no_color"`
@@ -119,12 +121,14 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		Astria_composer_sequencer_chain_id:         "astria-dusk-" + duskNum,
 		Astria_composer_rollups:                    "astriachain::ws://127.0.0.1:8546",
 		Astria_composer_private_key_file:           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
+		Astria_composer_sequencer_address_prefix:   "astria",
 		Astria_composer_max_submit_interval_ms:     2000,
 		Astria_composer_max_bytes_per_bundle:       200000,
 		Astria_composer_bundle_queue_capacity:      40000,
 		Astria_composer_no_metrics:                 true,
 		Astria_composer_metrics_http_listener_addr: "127.0.0.1:9000",
 		Astria_composer_grpc_addr:                  "0.0.0.0:0",
+		Astria_composer_fee_asset:                  "nria",
 
 		No_color: "",
 
@@ -221,19 +225,19 @@ func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) 
 		log.Infof("%s already exists. Skipping initialization.\n", path)
 		return
 	}
-	// Create an instance of the Config struct with some data
+	// create an instance of the Config struct with some data
 	config := DefaultNetworksConfigs()
 	config.Local.NativeDenom = localNativeDenom
 	config.Local.SequencerChainId = localSequencerChainId
 
-	// Open a file for writing
+	// open a file for writing
 	file, err := os.Create(path)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	// Encode the struct to TOML and write to the file
+	// encode the struct to TOML and write to the file
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
 	}
@@ -251,17 +255,17 @@ func CreateBaseConfig(path, instance string) {
 		log.Infof("%s already exists. Skipping initialization.\n", path)
 		return
 	}
-	// Create an instance of the Config struct with some data
+	// create an instance of the Config struct with some data
 	config := NewBaseConfig(instance)
 
-	// Open a file for writing
+	// open a file for writing
 	file, err := os.Create(path)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	// Encode the struct to TOML and write to the file
+	// encode the struct to TOML and write to the file
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
 	}
@@ -295,7 +299,7 @@ func (b BaseConfig) ToSlice() []string {
 	typ := reflect.TypeOf(b)
 
 	var output []string
-	// Ensure the provided variable is a struct
+	// ensure the provided variable is a struct
 	for i := 0; i < val.NumField(); i++ {
 		field := typ.Field(i)
 		value := val.Field(i)

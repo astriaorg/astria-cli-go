@@ -25,40 +25,45 @@ const SequencerChainID = "sequencer-test-chain-0"
 
 const TestBinPath = "../../../bin/astria-go-testy"
 
-func TestCreateaccount(t *testing.T) {
-	createaccountCmd := exec.Command(TestBinPath, "sequencer", "createaccount", "--insecure", "--json")
-	createaccountOutput, err := createaccountCmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)
+// NOTE - the ordering of these tests matters
 
-	}
-	var account sequencer.AccountJSON
-	err = json.Unmarshal(createaccountOutput, &account)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal account json output: %v", err)
-	}
-	assert.NotEmpty(t, account.Address, "Address should not be empty")
-	assert.NotEmpty(t, account.PublicKey, "PublicKey should not be empty")
-	assert.NotEmpty(t, account.PrivateKey, "PrivateKey should not be empty")
-}
-
-func TestTransferFlags(t *testing.T) {
-	// test that we get error when too many flags passed in
+func TestAddAndRemoveFeeAssets(t *testing.T) {
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	secondKey := fmt.Sprintf("--keyfile=/fake/file")
-	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", SequencerURL)
-	_, err := transferCmd.CombinedOutput()
-	assert.Error(t, err)
+	// test synchronously first
 
-	// test that we get error when no type of key passed in
-	transferCmd = exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, "--sequencer-url", SequencerURL)
-	_, err = transferCmd.CombinedOutput()
-	assert.Error(t, err)
+	// add a fee asset
+	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := addFeeAssetCmdSync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err = removeFeeAssetCmdSync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// NOTE - test synchronously
+	// add a fee asset
+	testAssetName := "testAsset"
+	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = addFeeAssetCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// remove a fee asset
+	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = removeFeeAssetCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// wait a bit for async tx to be processed
+	time.Sleep(2 * time.Second)
 }
 
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
+	// FIXME - using Output (vs CombinedOutput) only returns Stdout, but using CombinedOutput returns all logging as well,
+	//  which can break json marshalling. how can we use CombinedOutput so that we get stderr info in case something fails?
+	//  would rather not do any crazy string filtering/matching, but might be a good idea for the test.
+	//  could also use jq in the test? probably best option.
 	blockHeightOutput, err := getBlockHeightCmd.Output()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
@@ -100,14 +105,10 @@ func TestTransferAndGetNonce(t *testing.T) {
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	amtStr := fmt.Sprintf("%d", TransferAmount)
 	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", amtStr, TestTo, key, "--sequencer-chain-id", SequencerChainID, "--sequencer-url", SequencerURL)
-	transferOutput, err := transferCmd.Output()
+	transferOutput, err := transferCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to transfer: %s, %v", transferOutput, err)
 	}
-
-	// wait for transaction to be processed
-	// FIXME - this could be flaky. can we check for the tx?
-	time.Sleep(2 * time.Second)
 
 	// get blockheight after transfer
 	getBlockHeightAfterCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
@@ -125,7 +126,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get nonce after transfer
 	getNonceAfterCmd := exec.Command(TestBinPath, "sequencer", "nonce", TestFromAddress, "--json", "--sequencer-url", SequencerURL)
-	nonceAfterOutput, err := getNonceAfterCmd.Output()
+	nonceAfterOutput, err := getNonceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get nonce: %s, %v", nonceAfterOutput, err)
 	}
@@ -140,7 +141,7 @@ func TestTransferAndGetNonce(t *testing.T) {
 
 	// get balance after transfer
 	getBalanceAfterCmd := exec.Command(TestBinPath, "sequencer", "balances", TestTo, "--json", "--sequencer-url", SequencerURL)
-	balanceAfterOutput, err := getBalanceAfterCmd.Output()
+	balanceAfterOutput, err := getBalanceAfterCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get balance: %s, %v", balanceAfterOutput, err)
 	}
@@ -154,50 +155,111 @@ func TestTransferAndGetNonce(t *testing.T) {
 	assert.Equal(t, expectedFinalBalance.String(), finalBalance.String())
 }
 
-func TestAddAndRemoveFeeAssts(t *testing.T) {
-	testAssetName := "testAsset"
-	// add a fee asset
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := addFeeAssetCmd.Output()
-	assert.NoError(t, err)
+func TestCreateaccount(t *testing.T) {
+	createaccountCmd := exec.Command(TestBinPath, "sequencer", "createaccount", "--insecure", "--json")
+	createaccountOutput, err := createaccountCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to create account: %s, %v", createaccountOutput, err)
 
-	// remove a fee asset
-	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = removeFeeAssetCmd.Output()
-	assert.NoError(t, err)
+	}
+	var account sequencer.AccountJSON
+	err = json.Unmarshal(createaccountOutput, &account)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal account json output: %v", err)
+	}
+	assert.NotEmpty(t, account.Address, "Address should not be empty")
+	assert.NotEmpty(t, account.PublicKey, "PublicKey should not be empty")
+	assert.NotEmpty(t, account.PrivateKey, "PrivateKey should not be empty")
+}
+
+func TestTransferFlags(t *testing.T) {
+	// test that we get error when too many flags passed in
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+	secondKey := fmt.Sprintf("--keyfile=/fake/file")
+	transferCmd := exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, key, secondKey, "--sequencer-url", SequencerURL)
+	_, err := transferCmd.CombinedOutput()
+	assert.Error(t, err)
+
+	// test that we get error when no type of key passed in
+	transferCmd = exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, "--sequencer-url", SequencerURL)
+	_, err = transferCmd.CombinedOutput()
+	assert.Error(t, err)
 }
 
 func TestRemoveAndAddIBCRelayer(t *testing.T) {
-	// remove an address from the existing IBC relayer set
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+
+	// remove an address from the existing IBC relayer set
 	removeIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := removeIBCRelayerCmd.Output()
+	_, err := removeIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// add same address back to the IBC relayer set
 	addIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = addIBCRelayerCmd.Output()
+	_, err = addIBCRelayerCmd.CombinedOutput()
 	assert.NoError(t, err)
+
+	// test asynchronously
+	// remove an address from the existing IBC relayer set
+	removeIBCRelayerCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = removeIBCRelayerCmdAsync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// add same address back to the IBC relayer set
+	addIBCRelayerCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = addIBCRelayerCmdAsync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// wait a bit for async tx to be processed
+	time.Sleep(2 * time.Second)
 }
 
 func TestValidatorUpdate(t *testing.T) {
 	// update the validator power
 	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
 	validatorUpdateCmd := exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := validatorUpdateCmd.Output()
+	_, err := validatorUpdateCmd.CombinedOutput()
 	assert.NoError(t, err)
 
 	// revert the validator power
 	validatorUpdateCmd = exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = validatorUpdateCmd.Output()
+	_, err = validatorUpdateCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// test async
+	// update the validator power
+	validatorUpdateCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = validatorUpdateCmdAsync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// revert the validator power
+	validatorUpdateCmdAsync = exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = validatorUpdateCmdAsync.CombinedOutput()
+	assert.NoError(t, err)
+
+	// wait a bit for async tx to be processed
+	time.Sleep(2 * time.Second)
+}
+
+func TestUpdateSudoAddress(t *testing.T) {
+	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
+
+	// change the sudo address
+	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
+	_, err := addressChangeCmd.CombinedOutput()
+	assert.NoError(t, err)
+
+	// async
+	// change the sudo address
+	addressChangeCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
+	_, err = addressChangeCmdAsync.CombinedOutput()
 	assert.NoError(t, err)
 }
 
 func TestGetBlock(t *testing.T) {
 	// get initial blockheight
 	getBlockHeightCmd := exec.Command(TestBinPath, "sequencer", "blockheight", "--json", "--sequencer-url", SequencerURL)
-	blockHeightOutput, err := getBlockHeightCmd.Output()
+	blockHeightOutput, err := getBlockHeightCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to get blockheight: %s, %v", blockHeightOutput, err)
 	}
@@ -211,23 +273,9 @@ func TestGetBlock(t *testing.T) {
 	// get a block
 	if initialBlockHeight > 0 {
 		getBlockCmd := exec.Command(TestBinPath, "sequencer", "block", "1", "--json", "--sequencer-url", SequencerURL)
-		_, err := getBlockCmd.Output()
+		_, err := getBlockCmd.CombinedOutput()
 		assert.NoError(t, err)
 	} else {
 		t.Fatalf("Blockheight is 0, cannot get block")
 	}
-}
-
-func TestUpdateSudoAddress(t *testing.T) {
-	// change the sudo address
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := addressChangeCmd.Output()
-	assert.NoError(t, err)
-
-	// useing the old sudo address to try to update the sudo address again, this
-	// will fail becuase the old sudo address is no longer the sudo address
-	failingAddressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = failingAddressChangeCmd.Output()
-	assert.Error(t, err)
 }

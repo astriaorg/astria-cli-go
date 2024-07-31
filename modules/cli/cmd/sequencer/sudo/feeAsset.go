@@ -46,7 +46,10 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	isAsync := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.FeeAssetOpts{
+		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
@@ -96,7 +99,10 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	isAsync := flagHandler.GetValue("async") == "true"
+
 	opts := sequencer.FeeAssetOpts{
+		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
@@ -123,6 +129,7 @@ func init() {
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
 	afafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
 	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
+	afafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	afafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	afafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	afafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
@@ -135,6 +142,7 @@ func init() {
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
 	rfafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
 	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
+	rfafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	rfafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	rfafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	rfafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")

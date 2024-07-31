@@ -54,7 +54,9 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	if !isInsecure {
+	if isInsecure {
+		log.Debug("Private Key Bytes: ", account.PrivateKey)
+	} else {
 		if useKeyfile {
 			pwIn := pterm.DefaultInteractiveTextInput.WithMask("*")
 			pw, _ := pwIn.Show("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:")
@@ -89,7 +91,6 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 			}
 			log.Infof("Private key for %s stored in keychain", account.Address)
 		}
-
 		// clear the private key. we don't want to print it since we are secure here
 		account.PrivateKey = nil
 	}
