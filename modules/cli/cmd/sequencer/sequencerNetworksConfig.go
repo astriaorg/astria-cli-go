@@ -14,10 +14,10 @@ import (
 // SequencerNetworkConfig is the struct that holds the configuration for
 // interacting with a given Astria sequencer network.
 type SequencerNetworkConfig struct {
-	SequencerChainId string `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
-	SequencerURL     string `mapstructure:"sequencer_url" toml:"sequencer_url"`
-	Asset            string `mapstructure:"asset" toml:"asset"`
-	FeeAsset         string `mapstructure:"fee_asset" toml:"fee_asset"`
+	SequencerChainId string `flag:"sequencer-chain-id" mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
+	SequencerURL     string `flag:"sequencer-url" mapstructure:"sequencer_url" toml:"sequencer_url"`
+	Asset            string `flag:"asset" mapstructure:"asset" toml:"asset"`
+	FeeAsset         string `flag:"fee-asset" mapstructure:"fee_asset" toml:"fee_asset"`
 }
 
 // SequencerNetworkConfigs is a map of SequencerNetworkConfig structs.

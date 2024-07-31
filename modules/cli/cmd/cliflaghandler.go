@@ -13,9 +13,10 @@ import (
 
 // CliFlagHandler is a struct that handles the binding of flags and the retrieval of the flag's string value
 type CliFlagHandler struct {
-	Cmd                *cobra.Command
-	EnvPrefix          string
-	configOverrideFlag string
+	Cmd           *cobra.Command
+	EnvPrefix     string
+	useConfigFlag string
+	config        any
 }
 
 // CreateCliFlagHandler creates a new CliFlagHandler.
@@ -26,19 +27,18 @@ func CreateCliFlagHandler(c *cobra.Command, envPrefix string) *CliFlagHandler {
 	}
 }
 
-// CreateCliFlagHandler creates a new CliFlagHandler.
-func CreateCliFlagHandlerWithOverrideFlag(c *cobra.Command, envPrefix string, configOverrideFlag string) *CliFlagHandler {
+// CreateCliFlagHandlerWithUseConfigFlag creates a new CliFlagHandler.
+func CreateCliFlagHandlerWithUseConfigFlag(c *cobra.Command, envPrefix string, configOverrideFlag string) *CliFlagHandler {
 	return &CliFlagHandler{
-		Cmd:                c,
-		EnvPrefix:          envPrefix,
-		configOverrideFlag: configOverrideFlag,
+		Cmd:           c,
+		EnvPrefix:     envPrefix,
+		useConfigFlag: configOverrideFlag,
 	}
 }
 
-// TODO - desicription
-func (f *CliFlagHandler) SetConfigOverrideFlag(flagName string) {
-	log.Debugf("Setting config override flag to: %s", flagName)
-	f.configOverrideFlag = flagName
+// SetConfig sets the config for the CliFlagHandler.
+func (f *CliFlagHandler) SetConfig(config any) {
+	f.config = config
 }
 
 // BindStringFlag binds a string flag to a cobra flag and viper env var handler for a
@@ -136,6 +136,19 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 		panic(fmt.Sprintf("getValue: unsupported flag type: %s", valueKind))
 	}
 
+	if f.useConfigFlag != "" && f.Cmd.Flag(f.useConfigFlag).Changed {
+		// check if value exists in config and return it
+		if f.config != nil {
+			configValue, found := getFieldByTag(f.config, "flag", flagName)
+			if found {
+				value := configValue.String()
+				log.Debugf("%s flag is set via config file: %s", flagName, value)
+				return value
+			}
+			log.Debugf("Config value for %s not found or invalid. Skipping.", flagName)
+		}
+	}
+
 	if f.Cmd.Flag(flagName).Changed {
 		log.Debugf("%s flag is set with value: %s", flagName, value)
 		return value
@@ -164,11 +177,11 @@ func (f *CliFlagHandler) GetChanged(flagName string) bool {
 
 // TODO - desicription
 func (f *CliFlagHandler) GetValueOrOverride(flagName, overrideValue string) string {
-	if f.configOverrideFlag == "" {
+	if f.useConfigFlag == "" {
 		log.Fatal("GetValueOrOverride: config override flag is empty. Has it been bound?")
 		panic("config override flag is empty")
 	}
-	overrideFlagUsed := f.GetChanged(f.configOverrideFlag)
+	overrideFlagUsed := f.GetChanged(f.useConfigFlag)
 	regularFlagUsed := f.GetChanged(flagName)
 
 	// There are four possible scenarios for overridding a flag's value:
@@ -191,4 +204,22 @@ func (f *CliFlagHandler) GetValueOrOverride(flagName, overrideValue string) stri
 	} else {
 		return f.GetValue(flagName)
 	}
+}
+
+// Helper function to get field by tag
+func getFieldByTag(obj interface{}, tagName, tagValue string) (reflect.Value, bool) {
+	val := reflect.ValueOf(obj)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	typ := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		tag := field.Tag.Get(tagName)
+		if tag == tagValue {
+			return val.Field(i), true
+		}
+	}
+	return reflect.Value{}, false
 }

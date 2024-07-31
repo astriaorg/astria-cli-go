@@ -30,11 +30,11 @@ func init() {
 }
 
 func nonceCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandlerWithOverrideFlag(c, cmd.EnvPrefix, "network")
-
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
 	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	sequencerURL := flagHandler.GetValueOrOverride("sequencer-url", networkConfig.SequencerURL)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
 	sequencerURL = AddPortToURL(sequencerURL)
 
 	printJSON := flagHandler.GetValue("json") == "true"

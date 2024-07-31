@@ -35,35 +35,15 @@ func init() {
 }
 
 func transferCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
 	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	sequencerURL := networkConfig.SequencerURL
-	if flagHandler.GetChanged("sequencer-url") {
-		sequencerURL = flagHandler.GetValue("sequencer-url")
-	}
+	sequencerURL := flagHandler.GetValue("sequencer-url")
 	sequencerURL = AddPortToURL(sequencerURL)
-
-	asset := networkConfig.Asset
-	if flagHandler.GetChanged("asset") {
-		asset = flagHandler.GetValue("asset")
-	}
-
-	// FIXME - if --fee-asset is not set, a user would expect DefaultFeeAsset to
-	//  be used, but networkConfig.FeeAsset is used if --fee-asset is not set,
-	//  and that value could be different than DefaultFeeAsset. This is a bug.
-	//  Should we make `--network` and the rest of the flags mutually exclusive?
-	//  I think it makes sense that a flag overrides the settings from the toml though.
-	feeAsset := networkConfig.FeeAsset
-	if flagHandler.GetChanged("fee-asset") {
-		feeAsset = flagHandler.GetValue("fee-asset")
-	}
-
-	chainID := networkConfig.SequencerChainId
-	if flagHandler.GetChanged("sequencer-chain-id") {
-		chainID = flagHandler.GetValue("sequencer-chain-id")
-	}
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+	chainID := flagHandler.GetValue("sequencer-chain-id")
 
 	printJSON := flagHandler.GetValue("json") == "true"
 
