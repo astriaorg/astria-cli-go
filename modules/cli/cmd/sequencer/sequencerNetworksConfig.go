@@ -141,29 +141,3 @@ func GetNetworkConfigFromFlags(flagHandler *cmd.CliFlagHandler) SequencerNetwork
 
 	return networkSettings
 }
-
-// ChooseFlagValue returns the value of the flag based on the usage of the
-// specified flag and the usage of the network config flag.
-// TODO - delete after all the commands are refactored
-func ChooseFlagValue(networksChange bool, flagChange bool, configValue string, flagValue string) string {
-	// There are four possible scenarios for setting a flag's value:
-	// 1. network flag hasn't changed & flag hasn't changed
-	//    -> return the flag default value
-	// 2. network flag hasn't changed & flag has changed
-	//    -> return the flag value
-	// 3. network flag has changed & flag hasn't changed
-	//    -> return the network config value
-	// 4. network flag has changed & flag has changed
-	//    -> return the flag value
-	//
-	// Using Cobra, situations 1, 2, and 4 are already handled.
-	// If situation 3 occurs, the network config value needs to be handled
-	// specifically.
-	// The logic below will return the config value if situation 3 occurs,
-	// otherwise it will return the flag value output by Cobra.
-	if networksChange && !flagChange {
-		return configValue
-	} else {
-		return flagValue
-	}
-}
