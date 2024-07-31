@@ -9,9 +9,10 @@ import (
 
 // VersionCmd represents the sequencer command
 var VersionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version of the services used by the CLI.",
-	Run:   seqVersionCmdHandler,
+	Use:     "version",
+	Short:   "Print the version of the services used by the CLI.",
+	Aliases: []string{"versions"},
+	Run:     seqVersionCmdHandler,
 }
 
 func seqVersionCmdHandler(c *cobra.Command, _ []string) {
