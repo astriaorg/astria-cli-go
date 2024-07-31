@@ -34,8 +34,6 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
 		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	} else {
-		log.Info("Target network not specified. Using flag values.")
 	}
 
 	printJSON := flagHandler.GetValue("json") == "true"
@@ -109,8 +107,6 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
 		networkSettings = sequencercmd.GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	} else {
-		log.Info("Target network not specified. Using flag values.")
 	}
 
 	printJSON := flagHandler.GetValue("json") == "true"

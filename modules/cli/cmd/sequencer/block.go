@@ -37,8 +37,6 @@ func blockCmdHandler(c *cobra.Command, args []string) {
 		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
 		CreateSequencerNetworkConfigs(networksConfigPath)
 		networkSettings = GetSequencerNetworkSettingsFromConfig(network, networksConfigPath)
-	} else {
-		log.Info("Target network not specified. Using flag values.")
 	}
 
 	printJSON := flagHandler.GetValue("json") == "true"
