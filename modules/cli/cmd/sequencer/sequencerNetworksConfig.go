@@ -10,15 +10,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// SequencerNetworkConfigs is the struct that holds the configurations for all
-// individual Astria networks.
-type SequencerNetworkConfigs struct {
-	Local   SequencerNetworkConfig `mapstructure:"local" toml:"local"`
-	Dusk    SequencerNetworkConfig `mapstructure:"dusk" toml:"dusk"`
-	Dawn    SequencerNetworkConfig `mapstructure:"dawn" toml:"dawn"`
-	Mainnet SequencerNetworkConfig `mapstructure:"mainnet" toml:"mainnet"`
-}
-
 // SequencerNetworkConfig is the struct that holds the configuration for
 // interacting with a given Astria sequencer network.
 type SequencerNetworkConfig struct {
@@ -28,36 +19,43 @@ type SequencerNetworkConfig struct {
 	FeeAsset         string `mapstructure:"fee_asset" toml:"fee_asset"`
 }
 
-// DefaultNetworksConfigs returns a SequencerNetworkConfigs struct populated
-// with all sequencer network defaults.
-func DefaultNetworksConfigs() SequencerNetworkConfigs {
-	config := SequencerNetworkConfigs{
-		Local: SequencerNetworkConfig{
-			SequencerChainId: "sequencer-test-chain-0",
-			SequencerURL:     "http://127.0.0.1:26657",
-			Asset:            "nria",
-			FeeAsset:         "nria",
-		},
-		Dusk: SequencerNetworkConfig{
-			SequencerChainId: DefaultDuskSequencerChainID,
-			SequencerURL:     DefaultDuskSequencerURL,
-			Asset:            "nria",
-			FeeAsset:         "nria",
-		},
-		Dawn: SequencerNetworkConfig{
-			SequencerChainId: DefaultDawnSequencerChainID,
-			SequencerURL:     DefaultDawnSequencerURL,
-			Asset:            "ibc/channel0/utia",
-			FeeAsset:         "ibc/channel0/utia",
-		},
-		Mainnet: SequencerNetworkConfig{
-			SequencerChainId: DefaultMainnetSequencerChainID,
-			SequencerURL:     DefaultMainnetSequencerURL,
-			Asset:            "ibc/channel0/utia",
-			FeeAsset:         "ibc/channel0/utia",
+// SequencerNetworkConfigs is a map of SequencerNetworkConfig structs.
+// Using a map here to allow for user to add new networks by adding a new section in the toml
+type SequencerNetworkConfigs struct {
+	Configs map[string]SequencerNetworkConfig `mapstructure:"networks" toml:"networks"`
+}
+
+// GetSequencerNetworkConfigsPresets returns a map of all sequencer network presets.
+// Used to generate the initial config file.
+func GetSequencerNetworkConfigsPresets() SequencerNetworkConfigs {
+	return SequencerNetworkConfigs{
+		Configs: map[string]SequencerNetworkConfig{
+			"Local": {
+				SequencerChainId: "sequencer-test-chain-0",
+				SequencerURL:     "http://127.0.0.1:26657",
+				Asset:            "nria",
+				FeeAsset:         "nria",
+			},
+			"Dusk": {
+				SequencerChainId: DefaultSequencerChainID,
+				SequencerURL:     DefaultSequencerURL,
+				Asset:            "nria",
+				FeeAsset:         "nria",
+			},
+			"Dawn": {
+				SequencerChainId: "astria-dawn-0",
+				SequencerURL:     "https://rpc.sequencer.dawn-0.devnet.astria.org",
+				Asset:            "ibc/channel0/utia",
+				FeeAsset:         "ibc/channel0/utia",
+			},
+			"Mainnet": {
+				SequencerChainId: "astria",
+				SequencerURL:     "https://rpc.sequencer.astria.org/",
+				Asset:            "ibc/channel0/utia",
+				FeeAsset:         "ibc/channel0/utia",
+			},
 		},
 	}
-	return config
 }
 
 // LoadSequencerNetworkConfigsOrPanic loads the SequencerNetworkConfigs from the given
@@ -72,7 +70,7 @@ func LoadSequencerNetworkConfigsOrPanic(path string) SequencerNetworkConfigs {
 
 	var config SequencerNetworkConfigs
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
+		log.Fatalf("Unable to decode toml into struct, %v", err)
 		panic(err)
 	}
 
@@ -102,7 +100,7 @@ func CreateSequencerNetworkConfigs(path string) {
 		return
 	}
 
-	config := DefaultNetworksConfigs()
+	config := GetSequencerNetworkConfigsPresets()
 
 	file, err := os.Create(path)
 	if err != nil {
@@ -125,21 +123,12 @@ func CreateSequencerNetworkConfigs(path string) {
 func GetSequencerNetworkSettingsFromConfig(network, path string) SequencerNetworkConfig {
 	sequencerConfig := LoadSequencerNetworkConfigsOrPanic(path)
 
-	var networkSettings SequencerNetworkConfig
-	switch network {
-	case "local":
-		networkSettings = sequencerConfig.Local
-	case "dusk":
-		networkSettings = sequencerConfig.Dusk
-	case "dawn":
-		networkSettings = sequencerConfig.Dawn
-	case "mainnet":
-		networkSettings = sequencerConfig.Mainnet
-	default:
-		panic("Invalid network selected: Must be one of 'local', 'dusk', 'dawn', or 'mainnet'.")
+	if _, ok := sequencerConfig.Configs[network]; !ok {
+		log.Fatalf("Network not found in config file: %s", network)
+		panic("Network not found in config file")
 	}
 
-	return networkSettings
+	return sequencerConfig.Configs[network]
 }
 
 // ChooseFlagValue returns the value of the flag based on the usage of the

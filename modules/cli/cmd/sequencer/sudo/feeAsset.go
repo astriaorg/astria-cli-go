@@ -27,9 +27,9 @@ var addFeeAssetCmd = &cobra.Command{
 func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings sequencercmd.SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
@@ -41,7 +41,7 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -49,7 +49,7 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
 	chainId := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
@@ -102,9 +102,9 @@ var removeFeeAssetCmd = &cobra.Command{
 func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings sequencercmd.SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
@@ -116,7 +116,7 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -124,7 +124,7 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
 	chainId := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
@@ -172,10 +172,10 @@ func init() {
 
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
 	afafh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
-	afafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to add fee asset to.")
+	afafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
 	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	afafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
-	afafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	afafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	afafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	afafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	afafh.BindStringFlag("privkey", "", "The private key of the sender.")
@@ -186,10 +186,10 @@ func init() {
 
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
 	rfafh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
-	rfafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to remove fee asset from.")
+	rfafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
 	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	rfafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
-	rfafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	rfafh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	rfafh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	rfafh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	rfafh.BindStringFlag("privkey", "", "The private key of the sender.")

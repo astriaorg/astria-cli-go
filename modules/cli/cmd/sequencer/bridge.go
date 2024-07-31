@@ -30,9 +30,9 @@ and is the only actor authorized to transfer out of this account.`,
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
 		CreateSequencerNetworkConfigs(networksConfigPath)
@@ -44,7 +44,7 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -69,21 +69,21 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	rollupName := args[0]
 
 	sequencerChainID := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
 	)
 
 	asset := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("asset"),
 		networkSettings.Asset,
 		flagHandler.GetValue("asset"),
 	)
 
 	feeAsset := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("fee-asset"),
 		networkSettings.FeeAsset,
 		flagHandler.GetValue("fee-asset"),
@@ -150,9 +150,9 @@ bridged to a destination chain address if an IBC relayer is running.`,
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
 		CreateSequencerNetworkConfigs(networksConfigPath)
@@ -164,7 +164,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -192,21 +192,21 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	toAddress := AddressFromText(to)
 
 	sequencerChainID := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
 	)
 
 	asset := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("asset"),
 		networkSettings.Asset,
 		flagHandler.GetValue("asset"),
 	)
 
 	feeAsset := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("fee-asset"),
 		networkSettings.FeeAsset,
 		flagHandler.GetValue("fee-asset"),
@@ -247,7 +247,7 @@ func init() {
 	bridgeCmd.AddCommand(bridgeInitCmd)
 	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
 	bifh.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
-	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
 	bifh.BindStringFlag("asset", DefaultAsset, "The name of the asset we want to bridge.")
 	bifh.BindStringFlag("fee-asset", DefaultFeeAsset, "The name of the asset used for fees.")
 	bifh.BindStringFlag("sudo-address", "", "Set the sudo address to use for the bridge account. The address of the sender is used if this is not set.")
@@ -256,7 +256,7 @@ func init() {
 	bifh.BindBoolFlag("json", false, "Output bridge account as JSON.")
 	bifh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 
-	bifh.BindStringPFlag("sequencer-url", "u", DefaultDuskSequencerURL, "The URL of the sequencer to init bridge account on.")
+	bifh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to init bridge account on.")
 
 	bifh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
 	bifh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")
@@ -267,13 +267,13 @@ func init() {
 	bridgeCmd.AddCommand(bridgeLockCmd)
 	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
 	blfh.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
-	blfh.BindStringFlag("sequencer-chain-id", DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	blfh.BindStringFlag("sequencer-chain-id", DefaultSequencerChainID, "The chain ID of the sequencer.")
 	blfh.BindStringFlag("asset", DefaultAsset, "The asset to be locked and transferred.")
 	blfh.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used to pay the transaction fee.")
 
 	blfh.BindBoolFlag("json", false, "Output bridge account as JSON")
 	blfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
-	blfh.BindStringPFlag("sequencer-url", "u", DefaultDuskSequencerURL, "The URL of the sequencer to lock assets on.")
+	blfh.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to lock assets on.")
 
 	blfh.BindStringFlag("keyfile", "", "Path to secure keyfile for the bridge account.")
 	blfh.BindStringFlag("keyring-address", "", "The address of the bridge account. Requires private key be stored in keyring.")

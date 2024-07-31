@@ -27,9 +27,9 @@ var addIBCRelayerCmd = &cobra.Command{
 func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings sequencercmd.SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
@@ -41,7 +41,7 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -49,7 +49,7 @@ func addIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
 	chainId := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
@@ -103,9 +103,9 @@ var removeIBCRelayerCmd = &cobra.Command{
 func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings sequencercmd.SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
@@ -117,7 +117,7 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -125,7 +125,7 @@ func removeIBCRelayerCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
 	chainId := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
@@ -174,10 +174,10 @@ func init() {
 
 	aibfh := cmd.CreateCliFlagHandler(addIBCRelayerCmd, cmd.EnvPrefix)
 	aibfh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
-	aibfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to add the relayer address to.")
+	aibfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add the relayer address to.")
 	aibfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	aibfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
-	aibfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	aibfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	aibfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	aibfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	aibfh.BindStringFlag("privkey", "", "The private key of the sender.")
@@ -188,10 +188,10 @@ func init() {
 
 	ribfh := cmd.CreateCliFlagHandler(removeIBCRelayerCmd, cmd.EnvPrefix)
 	ribfh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
-	ribfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to remove the relayer address from.")
+	ribfh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove the relayer address from.")
 	ribfh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	ribfh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
-	ribfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	ribfh.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	ribfh.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	ribfh.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	ribfh.BindStringFlag("privkey", "", "The private key of the sender.")

@@ -23,9 +23,9 @@ var validatorUpdateCmd = &cobra.Command{
 func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings sequencercmd.SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := sequencercmd.BuildSequencerNetworkConfigsFilepath()
 		sequencercmd.CreateSequencerNetworkConfigs(networksConfigPath)
@@ -37,7 +37,7 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
@@ -45,7 +45,7 @@ func validatorUpdateCmdHandler(c *cobra.Command, args []string) {
 	sequencerURL := sequencercmd.AddPortToURL(url)
 
 	chainId := sequencercmd.ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-chain-id"),
 		networkSettings.SequencerChainId,
 		flagHandler.GetValue("sequencer-chain-id"),
@@ -107,8 +107,8 @@ func init() {
 	flaghandler.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flaghandler.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	flaghandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
-	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultDuskSequencerURL, "The URL of the sequencer to update the validator on.")
-	flaghandler.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultDuskSequencerChainID, "The chain ID of the sequencer.")
+	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to update the validator on.")
+	flaghandler.BindStringPFlag("sequencer-chain-id", "c", sequencercmd.DefaultSequencerChainID, "The chain ID of the sequencer.")
 	flaghandler.BindStringFlag("keyfile", "", "Path to secure keyfile for sender.")
 	flaghandler.BindStringFlag("keyring-address", "", "The address of the sender. Requires private key be stored in keyring.")
 	flaghandler.BindStringFlag("privkey", "", "The private key of the sender.")

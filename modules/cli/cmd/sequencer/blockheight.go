@@ -20,16 +20,16 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(blockheightCmd, cmd.EnvPrefix)
 	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
-	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultDuskSequencerURL, "The URL of the sequencer to retrieve the balance from.")
+	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 }
 
 func blockheightCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	networkDefaultsUsed := flagHandler.GetChanged("network")
+	useNetworkPreset := flagHandler.GetChanged("network")
 	var networkSettings SequencerNetworkConfig
-	if networkDefaultsUsed {
+	if useNetworkPreset {
 		network := flagHandler.GetValue("network")
 		networksConfigPath := BuildSequencerNetworkConfigsFilepath()
 		CreateSequencerNetworkConfigs(networksConfigPath)
@@ -41,7 +41,7 @@ func blockheightCmdHandler(c *cobra.Command, args []string) {
 	printJSON := flagHandler.GetValue("json") == "true"
 
 	url := ChooseFlagValue(
-		networkDefaultsUsed,
+		useNetworkPreset,
 		flagHandler.GetChanged("sequencer-url"),
 		networkSettings.SequencerURL,
 		flagHandler.GetValue("sequencer-url"),
