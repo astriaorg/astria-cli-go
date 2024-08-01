@@ -167,7 +167,7 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 }
 
 // Helper function to get field by tag
-func getFieldByTag(obj interface{}, tagName, tagValue string) (reflect.Value, bool) {
+func getFieldValueByTag(obj interface{}, tagName, tagValue string) (reflect.Value, bool) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
