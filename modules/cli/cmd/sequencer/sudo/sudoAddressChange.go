@@ -19,13 +19,15 @@ var sudoAddressChangeCmd = &cobra.Command{
 }
 
 func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := sequencercmd.GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
+
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := sequencercmd.AddPortToURL(url)
-
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = sequencercmd.AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	to := args[0]
 	toAddress := sequencercmd.AddressFromText(to)
@@ -41,15 +43,13 @@ func sudoAddressChangeCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	isAsync := flagHandler.GetValue("async") == "true"
-
 	opts := sequencer.ChangeSudoAddressOpts{
 		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		UpdateAddress:    toAddress,
 		SequencerURL:     sequencerURL,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 	}
 	tx, err := sequencer.ChangeSudoAddress(opts)
 	if err != nil {
@@ -68,6 +68,7 @@ func init() {
 	sudoCmd.AddCommand(sudoAddressChangeCmd)
 
 	flaghandler := cmd.CreateCliFlagHandler(sudoAddressChangeCmd, cmd.EnvPrefix)
+	flaghandler.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flaghandler.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	flaghandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 	flaghandler.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to update the sudo address on.")

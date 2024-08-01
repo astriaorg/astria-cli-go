@@ -13,8 +13,10 @@ import (
 
 // CliFlagHandler is a struct that handles the binding of flags and the retrieval of the flag's string value
 type CliFlagHandler struct {
-	Cmd       *cobra.Command
-	EnvPrefix string
+	Cmd           *cobra.Command
+	EnvPrefix     string
+	useConfigFlag string
+	config        any
 }
 
 // CreateCliFlagHandler creates a new CliFlagHandler.
@@ -23,6 +25,23 @@ func CreateCliFlagHandler(c *cobra.Command, envPrefix string) *CliFlagHandler {
 		Cmd:       c,
 		EnvPrefix: envPrefix,
 	}
+}
+
+// CreateCliFlagHandlerWithUseConfigFlag creates a new CliFlagHandler with a
+// specified config override flag. When the config flag is set, that will
+// trigger the flag handler to use the config preset values instead of the flag
+// defaults.
+func CreateCliFlagHandlerWithUseConfigFlag(c *cobra.Command, envPrefix string, configOverrideFlag string) *CliFlagHandler {
+	return &CliFlagHandler{
+		Cmd:           c,
+		EnvPrefix:     envPrefix,
+		useConfigFlag: configOverrideFlag,
+	}
+}
+
+// SetConfig sets the config for the CliFlagHandler.
+func (f *CliFlagHandler) SetConfig(config any) {
+	f.config = config
 }
 
 // BindStringFlag binds a string flag to a cobra flag and viper env var handler for a
@@ -118,6 +137,19 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	default:
 		log.Errorf("Flag '%s' has an unsupported type: %s", flagName, valueKind)
 		panic(fmt.Sprintf("getValue: unsupported flag type: %s", valueKind))
+	}
+
+	if f.useConfigFlag != "" && f.Cmd.Flag(f.useConfigFlag).Changed {
+		// check if value exists in config and return it
+		if f.config != nil {
+			configValue, found := GetFieldValueByTag(f.config, "flag", flagName)
+			if found {
+				value := configValue.String()
+				log.Debugf("%s flag is set via config file: %s", flagName, value)
+				return value
+			}
+			log.Debugf("Config value for %s not found or invalid. Skipping.", flagName)
+		}
 	}
 
 	if f.Cmd.Flag(flagName).Changed {

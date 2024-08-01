@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// copyFile copies the contents of the src file to dst.
+// CopyFile copies the contents of the src file to dst.
 // If dst does not exist, it will be created, and if it does, it will be overwritten.
 func CopyFile(src, dst string) error {
 	sourceFile, err := os.Open(src)

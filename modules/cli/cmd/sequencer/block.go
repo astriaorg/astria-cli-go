@@ -22,16 +22,19 @@ func init() {
 	SequencerCmd.AddCommand(blockCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(blockCmd, cmd.EnvPrefix)
+	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the block from.")
 	flagHandler.BindBoolFlag("json", false, "Output the block in JSON format.")
 }
 
 func blockCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	printJSON := flagHandler.GetValue("json") == "true"
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := AddPortToURL(url)
+	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
 
 	height, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {

@@ -24,6 +24,7 @@ func init() {
 	SequencerCmd.AddCommand(balancesCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(balancesCmd, cmd.EnvPrefix)
+	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer to retrieve the balance from.")
 	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 
@@ -31,11 +32,13 @@ func init() {
 }
 
 func balancesCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	printJSON := flagHandler.GetValue("json") == "true"
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := AddPortToURL(url)
+	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
 
 	address := args[0]
 	if !strings.HasPrefix(address, DefaultAddressPrefix) {

@@ -25,13 +25,15 @@ var addFeeAssetCmd = &cobra.Command{
 }
 
 func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := sequencercmd.GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
+
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := sequencercmd.AddPortToURL(url)
-
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = sequencercmd.AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	asset := args[0]
 
@@ -46,14 +48,12 @@ func addFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	isAsync := flagHandler.GetValue("async") == "true"
-
 	opts := sequencer.FeeAssetOpts{
 		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 		Asset:            asset,
 	}
 	tx, err := sequencer.AddFeeAsset(opts)
@@ -78,13 +78,15 @@ var removeFeeAssetCmd = &cobra.Command{
 }
 
 func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := sequencercmd.GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
+
 	printJSON := flagHandler.GetValue("json") == "true"
-
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := sequencercmd.AddPortToURL(url)
-
-	chainId := flagHandler.GetValue("sequencer-chain-id")
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = sequencercmd.AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	asset := args[0]
 
@@ -99,14 +101,12 @@ func removeFeeAssetCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	isAsync := flagHandler.GetValue("async") == "true"
-
 	opts := sequencer.FeeAssetOpts{
 		IsAsync:          isAsync,
 		AddressPrefix:    sequencercmd.DefaultAddressPrefix,
 		FromKey:          from,
 		SequencerURL:     sequencerURL,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 		Asset:            asset,
 	}
 	tx, err := sequencer.RemoveFeeAsset(opts)
@@ -127,6 +127,7 @@ func init() {
 	feeAssetCmd.AddCommand(addFeeAssetCmd)
 
 	afafh := cmd.CreateCliFlagHandler(addFeeAssetCmd, cmd.EnvPrefix)
+	afafh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	afafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to add fee asset to.")
 	afafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	afafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
@@ -140,6 +141,7 @@ func init() {
 	feeAssetCmd.AddCommand(removeFeeAssetCmd)
 
 	rfafh := cmd.CreateCliFlagHandler(removeFeeAssetCmd, cmd.EnvPrefix)
+	rfafh.BindStringFlag("network", sequencercmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	rfafh.BindStringPFlag("sequencer-url", "u", sequencercmd.DefaultSequencerURL, "The URL of the sequencer to remove fee asset from.")
 	rfafh.BindBoolFlag("json", false, "Output the command result in JSON format.")
 	rfafh.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")

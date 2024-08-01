@@ -28,11 +28,17 @@ and is the only actor authorized to transfer out of this account.`,
 }
 
 func bridgeInitCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	printJSON := flagHandler.GetValue("json") == "true"
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := AddPortToURL(url)
+	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -50,11 +56,6 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 	}
 
 	rollupName := args[0]
-
-	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
-
-	asset := flagHandler.GetValue("asset")
-	feeAsset := flagHandler.GetValue("fee-asset")
 
 	sa := flagHandler.GetValue("sudo-address")
 	if sa == "" {
@@ -75,8 +76,6 @@ func bridgeInitCmdHandler(c *cobra.Command, args []string) {
 		panic(fmt.Errorf("withdrawer address does not have the expected prefix: %s", DefaultAddressPrefix))
 	}
 	withdrawerAddress := AddressFromText(wa)
-
-	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.InitBridgeOpts{
 		IsAsync:           isAsync,
@@ -115,11 +114,17 @@ bridged to a destination chain address if an IBC relayer is running.`,
 }
 
 func bridgeLockCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	printJSON := flagHandler.GetValue("json") == "true"
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := AddPortToURL(url)
+	printJSON := flagHandler.GetValue("json") == "true"
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+	isAsync := flagHandler.GetValue("async") == "true"
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -141,14 +146,7 @@ func bridgeLockCmdHandler(c *cobra.Command, args []string) {
 	to := args[1]
 	toAddress := AddressFromText(to)
 
-	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
-
-	asset := flagHandler.GetValue("asset")
-	feeAsset := flagHandler.GetValue("fee-asset")
-
 	destinationChainAddress := args[2]
-
-	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.BridgeLockOpts{
 		IsAsync:                 isAsync,
@@ -180,6 +178,7 @@ func init() {
 
 	bridgeCmd.AddCommand(bridgeInitCmd)
 	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
+	bifh.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
 	bifh.BindStringFlag("asset", DefaultAsset, "The name of the asset we want to bridge.")
 	bifh.BindStringFlag("fee-asset", DefaultFeeAsset, "The name of the asset used for fees.")
@@ -199,6 +198,7 @@ func init() {
 
 	bridgeCmd.AddCommand(bridgeLockCmd)
 	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
+	blfh.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	blfh.BindStringFlag("sequencer-chain-id", DefaultSequencerChainID, "The chain ID of the sequencer.")
 	blfh.BindStringFlag("asset", DefaultAsset, "The asset to be locked and transferred.")
 	blfh.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used to pay the transaction fee.")

@@ -158,7 +158,7 @@ type NetworkConfig struct {
 	NativeDenom      string `mapstructure:"default_denom" toml:"default_denom"`
 }
 
-// DefaultNetworksConfig returns a NetworksConfig struct populated with all
+// DefaultNetworksConfigs returns a NetworksConfig struct populated with all
 // network defaults.
 func DefaultNetworksConfigs() NetworkConfigs {
 	config := NetworkConfigs{

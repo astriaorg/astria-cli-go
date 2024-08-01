@@ -25,15 +25,19 @@ func init() {
 	flagHandler := cmd.CreateCliFlagHandler(nonceCmd, cmd.EnvPrefix)
 
 	flagHandler.BindStringPFlag("sequencer-url", "u", DefaultSequencerURL, "The URL of the sequencer.")
+	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flagHandler.BindBoolFlag("json", false, "Output in JSON format.")
 }
 
 func nonceCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	printJSON := flagHandler.GetValue("json") == "true"
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := AddPortToURL(url)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
+
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	address := args[0]
 	if !strings.HasPrefix(address, DefaultAddressPrefix) {

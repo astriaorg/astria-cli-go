@@ -27,6 +27,7 @@ func init() {
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
 	flagHandler.BindStringFlag("asset", DefaultAsset, "The asset to be transferred.")
 	flagHandler.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used for paying fees.")
+	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flagHandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 
 	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
@@ -34,11 +35,17 @@ func init() {
 }
 
 func transferCmdHandler(c *cobra.Command, args []string) {
-	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
-	printJSON := flagHandler.GetValue("json") == "true"
+	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
+	networkConfig := GetNetworkConfigFromFlags(flagHandler)
+	flagHandler.SetConfig(networkConfig)
 
-	url := flagHandler.GetValue("sequencer-url")
-	sequencerURL := AddPortToURL(url)
+	sequencerURL := flagHandler.GetValue("sequencer-url")
+	sequencerURL = AddPortToURL(sequencerURL)
+	asset := flagHandler.GetValue("asset")
+	feeAsset := flagHandler.GetValue("fee-asset")
+	sequencerChainID := flagHandler.GetValue("sequencer-chain-id")
+
+	printJSON := flagHandler.GetValue("json") == "true"
 
 	priv, err := GetPrivateKeyFromFlags(c)
 	if err != nil {
@@ -60,11 +67,6 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	asset := flagHandler.GetValue("asset")
-	feeAsset := flagHandler.GetValue("fee-asset")
-
-	chainId := flagHandler.GetValue("sequencer-chain-id")
-
 	isAsync := flagHandler.GetValue("async") == "true"
 
 	opts := sequencer.TransferOpts{
@@ -76,7 +78,7 @@ func transferCmdHandler(c *cobra.Command, args []string) {
 		Amount:           amount,
 		Asset:            asset,
 		FeeAsset:         feeAsset,
-		SequencerChainID: chainId,
+		SequencerChainID: sequencerChainID,
 	}
 	tx, err := sequencer.Transfer(opts)
 	if err != nil {
