@@ -166,7 +166,7 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	return value
 }
 
-// Helper function to get field by tag
+// getFieldValueByTag gets a field's value from a struct by the specified tagName.
 func getFieldValueByTag(obj interface{}, tagName, tagValue string) (reflect.Value, bool) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() == reflect.Ptr {
