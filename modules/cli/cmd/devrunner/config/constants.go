@@ -1,6 +1,8 @@
 package config
 
 const (
+	duskNum                          = "9"
+	dawnNum                          = "0"
 	BinariesDirName                  = "bin"
 	DataDirName                      = "data"
 	DefaultBaseConfigName            = "base-config.toml"

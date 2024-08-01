@@ -5,17 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/pelletier/go-toml/v2"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
-
-const duskNum = "9"
-const dawnNum = "0"
 
 type BaseConfig struct {
 	// conductor
@@ -141,109 +136,6 @@ func NewBaseConfig(instanceName string) BaseConfig {
 	}
 }
 
-// NetworkConfigs is the struct that holds the configuration for all individual Astria networks.
-type NetworkConfigs struct {
-	Local   NetworkConfig `mapstructure:"local" toml:"local"`
-	Dusk    NetworkConfig `mapstructure:"dusk" toml:"dusk"`
-	Dawn    NetworkConfig `mapstructure:"dawn" toml:"dawn"`
-	Mainnet NetworkConfig `mapstructure:"mainnet" toml:"mainnet"`
-}
-
-// NetworkConfig is the struct that holds the configuration for an individual Astria network.
-type NetworkConfig struct {
-	SequencerChainId string `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
-	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
-	SequencerRPC     string `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
-	RollupName       string `mapstructure:"rollup_name" toml:"rollup_name"`
-	NativeDenom      string `mapstructure:"default_denom" toml:"default_denom"`
-}
-
-// DefaultNetworksConfigs returns a NetworksConfig struct populated with all
-// network defaults.
-func DefaultNetworksConfigs() NetworkConfigs {
-	config := NetworkConfigs{
-		Local: NetworkConfig{
-			SequencerChainId: "sequencer-test-chain-0",
-			SequencerGRPC:    "http://127.0.0.1:8080",
-			SequencerRPC:     "http://127.0.0.1:26657",
-			RollupName:       "astria-test-chain",
-			NativeDenom:      "nria",
-		},
-		Dusk: NetworkConfig{
-			SequencerChainId: "astria-dusk-" + duskNum,
-			SequencerGRPC:    "https://grpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
-			RollupName:       "",
-			NativeDenom:      "nria",
-		},
-		Dawn: NetworkConfig{
-			SequencerChainId: "astria-dawn-" + dawnNum,
-			SequencerGRPC:    "https://grpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
-			RollupName:       "",
-			NativeDenom:      "ibc/channel0/utia",
-		},
-		Mainnet: NetworkConfig{
-			SequencerChainId: "astria",
-			SequencerGRPC:    "https://grpc.sequencer.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.astria.org/",
-			RollupName:       "",
-			NativeDenom:      "ibc/channel0/utia",
-		},
-	}
-	return config
-}
-
-// LoadNetworkConfigsOrPanic loads the NetworksConfig from the given path. If the file
-// cannot be loaded or parsed, the function will panic.
-func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
-	viper.SetConfigFile(path)
-
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
-		panic(err)
-	}
-
-	var config NetworkConfigs
-	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
-		panic(err)
-	}
-
-	return config
-}
-
-// CreateNetworksConfig creates a networks configuration file at
-// the given path, populating the file with the network defaults, and overriding
-// the default local denom and local sequencer network chain id .
-// It will skip initialization if the file already exists. It will panic if the
-// file cannot be created or written to.
-func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) {
-
-	_, err := os.Stat(path)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", path)
-		return
-	}
-	// create an instance of the Config struct with some data
-	config := DefaultNetworksConfigs()
-	config.Local.NativeDenom = localNativeDenom
-	config.Local.SequencerChainId = localSequencerChainId
-
-	// open a file for writing
-	file, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	// encode the struct to TOML and write to the file
-	if err := toml.NewEncoder(file).Encode(config); err != nil {
-		panic(err)
-	}
-	log.Infof("New network config file created successfully: %s\n", path)
-}
-
 // CreateBaseConfig creates a base configuration file at
 // the given path, populating the file with the service defaults.
 // It will skip initialization if the file already exists. It will panic if the
@@ -311,29 +203,4 @@ func (b BaseConfig) ToSlice() []string {
 	}
 
 	return output
-}
-
-// GetEndpointOverrides returns a slice of environment variables for supporting
-// the ability to run against different Sequencer networks. It enables a way to
-// dynamically configure endpoints for Conductor and Composer to override
-// the default environment variables for the network configuration. It uses the
-// BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
-func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
-	rollupEndpoint := bc.Astria_composer_rollups
-	// get the rollup ws endpoint
-	pattern := `ws{1,2}:\/\/.*:\d+`
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		log.Error("Error compiling regex")
-		panic(err)
-	}
-	match := re.FindString(rollupEndpoint)
-
-	return []string{
-		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
-		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
-		"ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL=" + n.SequencerRPC,
-		"ASTRIA_COMPOSER_SEQUENCER_URL=" + n.SequencerRPC,
-		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::" + match,
-	}
 }
