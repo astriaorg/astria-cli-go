@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -14,4 +15,22 @@ func CreateDirOrPanic(dirName string) {
 		log.WithError(err).Error("Error creating data directory")
 		panic(err)
 	}
+}
+
+// GetFieldValueByTag gets a field's value from a struct by the specified tagName.
+func GetFieldValueByTag(obj interface{}, tagName, tagValue string) (reflect.Value, bool) {
+	val := reflect.ValueOf(obj)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	typ := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		tag := field.Tag.Get(tagName)
+		if tag == tagValue {
+			return val.Field(i), true
+		}
+	}
+	return reflect.Value{}, false
 }

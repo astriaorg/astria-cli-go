@@ -142,7 +142,7 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	if f.useConfigFlag != "" && f.Cmd.Flag(f.useConfigFlag).Changed {
 		// check if value exists in config and return it
 		if f.config != nil {
-			configValue, found := getFieldByTag(f.config, "flag", flagName)
+			configValue, found := GetFieldValueByTag(f.config, "flag", flagName)
 			if found {
 				value := configValue.String()
 				log.Debugf("%s flag is set via config file: %s", flagName, value)
@@ -164,22 +164,4 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 
 	log.Debugf("%s flag is not set, using default: %s", flagName, value)
 	return value
-}
-
-// getFieldValueByTag gets a field's value from a struct by the specified tagName.
-func getFieldValueByTag(obj interface{}, tagName, tagValue string) (reflect.Value, bool) {
-	val := reflect.ValueOf(obj)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-
-	typ := val.Type()
-	for i := 0; i < val.NumField(); i++ {
-		field := typ.Field(i)
-		tag := field.Tag.Get(tagName)
-		if tag == tagValue {
-			return val.Field(i), true
-		}
-	}
-	return reflect.Value{}, false
 }
