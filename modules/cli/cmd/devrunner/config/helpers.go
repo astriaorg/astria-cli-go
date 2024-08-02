@@ -339,7 +339,7 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 }
 
 // findBinaryByName returns a pointer to a Binary struct with the given name
-// within an []Binary. It will return nil if the speciic struct is not found.
+// within a []Binary. It will return nil if the speciic struct is not found.
 func findBinaryByName(binaries []Binary, name string) *Binary {
 	for _, binary := range binaries {
 		if binary.Name == name {
