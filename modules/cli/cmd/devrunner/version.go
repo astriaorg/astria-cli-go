@@ -56,6 +56,5 @@ func init() {
 	devCmd.AddCommand(VersionCmd)
 
 	flagHandler := cmd.CreateCliFlagHandler(VersionCmd, cmd.EnvPrefix)
-	flagHandler.BindStringFlag("network", config.DefaultTargetNetwork, "Select the network to run the services against. Valid networks are: local, dusk, dawn, mainnet")
-
+	flagHandler.BindStringFlag("network", config.DefaultTargetNetwork, "Select the network to print the service versions for.")
 }

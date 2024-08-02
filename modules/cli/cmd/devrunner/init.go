@@ -3,6 +3,7 @@ package devrunner
 import (
 	"archive/tar"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -74,10 +75,14 @@ func runInitialization(c *cobra.Command, args []string) {
 	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
 	cmd.CreateDirOrPanic(localBinPath)
 
-	// TODO: download and unpack all services for all networks, not just local
-	binaries := networkConfigs.Configs["local"].Services
-	for _, bin := range binaries {
-		downloadAndUnpack(bin.Source, bin.Version, bin.Name, localBinPath)
+	// download and unpack all services for all networks
+	for label := range networkConfigs.Configs {
+		purpleANSI := "\033[35m"
+		resetANSI := "\033[0m"
+		log.Info(fmt.Sprint("--Downloading binaries for network: ", purpleANSI, label, resetANSI))
+		for _, bin := range networkConfigs.Configs[label].Services {
+			downloadAndUnpack(bin.Source, bin.Version, bin.Name, localBinPath)
+		}
 	}
 
 	// create the data directory for cometbft and sequencer
