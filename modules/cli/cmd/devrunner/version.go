@@ -16,6 +16,8 @@ var VersionCmd = &cobra.Command{
 }
 
 func seqVersionCmdHandler(c *cobra.Command, _ []string) {
+	// TODO: also load networks config and print the versions of the services
+	// specified there
 	fmt.Println("Default Service Versions:")
 	fmt.Println("cometbft:        ", "v"+config.CometbftVersion)
 	fmt.Println("astria-sequencer:", "v"+config.AstriaSequencerVersion)

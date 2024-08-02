@@ -18,6 +18,7 @@ type NetworkConfigs struct {
 type ServiceConfig struct {
 	Name    string `mapstructure:"name" toml:"name"`
 	Version string `mapstructure:"version" toml:"version"`
+	Source  string `mapstructure:"source" toml:"source"`
 }
 
 // NetworkConfig is the struct that holds the configuration for an individual Astria network.
@@ -44,19 +45,23 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:    "astria-conductor",
-						Version: "0.19.0",
+						Version: "v" + AstriaConductorVersion,
+						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
 					},
 					"composer": {
 						Name:    "astria-composer",
-						Version: "0.8.1",
+						Version: "v" + AstriaComposerVersion,
+						Source:  findBinaryByName(Binaries, "astria-composer").Url,
 					},
 					"sequencer": {
 						Name:    "astria-sequencer",
-						Version: "0.15.0",
+						Version: "v" + AstriaSequencerVersion,
+						Source:  findBinaryByName(Binaries, "astria-sequencer").Url,
 					},
 					"cometbft": {
 						Name:    "cometbft",
-						Version: "0.38.8",
+						Version: "v" + CometbftVersion,
+						Source:  findBinaryByName(Binaries, "cometbft").Url,
 					},
 				},
 			},
@@ -69,11 +74,13 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:    "astria-conductor",
-						Version: "0.19.0",
+						Version: "v" + AstriaConductorVersion,
+						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
 					},
 					"composer": {
 						Name:    "astria-composer",
-						Version: "0.8.1",
+						Version: "v" + AstriaComposerVersion,
+						Source:  findBinaryByName(Binaries, "astria-composer").Url,
 					},
 				},
 			},
@@ -86,11 +93,13 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:    "astria-conductor",
-						Version: "0.19.0",
+						Version: "v" + AstriaConductorVersion,
+						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
 					},
 					"composer": {
 						Name:    "astria-composer",
-						Version: "0.8.1",
+						Version: "v" + AstriaComposerVersion,
+						Source:  findBinaryByName(Binaries, "astria-composer").Url,
 					},
 				},
 			},
@@ -103,11 +112,13 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:    "astria-conductor",
-						Version: "0.19.0",
+						Version: "v" + AstriaConductorVersion,
+						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
 					},
 					"composer": {
 						Name:    "astria-composer",
-						Version: "0.8.1",
+						Version: "v" + AstriaComposerVersion,
+						Source:  findBinaryByName(Binaries, "astria-composer").Url,
 					},
 				},
 			},

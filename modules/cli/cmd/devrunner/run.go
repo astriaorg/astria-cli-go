@@ -73,6 +73,12 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	// we will set runners after we decide which binaries we need to run
 	var runners []processrunner.ProcessRunner
 
+	// TODO: load the services from the networks config based on network name
+	// and build the process runners for each service, with special treatment
+	// for "known" services like sequencer, composer, conductor, and cometbft
+	// this should all be dynamic and based on the network config
+	// also need to order known services then anything else at the end
+
 	// setup services based on network config
 	switch network {
 	case "local":
@@ -86,10 +92,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
 
 		// get the binary paths
-		conductorPath := getFlagPath(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
-		cometbftPath := getFlagPath(c, "cometbft-path", "cometbft", filepath.Join(binDir, "cometbft"))
-		composerPath := getFlagPath(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
-		sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", filepath.Join(binDir, "astria-sequencer"))
+		// TODO: known services should be loaded from the networks config
+		conductorPath := getFlagPath(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor-v"+config.AstriaConductorVersion))
+		cometbftPath := getFlagPath(c, "cometbft-path", "cometbft", filepath.Join(binDir, "cometbft-v"+config.CometbftVersion))
+		composerPath := getFlagPath(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer-v"+config.AstriaComposerVersion))
+		sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", filepath.Join(binDir, "astria-sequencer-v"+config.AstriaSequencerVersion))
 		log.Debugf("Using binaries from %s", binDir)
 
 		// sequencer

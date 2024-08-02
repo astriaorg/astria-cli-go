@@ -179,12 +179,12 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 }
 
 // InitCometbft initializes CometBFT for running a local sequencer.
-func InitCometbft(defaultDir string, dataDirName string, binDirName string, configDirName string) {
+func InitCometbft(defaultDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
 	log.Info("Initializing CometBFT for running local sequencer:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
 	// verify that cometbft was downloaded and extracted to the correct location
-	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
+	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft-v"+binVersion)
 	if !util.PathExists(cometbftCmdPath) {
 		log.Error("Error: cometbft binary not found here", cometbftCmdPath)
 		log.Error("\tCannot continue with initialization.")
@@ -336,4 +336,15 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
 	}
 	return serviceLogLevelOverrides
+}
+
+// findBinaryByName returns a pointer to a Binary struct with the given name
+// within an []Binary. It will return nil if the speciic struct is not found.
+func findBinaryByName(binaries []Binary, name string) *Binary {
+	for _, binary := range binaries {
+		if binary.Name == name {
+			return &binary
+		}
+	}
+	return nil
 }
