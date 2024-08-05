@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 
 	log "github.com/sirupsen/logrus"
@@ -16,9 +17,11 @@ type NetworkConfigs struct {
 }
 
 type ServiceConfig struct {
-	Name    string `mapstructure:"name" toml:"name"`
-	Version string `mapstructure:"version" toml:"version"`
-	Source  string `mapstructure:"source" toml:"source"`
+	Name        string `mapstructure:"name" toml:"name"`
+	Version     string `mapstructure:"version" toml:"version"`
+	DownloadURL string `mapstructure:"download_url" toml:"download_url"`
+	LocalPath   string `mapstructure:"local_path" toml:"local_path"`
+	// TODO: implement generic args?
 }
 
 // NetworkConfig is the struct that holds the configuration for an individual Astria network.
@@ -33,7 +36,7 @@ type NetworkConfig struct {
 
 // DefaultNetworksConfigs returns a NetworksConfig struct populated with all
 // network defaults.
-func DefaultNetworksConfigs() NetworkConfigs {
+func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 	return NetworkConfigs{
 		Configs: map[string]NetworkConfig{
 			"local": {
@@ -44,24 +47,28 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				NativeDenom:      "nria",
 				Services: map[string]ServiceConfig{
 					"conductor": {
-						Name:    "astria-conductor",
-						Version: "v" + AstriaConductorVersion,
-						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-conductor").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
 					},
 					"composer": {
-						Name:    "astria-composer",
-						Version: "v" + AstriaComposerVersion,
-						Source:  findBinaryByName(Binaries, "astria-composer").Url,
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-composer").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
 					},
 					"sequencer": {
-						Name:    "astria-sequencer",
-						Version: "v" + AstriaSequencerVersion,
-						Source:  findBinaryByName(Binaries, "astria-sequencer").Url,
+						Name:        "astria-sequencer",
+						Version:     "v" + AstriaSequencerVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-sequencer").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-sequencer-v"+AstriaSequencerVersion),
 					},
 					"cometbft": {
-						Name:    "cometbft",
-						Version: "v" + CometbftVersion,
-						Source:  findBinaryByName(Binaries, "cometbft").Url,
+						Name:        "cometbft",
+						Version:     "v" + CometbftVersion,
+						DownloadURL: findBinaryByName(Binaries, "cometbft").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "cometbft-v"+CometbftVersion),
 					},
 				},
 			},
@@ -73,14 +80,16 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				NativeDenom:      "nria",
 				Services: map[string]ServiceConfig{
 					"conductor": {
-						Name:    "astria-conductor",
-						Version: "v" + AstriaConductorVersion,
-						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-conductor").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
 					},
 					"composer": {
-						Name:    "astria-composer",
-						Version: "v" + AstriaComposerVersion,
-						Source:  findBinaryByName(Binaries, "astria-composer").Url,
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-composer").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
 					},
 				},
 			},
@@ -92,14 +101,16 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				NativeDenom:      "ibc/channel0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
-						Name:    "astria-conductor",
-						Version: "v" + AstriaConductorVersion,
-						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-conductor").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
 					},
 					"composer": {
-						Name:    "astria-composer",
-						Version: "v" + AstriaComposerVersion,
-						Source:  findBinaryByName(Binaries, "astria-composer").Url,
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-composer").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
 					},
 				},
 			},
@@ -111,14 +122,16 @@ func DefaultNetworksConfigs() NetworkConfigs {
 				NativeDenom:      "ibc/channel0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
-						Name:    "astria-conductor",
-						Version: "v" + AstriaConductorVersion,
-						Source:  findBinaryByName(Binaries, "astria-conductor").Url,
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-conductor").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
 					},
 					"composer": {
-						Name:    "astria-composer",
-						Version: "v" + AstriaComposerVersion,
-						Source:  findBinaryByName(Binaries, "astria-composer").Url,
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: findBinaryByName(Binaries, "astria-composer").Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
 					},
 				},
 			},
@@ -150,22 +163,22 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 // the default local denom and local sequencer network chain id.
 // It will skip initialization if the file already exists. It will panic if the
 // file cannot be created or written to.
-func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) {
+func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativeDenom string) {
 
-	_, err := os.Stat(path)
+	_, err := os.Stat(configPath)
 	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", path)
+		log.Infof("%s already exists. Skipping initialization.\n", configPath)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := DefaultNetworksConfigs()
+	config := DefaultNetworksConfigs(binPath)
 	local := config.Configs["local"]
 	local.NativeDenom = localNativeDenom
 	local.SequencerChainId = localSequencerChainId
 	config.Configs["local"] = local
 
 	// open a file for writing
-	file, err := os.Create(path)
+	file, err := os.Create(configPath)
 	if err != nil {
 		panic(err)
 	}
@@ -175,7 +188,7 @@ func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) 
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
 	}
-	log.Infof("New network config file created successfully: %s\n", path)
+	log.Infof("New network config file created successfully: %s\n", configPath)
 }
 
 // GetEndpointOverrides returns a slice of environment variables for supporting

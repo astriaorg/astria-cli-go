@@ -56,8 +56,13 @@ func runInitialization(c *cobra.Command, args []string) {
 	log.Info("Creating new instance in:", instanceDir)
 	cmd.CreateDirOrPanic(instanceDir)
 
+	// create the local bin directory for downloaded binaries
+	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
+	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
+	cmd.CreateDirOrPanic(localBinPath)
+
 	networksConfigPath := filepath.Join(defaultDir, instance, config.DefaultNetworksConfigName)
-	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDefaultDenom)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
@@ -70,18 +75,13 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDefaultDenom)
 
-	// create the local bin directory for downloaded binaries
-	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
-	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
-	cmd.CreateDirOrPanic(localBinPath)
-
 	// download and unpack all services for all networks
 	for label := range networkConfigs.Configs {
 		purpleANSI := "\033[35m"
 		resetANSI := "\033[0m"
 		log.Info(fmt.Sprint("--Downloading binaries for network: ", purpleANSI, label, resetANSI))
 		for _, bin := range networkConfigs.Configs[label].Services {
-			downloadAndUnpack(bin.Source, bin.Version, bin.Name, localBinPath)
+			downloadAndUnpack(bin.DownloadURL, bin.Version, bin.Name, localBinPath)
 		}
 	}
 
