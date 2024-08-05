@@ -305,7 +305,7 @@ func startProcessInOrder(ctx context.Context, runners ...processrunner.ProcessRu
 				err = runner.Start(ctx, previousRunner.GetDidStart())
 			}
 			if err != nil {
-				log.WithError(err).Error("Error running %s", runner.GetTitle())
+				log.WithError(err).Errorf("Error running %s", runner.GetTitle())
 				return nil, err
 			}
 			returnRunners = append(returnRunners, runner)
