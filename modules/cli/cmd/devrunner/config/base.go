@@ -19,8 +19,8 @@ import (
 // config toml file.
 type BaseConfig map[string]string
 
-// NewBaseConfig returns a BaseConfig with default values.
-func NewBaseConfig(instanceName string) BaseConfig {
+// DefaultBaseConfig returns a BaseConfig with default values.
+func DefaultBaseConfig(instanceName string) BaseConfig {
 	homeDir := cmd.GetUserHomeDirOrPanic()
 	return map[string]string{
 		// conductor
@@ -95,7 +95,7 @@ func CreateBaseConfig(path, instance string) {
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := NewBaseConfig(instance)
+	config := DefaultBaseConfig(instance)
 
 	// open a file for writing
 	file, err := os.Create(path)
