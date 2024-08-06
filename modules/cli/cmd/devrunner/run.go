@@ -36,6 +36,7 @@ func init() {
 	flagHandler.BindStringFlag("cometbft-path", "", "Provide an override path to a specific cometbft binary.")
 	flagHandler.BindStringFlag("composer-path", "", "Provide an override path to a specific composer binary.")
 	flagHandler.BindStringFlag("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
+	flagHandler.BindBoolFlag("export-logs", false, "Export logs to files.")
 }
 
 func runCmdHandler(c *cobra.Command, args []string) {
@@ -48,6 +49,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
+
+	exportLogs := flagHandler.GetValue("export-logs") == "true"
+	logsDir := filepath.Join(astriaDir, instance, config.LogsDirName)
+	currentTime := time.Now()
+	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
 
@@ -106,6 +112,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 				Env:        environment,
 				Args:       nil,
 				ReadyCheck: &seqReadinessCheck,
+				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
+				ExportLogs: exportLogs,
 			}
 			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
 		case "composer":
@@ -116,6 +124,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 				Env:        environment,
 				Args:       nil,
 				ReadyCheck: nil,
+				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
+				ExportLogs: exportLogs,
 			}
 			compRunner = processrunner.NewProcessRunner(ctx, composerOpts)
 		case "conductor":
@@ -126,6 +136,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 				Env:        environment,
 				Args:       nil,
 				ReadyCheck: nil,
+				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
+				ExportLogs: exportLogs,
 			}
 			condRunner = processrunner.NewProcessRunner(ctx, conductorOpts)
 		case "cometbft":
@@ -146,6 +158,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 				Env:        environment,
 				Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
 				ReadyCheck: &cometReadinessCheck,
+				LogPath:    filepath.Join(logsDir, appStartTime+"-cometbft.log"),
+				ExportLogs: exportLogs,
 			}
 			cometRunner = processrunner.NewProcessRunner(ctx, cometOpts)
 		default:
@@ -155,6 +169,8 @@ func runCmdHandler(c *cobra.Command, args []string) {
 				Env:        environment,
 				Args:       nil, // TODO: implement generic args?
 				ReadyCheck: nil,
+				LogPath:    filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
+				ExportLogs: exportLogs,
 			}
 			genericRunner := processrunner.NewProcessRunner(ctx, genericOpts)
 			genericRunners = append(genericRunners, genericRunner)

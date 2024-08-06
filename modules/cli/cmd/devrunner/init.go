@@ -52,6 +52,10 @@ func runInitialization(c *cobra.Command, args []string) {
 	log.Info("Creating new instance in:", instanceDir)
 	cmd.CreateDirOrPanic(instanceDir)
 
+	// create a directory for all log files
+	logsDir := filepath.Join(instanceDir, config.LogsDirName)
+	cmd.CreateDirOrPanic(logsDir)
+
 	// create the local bin directory for downloaded binaries
 	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
 	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
