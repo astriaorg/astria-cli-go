@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -43,13 +42,9 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	ctx := c.Context()
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
+	homeDir := cmd.GetUserHomeDirOrPanic()
 
-	astriaDir := filepath.Join(homePath, ".astria")
+	astriaDir := filepath.Join(homeDir, ".astria")
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)

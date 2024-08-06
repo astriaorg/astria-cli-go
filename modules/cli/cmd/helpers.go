@@ -34,3 +34,13 @@ func GetFieldValueByTag(obj interface{}, tagName, tagValue string) (reflect.Valu
 	}
 	return reflect.Value{}, false
 }
+
+// GetUserHomeDirOrPanic returns the user's home directory or panics if it cannot be found.
+func GetUserHomeDirOrPanic() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.WithError(err).Error("error getting home dir")
+		panic(err)
+	}
+	return homeDir
+}

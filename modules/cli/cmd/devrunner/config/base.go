@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/pelletier/go-toml/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -20,11 +21,7 @@ type BaseConfig map[string]string
 
 // NewBaseConfig returns a BaseConfig with default values.
 func NewBaseConfig(instanceName string) BaseConfig {
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
+	homeDir := cmd.GetUserHomeDirOrPanic()
 	return map[string]string{
 		// conductor
 		"astria_conductor_celestia_block_time_ms":        "1200",
@@ -45,7 +42,7 @@ func NewBaseConfig(instanceName string) BaseConfig {
 
 		// sequencer
 		"astria_sequencer_listen_addr":                "127.0.0.1:26658",
-		"astria_sequencer_db_filepath":                filepath.Join(homePath, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
+		"astria_sequencer_db_filepath":                filepath.Join(homeDir, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
 		"astria_sequencer_enable_mint":                "false",
 		"astria_sequencer_grpc_addr":                  "127.0.0.1:8080",
 		"astria_sequencer_log":                        "astria_sequencer=info",
@@ -64,7 +61,7 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_sequencer_url":              "http://127.0.0.1:26657",
 		"astria_composer_sequencer_chain_id":         "astria-dusk-" + duskNum,
 		"astria_composer_rollups":                    "astriachain::ws://127.0.0.1:8546",
-		"astria_composer_private_key_file":           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
+		"astria_composer_private_key_file":           filepath.Join(homeDir, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		"astria_composer_sequencer_address_prefix":   "astria",
 		"astria_composer_max_submit_interval_ms":     "2000",
 		"astria_composer_max_bytes_per_bundle":       "200000",

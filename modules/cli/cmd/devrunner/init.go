@@ -44,11 +44,7 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	localDefaultDenom := flagHandler.GetValue("local-native-denom")
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Error("error getting home dir:", err)
-		return
-	}
+	homeDir := cmd.GetUserHomeDirOrPanic()
 	// TODO: make the default home dir configurable
 	defaultDir := filepath.Join(homeDir, ".astria")
 	instanceDir := filepath.Join(defaultDir, instance)

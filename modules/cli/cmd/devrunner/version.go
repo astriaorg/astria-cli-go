@@ -2,12 +2,10 @@ package devrunner
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/config"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -22,12 +20,8 @@ var VersionCmd = &cobra.Command{
 func seqVersionCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	astriaDir := filepath.Join(homePath, ".astria")
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	astriaDir := filepath.Join(homeDir, ".astria")
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 

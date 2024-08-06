@@ -32,17 +32,13 @@ func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	binDir := filepath.Join(homePath, ".astria", instance, config.BinariesDirName)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	binDir := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
 
 	log.Infof("Deleting binaries for instance '%s'", instance)
 
 	// remove the state files for sequencer and Cometbft
-	err = os.RemoveAll(binDir)
+	err := os.RemoveAll(binDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
@@ -67,17 +63,13 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	instanceDir := filepath.Join(homePath, ".astria", instance)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	instanceDir := filepath.Join(homeDir, ".astria", instance)
 
 	log.Infof("Deleting instance '%s'", instance)
 
 	// remove the state files for sequencer and Cometbft
-	err = os.RemoveAll(instanceDir)
+	err := os.RemoveAll(instanceDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return

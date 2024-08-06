@@ -38,18 +38,14 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 
 	localDefaultDenom := flagHandler.GetValue("local-native-denom")
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	localConfigDir := filepath.Join(homePath, ".astria", instance, config.DefaultConfigDirName)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	localConfigDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
 	baseConfigPath := filepath.Join(localConfigDir, config.DefaultBaseConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
 	// remove the config files
-	err = os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftGenesisFilename))
+	err := os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftGenesisFilename))
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
@@ -90,19 +86,15 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 
 	localDefaultDenom := flagHandler.GetValue("local-native-denom")
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	networksConfigPath := filepath.Join(homePath, ".astria", instance, config.DefaultNetworksConfigName)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
 
-	err = os.Remove(networksConfigPath)
+	err := os.Remove(networksConfigPath)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
 	}
-	localBinPath := filepath.Join(homePath, ".astria", instance, config.BinariesDirName)
+	localBinPath := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
 	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDefaultDenom)
 }
 
@@ -120,18 +112,14 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	instanceDir := filepath.Join(homePath, ".astria", instance)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	instanceDir := filepath.Join(homeDir, ".astria", instance)
 	dataDir := filepath.Join(instanceDir, config.DataDirName)
 
 	log.Infof("Resetting state for instance '%s'", instance)
 
 	// remove the state files for sequencer and Cometbft
-	err = os.RemoveAll(dataDir)
+	err := os.RemoveAll(dataDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return

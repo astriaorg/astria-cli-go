@@ -337,3 +337,13 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 	}
 	return serviceLogLevelOverrides
 }
+
+// GetUserHomeDirOrPanic returns the user's home directory or panics if it cannot be found.
+func GetUserHomeDirOrPanic() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.WithError(err).Error("error getting home dir")
+		panic(err)
+	}
+	return homeDir
+}
