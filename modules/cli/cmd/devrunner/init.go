@@ -42,7 +42,7 @@ func runInitialization(c *cobra.Command, args []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := flagHandler.GetValue("local-native-denom")
+	localDenom := flagHandler.GetValue("local-native-denom")
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
 	// TODO: make the default home dir configurable
@@ -58,7 +58,7 @@ func runInitialization(c *cobra.Command, args []string) {
 	cmd.CreateDirOrPanic(localBinPath)
 
 	networksConfigPath := filepath.Join(defaultDir, instance, config.DefaultNetworksConfigName)
-	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDefaultDenom)
+	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
@@ -69,7 +69,7 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	config.CreateComposerDevPrivKeyFile(configDirPath)
 
-	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDefaultDenom)
+	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDenom)
 
 	// download and unpack all services for all networks
 	for label := range networkConfigs.Configs {
