@@ -1,9 +1,9 @@
 package devrunner
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -42,14 +42,9 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	ctx := c.Context()
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
+	homeDir := cmd.GetUserHomeDirOrPanic()
 
-	// astriaDir is the directory where all the astria instances data is stored
-	astriaDir := filepath.Join(homePath, ".astria")
+	astriaDir := filepath.Join(homeDir, ".astria")
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
@@ -65,169 +60,113 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefaultNetworksConfigName)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
+	// check if the network exists in the networks config
+	if _, ok := networkConfigs.Configs[network]; !ok {
+		log.Fatalf("Network %s not found in config file at %s", network, networksConfigPath)
+		panic("Network not found in config file")
+	}
+
 	// get the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set
 	// in the ProcessRunnerOpts for the Cometbft ProcessRunner
 	serviceLogLevel := flagHandler.GetValue("service-log-level")
+	serviceLogLevelOverrides := config.GetServiceLogLevelOverrides(serviceLogLevel)
 
-	// we will set runners after we decide which binaries we need to run
-	var runners []processrunner.ProcessRunner
+	networkOverrides := networkConfigs.Configs[network].GetEndpointOverrides(baseConfig)
 
-	// setup services based on network config
-	switch network {
-	case "local":
-		networkOverrides := networkConfigs.Local.GetEndpointOverrides(baseConfig)
-		serviceLogLevelOverrides := config.GetServiceLogLevelOverrides(serviceLogLevel)
-		environment := config.MergeConfigs(baseConfigEnvVars, networkOverrides, serviceLogLevelOverrides)
-		config.LogEnv(environment)
+	environment := config.MergeConfigs(baseConfigEnvVars, networkOverrides, serviceLogLevelOverrides)
+	config.LogEnv(environment)
 
-		log.Debug("Running local sequencer")
-		dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
-		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
+	// known services
+	var seqRunner processrunner.ProcessRunner
+	var cometRunner processrunner.ProcessRunner
+	var compRunner processrunner.ProcessRunner
+	var condRunner processrunner.ProcessRunner
+	// generic services
+	var genericRunners []processrunner.ProcessRunner
 
-		// get the binary paths
-		conductorPath := getFlagPath(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
-		cometbftPath := getFlagPath(c, "cometbft-path", "cometbft", filepath.Join(binDir, "cometbft"))
-		composerPath := getFlagPath(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
-		sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", filepath.Join(binDir, "astria-sequencer"))
-		log.Debugf("Using binaries from %s", binDir)
-
-		// sequencer
-		seqRCOpts := processrunner.ReadyCheckerOpts{
-			CallBackName:  "Sequencer gRPC server is OK",
-			Callback:      getSequencerOKCallback(environment),
-			RetryCount:    10,
-			RetryInterval: 100 * time.Millisecond,
-			HaltIfFailed:  false,
+	// load the services from the networks config and build the process runners
+	// for each service, with special treatment for "known" services like
+	// sequencer, composer, conductor, and cometbft
+	for label, service := range networkConfigs.Configs[network].Services {
+		switch label {
+		case "sequencer":
+			sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", service.LocalPath)
+			seqRCOpts := processrunner.ReadyCheckerOpts{
+				CallBackName:  "Sequencer gRPC server is OK",
+				Callback:      getSequencerOKCallback(environment),
+				RetryCount:    10,
+				RetryInterval: 100 * time.Millisecond,
+				HaltIfFailed:  false,
+			}
+			seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
+			seqOpts := processrunner.NewProcessRunnerOpts{
+				Title:      "Sequencer",
+				BinPath:    sequencerPath,
+				Env:        environment,
+				Args:       nil,
+				ReadyCheck: &seqReadinessCheck,
+			}
+			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
+		case "composer":
+			composerPath := getFlagPath(c, "composer-path", "composer", service.LocalPath)
+			composerOpts := processrunner.NewProcessRunnerOpts{
+				Title:      "Composer",
+				BinPath:    composerPath,
+				Env:        environment,
+				Args:       nil,
+				ReadyCheck: nil,
+			}
+			compRunner = processrunner.NewProcessRunner(ctx, composerOpts)
+		case "conductor":
+			conductorPath := getFlagPath(c, "conductor-path", "conductor", service.LocalPath)
+			conductorOpts := processrunner.NewProcessRunnerOpts{
+				Title:      "Conductor",
+				BinPath:    conductorPath,
+				Env:        environment,
+				Args:       nil,
+				ReadyCheck: nil,
+			}
+			condRunner = processrunner.NewProcessRunner(ctx, conductorOpts)
+		case "cometbft":
+			cometbftPath := getFlagPath(c, "cometbft-path", "cometbft", service.LocalPath)
+			cometRCOpts := processrunner.ReadyCheckerOpts{
+				CallBackName:  "CometBFT rpc server is OK",
+				Callback:      getCometbftOKCallback(environment),
+				RetryCount:    10,
+				RetryInterval: 100 * time.Millisecond,
+				HaltIfFailed:  false,
+			}
+			cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
+			dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
+			cometDataPath := filepath.Join(dataDir, ".cometbft")
+			cometOpts := processrunner.NewProcessRunnerOpts{
+				Title:      "Comet BFT",
+				BinPath:    cometbftPath,
+				Env:        environment,
+				Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
+				ReadyCheck: &cometReadinessCheck,
+			}
+			cometRunner = processrunner.NewProcessRunner(ctx, cometOpts)
+		default:
+			genericOpts := processrunner.NewProcessRunnerOpts{
+				Title:      service.Name,
+				BinPath:    service.LocalPath,
+				Env:        environment,
+				Args:       nil, // TODO: implement generic args?
+				ReadyCheck: nil,
+			}
+			genericRunner := processrunner.NewProcessRunner(ctx, genericOpts)
+			genericRunners = append(genericRunners, genericRunner)
 		}
-		seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
-		seqOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Sequencer",
-			BinPath:    sequencerPath,
-			Env:        environment,
-			Args:       nil,
-			ReadyCheck: &seqReadinessCheck,
-		}
-		seqRunner := processrunner.NewProcessRunner(ctx, seqOpts)
+	}
 
-		// cometbft
-		cometRCOpts := processrunner.ReadyCheckerOpts{
-			CallBackName:  "CometBFT rpc server is OK",
-			Callback:      getCometbftOKCallback(environment),
-			RetryCount:    10,
-			RetryInterval: 100 * time.Millisecond,
-			HaltIfFailed:  false,
-		}
-		cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
-		cometDataPath := filepath.Join(dataDir, ".cometbft")
-		cometOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Comet BFT",
-			BinPath:    cometbftPath,
-			Env:        environment,
-			Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
-			ReadyCheck: &cometReadinessCheck,
-		}
-		cometRunner := processrunner.NewProcessRunner(ctx, cometOpts)
+	// set the order of the services to start
+	allRunners := append([]processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}, genericRunners...)
 
-		// composer
-		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Composer",
-			BinPath:    composerPath,
-			Env:        environment,
-			Args:       nil,
-			ReadyCheck: nil,
-		}
-		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
-
-		// conductor
-		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Conductor",
-			BinPath:    conductorPath,
-			Env:        environment,
-			Args:       nil,
-			ReadyCheck: nil,
-		}
-		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
-
-		// shouldStart acts as a control channel to start this first process
-		shouldStart := make(chan bool)
-		close(shouldStart)
-		err := seqRunner.Start(ctx, shouldStart)
-		if err != nil {
-			log.WithError(err).Error("Error running sequencer")
-		}
-		err = cometRunner.Start(ctx, seqRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running cometbft")
-		}
-		err = compRunner.Start(ctx, cometRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running composer")
-		}
-		err = condRunner.Start(ctx, compRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running conductor")
-		}
-
-		runners = []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}
-
-	case "dusk", "dawn", "mainnet":
-		var networkOverrides []string
-		if network == "dusk" {
-			networkOverrides = networkConfigs.Dusk.GetEndpointOverrides(baseConfig)
-		} else if network == "dawn" {
-			networkOverrides = networkConfigs.Dawn.GetEndpointOverrides(baseConfig)
-		} else {
-			networkOverrides = networkConfigs.Mainnet.GetEndpointOverrides(baseConfig)
-		}
-		serviceLogLevelOverrides := config.GetServiceLogLevelOverrides(serviceLogLevel)
-		environment := config.MergeConfigs(baseConfigEnvVars, networkOverrides, serviceLogLevelOverrides)
-		config.LogEnv(environment)
-
-		log.Debug("Running remote sequencer")
-		binDir := filepath.Join(astriaDir, instance, config.BinariesDirName)
-
-		// get the binary paths
-		conductorPath := getFlagPath(c, "conductor-path", "conductor", filepath.Join(binDir, "astria-conductor"))
-		composerPath := getFlagPath(c, "composer-path", "composer", filepath.Join(binDir, "astria-composer"))
-
-		// composer
-		composerOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Composer",
-			BinPath:    composerPath,
-			Env:        environment,
-			Args:       nil,
-			ReadyCheck: nil,
-		}
-		compRunner := processrunner.NewProcessRunner(ctx, composerOpts)
-
-		// conductor
-		conductorOpts := processrunner.NewProcessRunnerOpts{
-			Title:      "Conductor",
-			BinPath:    conductorPath,
-			Env:        environment,
-			Args:       nil,
-			ReadyCheck: nil,
-		}
-		condRunner := processrunner.NewProcessRunner(ctx, conductorOpts)
-
-		// shouldStart acts as a control channel to start this first process
-		shouldStart := make(chan bool)
-		close(shouldStart)
-		err := compRunner.Start(ctx, shouldStart)
-		if err != nil {
-			log.WithError(err).Error("Error running composer")
-		}
-		err = condRunner.Start(ctx, compRunner.GetDidStart())
-		if err != nil {
-			log.WithError(err).Error("Error running conductor")
-		}
-		runners = []processrunner.ProcessRunner{compRunner, condRunner}
-
-	default:
-		log.Fatalf("Invalid network provided: %s", network)
-		log.Fatalf("Valid networks are: local, dusk, dawn, mainnet")
-		panic("Invalid network provided")
+	runners, err := startProcessInOrder(ctx, allRunners...)
+	if err != nil {
+		log.WithError(err).Error("Error starting services")
 	}
 
 	// create and start ui app
@@ -323,4 +262,56 @@ func getCometbftOKCallback(config []string) func() bool {
 			return false
 		}
 	}
+}
+
+// startProcessInOrder starts the ProcessRunners in order they are provided, and
+// returns an array of all successfully started services. It will skip any
+// ProcessRunners that are nil. It will return an error if any of the
+// ProcessRunners fail to start.
+func startProcessInOrder(ctx context.Context, runners ...processrunner.ProcessRunner) ([]processrunner.ProcessRunner, error) {
+	if len(runners) < 1 {
+		return nil, fmt.Errorf("no runners provided. Nothing to start")
+	}
+
+	var returnRunners []processrunner.ProcessRunner
+
+	previousRunner := runners[0]
+	remainingRunners := runners[1:]
+
+	var err error
+
+	// start the first runner
+	shouldStart := make(chan bool)
+	close(shouldStart)
+	if previousRunner != nil {
+		err = previousRunner.Start(ctx, shouldStart)
+		if err != nil {
+			log.WithError(err).Errorf("Error running %s", previousRunner.GetTitle())
+			return nil, err
+		}
+		returnRunners = append(returnRunners, previousRunner)
+	}
+
+	if len(remainingRunners) == 0 {
+		return returnRunners, nil
+	}
+
+	// start the remaining runners
+	for _, runner := range remainingRunners {
+		if runner != nil {
+			if previousRunner == nil {
+				err = runner.Start(ctx, shouldStart)
+			} else {
+				err = runner.Start(ctx, previousRunner.GetDidStart())
+			}
+			if err != nil {
+				log.WithError(err).Errorf("Error running %s", runner.GetTitle())
+				return nil, err
+			}
+			returnRunners = append(returnRunners, runner)
+			previousRunner = runner
+		}
+	}
+
+	return returnRunners, nil
 }

@@ -36,20 +36,16 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := flagHandler.GetValue("local-native-denom")
+	localDenom := flagHandler.GetValue("local-native-denom")
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	localConfigDir := filepath.Join(homePath, ".astria", instance, config.DefaultConfigDirName)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	localConfigDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
 	baseConfigPath := filepath.Join(localConfigDir, config.DefaultBaseConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
 	// remove the config files
-	err = os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftGenesisFilename))
+	err := os.Remove(filepath.Join(localConfigDir, config.DefaultCometbftGenesisFilename))
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
@@ -65,7 +61,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 		return
 	}
 
-	config.RecreateCometbftAndSequencerGenesisData(localConfigDir, localNetworkName, localDefaultDenom)
+	config.RecreateCometbftAndSequencerGenesisData(localConfigDir, localNetworkName, localDenom)
 	config.CreateBaseConfig(baseConfigPath, instance)
 
 	log.Infof("Successfully reset config files for instance '%s'", instance)
@@ -88,21 +84,18 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := flagHandler.GetValue("local-native-denom")
+	localDenom := flagHandler.GetValue("local-native-denom")
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	networksConfigPath := filepath.Join(homePath, ".astria", instance, config.DefaultNetworksConfigName)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
 
-	err = os.Remove(networksConfigPath)
+	err := os.Remove(networksConfigPath)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
 	}
-	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	localBinPath := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
+	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
 }
 
 // resetStateCmd represents the 'reset state' command
@@ -119,24 +112,20 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	instanceDir := filepath.Join(homePath, ".astria", instance)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	instanceDir := filepath.Join(homeDir, ".astria", instance)
 	dataDir := filepath.Join(instanceDir, config.DataDirName)
 
 	log.Infof("Resetting state for instance '%s'", instance)
 
 	// remove the state files for sequencer and Cometbft
-	err = os.RemoveAll(dataDir)
+	err := os.RemoveAll(dataDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
 		return
 	}
 	cmd.CreateDirOrPanic(dataDir)
-	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.DefaultConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.CometbftVersion, config.DefaultConfigDirName)
 
 	log.Infof("Successfully reset state for instance '%s'", instance)
 }

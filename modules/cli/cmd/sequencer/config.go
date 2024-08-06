@@ -82,12 +82,8 @@ func LoadSequencerNetworkConfigsOrPanic(path string) SequencerNetworkConfigs {
 // networks configuration file. The file is located in the user's home directory
 // in the default Astria config directory (~/.astria/).
 func BuildSequencerNetworkConfigsFilepath() string {
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	return filepath.Join(homePath, DefaultConfigDirName, DefaultSequencerNetworksConfigFilename)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	return filepath.Join(homeDir, DefaultConfigDirName, DefaultSequencerNetworksConfigFilename)
 }
 
 // CreateSequencerNetworkConfigs creates a sequencer networks configuration file at the

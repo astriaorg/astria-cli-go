@@ -1,7 +1,6 @@
 package sequencer
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
@@ -66,12 +65,8 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 				log.WithError(err).Error("Error storing private key")
 				panic(err)
 			}
-			homePath, err := os.UserHomeDir()
-			if err != nil {
-				log.WithError(err).Error("Error getting home dir")
-				panic(err)
-			}
-			astriaDir := filepath.Join(homePath, ".astria")
+			homeDir := cmd.GetUserHomeDirOrPanic()
+			astriaDir := filepath.Join(homeDir, ".astria")
 			keydir := filepath.Join(astriaDir, "keyfiles")
 			cmd.CreateDirOrPanic(keydir)
 

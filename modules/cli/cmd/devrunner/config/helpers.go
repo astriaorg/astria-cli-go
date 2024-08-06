@@ -179,12 +179,12 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 }
 
 // InitCometbft initializes CometBFT for running a local sequencer.
-func InitCometbft(defaultDir string, dataDirName string, binDirName string, configDirName string) {
+func InitCometbft(defaultDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
 	log.Info("Initializing CometBFT for running local sequencer:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
 	// verify that cometbft was downloaded and extracted to the correct location
-	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft")
+	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft-v"+binVersion)
 	if !util.PathExists(cometbftCmdPath) {
 		log.Error("Error: cometbft binary not found here", cometbftCmdPath)
 		log.Error("\tCannot continue with initialization.")

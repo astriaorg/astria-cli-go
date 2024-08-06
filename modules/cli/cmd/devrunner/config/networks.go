@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"regexp"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -14,184 +12,132 @@ import (
 	"github.com/spf13/viper"
 )
 
-const duskNum = "9"
-const dawnNum = "0"
-
-type BaseConfig struct {
-	// conductor
-	Astria_conductor_celestia_block_time_ms        int    `mapstructure:"astria_conductor_celestia_block_time_ms" toml:"astria_conductor_celestia_block_time_ms"`
-	Astria_conductor_celestia_bearer_token         string `mapstructure:"astria_conductor_celestia_bearer_token" toml:"astria_conductor_celestia_bearer_token"`
-	Astria_conductor_celestia_node_http_url        string `mapstructure:"astria_conductor_celestia_node_http_url" toml:"astria_conductor_celestia_node_http_url"`
-	Astria_conductor_execution_rpc_url             string `mapstructure:"astria_conductor_execution_rpc_url" toml:"astria_conductor_execution_rpc_url"`
-	Astria_conductor_execution_commit_level        string `mapstructure:"astria_conductor_execution_commit_level" toml:"astria_conductor_execution_commit_level"`
-	Astria_conductor_log                           string `mapstructure:"astria_conductor_log" toml:"astria_conductor_log"`
-	Astria_conductor_no_otel                       bool   `mapstructure:"astria_conductor_no_otel" toml:"astria_conductor_no_otel"`
-	Astria_conductor_force_stdout                  bool   `mapstructure:"astria_conductor_force_stdout" toml:"astria_conductor_force_stdout"`
-	Astria_conductor_pretty_print                  bool   `mapstructure:"astria_conductor_pretty_print" toml:"astria_conductor_pretty_print"`
-	Astria_conductor_sequencer_grpc_url            string `mapstructure:"astria_conductor_sequencer_grpc_url" toml:"astria_conductor_sequencer_grpc_url"`
-	Astria_conductor_sequencer_cometbft_url        string `mapstructure:"astria_conductor_sequencer_cometbft_url" toml:"astria_conductor_sequencer_cometbft_url"`
-	Astria_conductor_sequencer_block_time_ms       int    `mapstructure:"astria_conductor_sequencer_block_time_ms" toml:"astria_conductor_sequencer_block_time_ms"`
-	Astria_conductor_sequencer_requests_per_second int    `mapstructure:"astria_conductor_sequencer_requests_per_second" toml:"astria_conductor_sequencer_requests_per_second"`
-	Astria_conductor_no_metrics                    bool   `mapstructure:"astria_conductor_no_metrics" toml:"astria_conductor_no_metrics"`
-	Astria_conductor_metrics_http_listener_addr    string `mapstructure:"astria_conductor_metrics_http_listener_addr" toml:"astria_conductor_metrics_http_listener_addr"`
-
-	// sequencer
-	Astria_sequencer_listen_addr                string `mapstructure:"astria_sequencer_listen_addr" toml:"astria_sequencer_listen_addr"`
-	Astria_sequencer_db_filepath                string `mapstructure:"astria_sequencer_db_filepath" toml:"astria_sequencer_db_filepath"`
-	Astria_sequencer_enable_mint                bool   `mapstructure:"astria_sequencer_enable_mint" toml:"astria_sequencer_enable_mint"`
-	Astria_sequencer_grpc_addr                  string `mapstructure:"astria_sequencer_grpc_addr" toml:"astria_sequencer_grpc_addr"`
-	Astria_sequencer_log                        string `mapstructure:"astria_sequencer_log" toml:"astria_sequencer_log"`
-	Astria_sequencer_no_otel                    bool   `mapstructure:"astria_sequencer_no_otel" toml:"astria_sequencer_no_otel"`
-	Astria_sequencer_force_stdout               bool   `mapstructure:"astria_sequencer_force_stdout" toml:"astria_sequencer_force_stdout"`
-	Astria_sequencer_no_metrics                 bool   `mapstructure:"astria_sequencer_no_metrics" toml:"astria_sequencer_no_metrics"`
-	Astria_sequencer_metrics_http_listener_addr string `mapstructure:"astria_sequencer_metrics_http_listener_addr" toml:"astria_sequencer_metrics_http_listener_addr"`
-	Astria_sequencer_pretty_print               bool   `mapstructure:"astria_sequencer_pretty_print" toml:"astria_sequencer_pretty_print"`
-
-	// composer
-	Astria_composer_log                        string `mapstructure:"astria_composer_log" toml:"astria_composer_log"`
-	Astria_composer_no_otel                    bool   `mapstructure:"astria_composer_no_otel" toml:"astria_composer_no_otel"`
-	Astria_composer_force_stdout               bool   `mapstructure:"astria_composer_force_stdout" toml:"astria_composer_force_stdout"`
-	Astria_composer_pretty_print               bool   `mapstructure:"astria_composer_pretty_print" toml:"astria_composer_pretty_print"`
-	Astria_composer_api_listen_addr            string `mapstructure:"astria_composer_api_listen_addr" toml:"astria_composer_api_listen_addr"`
-	Astria_composer_sequencer_url              string `mapstructure:"astria_composer_sequencer_url" toml:"astria_composer_sequencer_url"`
-	Astria_composer_sequencer_chain_id         string `mapstructure:"astria_composer_sequencer_chain_id" toml:"astria_composer_sequencer_chain_id"`
-	Astria_composer_rollups                    string `mapstructure:"astria_composer_rollups" toml:"astria_composer_rollups"`
-	Astria_composer_private_key_file           string `mapstructure:"astria_composer_private_key_file" toml:"astria_composer_private_key_file"`
-	Astria_composer_sequencer_address_prefix   string `mapstructure:"astria_composer_sequencer_address_prefix" toml:"astria_composer_sequencer_address_prefix"`
-	Astria_composer_max_submit_interval_ms     int    `mapstructure:"astria_composer_max_submit_interval_ms" toml:"astria_composer_max_submit_interval_ms"`
-	Astria_composer_max_bytes_per_bundle       int    `mapstructure:"astria_composer_max_bytes_per_bundle" toml:"astria_composer_max_bytes_per_bundle"`
-	Astria_composer_bundle_queue_capacity      int    `mapstructure:"astria_composer_bundle_queue_capacity" toml:"astria_composer_bundle_queue_capacity"`
-	Astria_composer_no_metrics                 bool   `mapstructure:"astria_composer_no_metrics" toml:"astria_composer_no_metrics"`
-	Astria_composer_metrics_http_listener_addr string `mapstructure:"astria_composer_metrics_http_listener_addr" toml:"astria_composer_metrics_http_listener_addr"`
-	Astria_composer_grpc_addr                  string `mapstructure:"astria_composer_grpc_addr" toml:"astria_composer_grpc_addr"`
-	Astria_composer_fee_asset                  string `mapstructure:"astria_composer_fee_asset" toml:"astria_composer_fee_asset"`
-
-	// global
-	No_color string `mapstructure:"no_color" toml:"no_color"`
-
-	// otel
-	Otel_exporter_otlp_endpoint           string `mapstructure:"otel_exporter_otlp_endpoint" toml:"otel_exporter_otlp_endpoint"`
-	Otel_exporter_otlp_traces_endpoint    string `mapstructure:"otel_exporter_otlp_traces_endpoint" toml:"otel_exporter_otlp_traces_endpoint"`
-	Otel_exporter_otlp_traces_timeout     int    `mapstructure:"otel_exporter_otlp_traces_timeout" toml:"otel_exporter_otlp_traces_timeout"`
-	Otel_exporter_otlp_traces_compression string `mapstructure:"otel_exporter_otlp_traces_compression" toml:"otel_exporter_otlp_traces_compression"`
-	Otel_exporter_otlp_headers            string `mapstructure:"otel_exporter_otlp_headers" toml:"otel_exporter_otlp_headers"`
-	Otel_exporter_otlp_trace_headers      string `mapstructure:"otel_exporter_otlp_trace_headers" toml:"otel_exporter_otlp_trace_headers"`
-}
-
-func NewBaseConfig(instanceName string) BaseConfig {
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		log.WithError(err).Error("Error getting home dir")
-		panic(err)
-	}
-	return BaseConfig{
-		Astria_conductor_celestia_block_time_ms:        1200,
-		Astria_conductor_celestia_bearer_token:         "<JWT Bearer token>",
-		Astria_conductor_celestia_node_http_url:        "http://127.0.0.1:26658",
-		Astria_conductor_execution_rpc_url:             "http://127.0.0.1:50051",
-		Astria_conductor_execution_commit_level:        "SoftOnly",
-		Astria_conductor_log:                           "astria_conductor=info",
-		Astria_conductor_no_otel:                       true,
-		Astria_conductor_force_stdout:                  true,
-		Astria_conductor_pretty_print:                  true,
-		Astria_conductor_sequencer_grpc_url:            "http://127.0.0.1:8080",
-		Astria_conductor_sequencer_cometbft_url:        "http://127.0.0.1:26657",
-		Astria_conductor_sequencer_block_time_ms:       2000,
-		Astria_conductor_sequencer_requests_per_second: 500,
-		Astria_conductor_no_metrics:                    true,
-		Astria_conductor_metrics_http_listener_addr:    "127.0.0.1:9000",
-
-		Astria_sequencer_listen_addr:                "127.0.0.1:26658",
-		Astria_sequencer_db_filepath:                filepath.Join(homePath, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
-		Astria_sequencer_enable_mint:                false,
-		Astria_sequencer_grpc_addr:                  "127.0.0.1:8080",
-		Astria_sequencer_log:                        "astria_sequencer=info",
-		Astria_sequencer_no_otel:                    true,
-		Astria_sequencer_force_stdout:               true,
-		Astria_sequencer_no_metrics:                 true,
-		Astria_sequencer_metrics_http_listener_addr: "127.0.0.1:9000",
-		Astria_sequencer_pretty_print:               true,
-
-		Astria_composer_log:                        "astria_composer=info",
-		Astria_composer_no_otel:                    true,
-		Astria_composer_force_stdout:               true,
-		Astria_composer_pretty_print:               true,
-		Astria_composer_api_listen_addr:            "0.0.0.0:0",
-		Astria_composer_sequencer_url:              "http://127.0.0.1:26657",
-		Astria_composer_sequencer_chain_id:         "astria-dusk-" + duskNum,
-		Astria_composer_rollups:                    "astriachain::ws://127.0.0.1:8546",
-		Astria_composer_private_key_file:           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
-		Astria_composer_sequencer_address_prefix:   "astria",
-		Astria_composer_max_submit_interval_ms:     2000,
-		Astria_composer_max_bytes_per_bundle:       200000,
-		Astria_composer_bundle_queue_capacity:      40000,
-		Astria_composer_no_metrics:                 true,
-		Astria_composer_metrics_http_listener_addr: "127.0.0.1:9000",
-		Astria_composer_grpc_addr:                  "0.0.0.0:0",
-		Astria_composer_fee_asset:                  "nria",
-
-		No_color: "",
-
-		Otel_exporter_otlp_endpoint:           "http://localhost:4317",
-		Otel_exporter_otlp_traces_endpoint:    "http://localhost:4317/v1/traces",
-		Otel_exporter_otlp_traces_timeout:     10,
-		Otel_exporter_otlp_traces_compression: "gzip",
-		Otel_exporter_otlp_headers:            "key1=value1,key2=value2",
-		Otel_exporter_otlp_trace_headers:      "key1=value1,key2=value2",
-	}
-}
-
 // NetworkConfigs is the struct that holds the configuration for all individual Astria networks.
 type NetworkConfigs struct {
-	Local   NetworkConfig `mapstructure:"local" toml:"local"`
-	Dusk    NetworkConfig `mapstructure:"dusk" toml:"dusk"`
-	Dawn    NetworkConfig `mapstructure:"dawn" toml:"dawn"`
-	Mainnet NetworkConfig `mapstructure:"mainnet" toml:"mainnet"`
+	Configs map[string]NetworkConfig `mapstructure:"networks" toml:"networks"`
+}
+
+type ServiceConfig struct {
+	Name        string `mapstructure:"name" toml:"name"`
+	Version     string `mapstructure:"version" toml:"version"`
+	DownloadURL string `mapstructure:"download_url" toml:"download_url"`
+	LocalPath   string `mapstructure:"local_path" toml:"local_path"`
+	// TODO: implement generic args?
 }
 
 // NetworkConfig is the struct that holds the configuration for an individual Astria network.
 type NetworkConfig struct {
-	SequencerChainId string `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
-	SequencerGRPC    string `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
-	SequencerRPC     string `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
-	RollupName       string `mapstructure:"rollup_name" toml:"rollup_name"`
-	NativeDenom      string `mapstructure:"default_denom" toml:"default_denom"`
+	SequencerChainId string                   `mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
+	SequencerGRPC    string                   `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
+	SequencerRPC     string                   `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
+	RollupName       string                   `mapstructure:"rollup_name" toml:"rollup_name"`
+	NativeDenom      string                   `mapstructure:"default_denom" toml:"default_denom"`
+	Services         map[string]ServiceConfig `mapstructure:"services" toml:"services"`
 }
 
 // DefaultNetworksConfigs returns a NetworksConfig struct populated with all
 // network defaults.
-func DefaultNetworksConfigs() NetworkConfigs {
-	config := NetworkConfigs{
-		Local: NetworkConfig{
-			SequencerChainId: "sequencer-test-chain-0",
-			SequencerGRPC:    "http://127.0.0.1:8080",
-			SequencerRPC:     "http://127.0.0.1:26657",
-			RollupName:       "astria-test-chain",
-			NativeDenom:      "nria",
-		},
-		Dusk: NetworkConfig{
-			SequencerChainId: "astria-dusk-" + duskNum,
-			SequencerGRPC:    "https://grpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
-			RollupName:       "",
-			NativeDenom:      "nria",
-		},
-		Dawn: NetworkConfig{
-			SequencerChainId: "astria-dawn-" + dawnNum,
-			SequencerGRPC:    "https://grpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
-			RollupName:       "",
-			NativeDenom:      "ibc/channel0/utia",
-		},
-		Mainnet: NetworkConfig{
-			SequencerChainId: "astria",
-			SequencerGRPC:    "https://grpc.sequencer.astria.org/",
-			SequencerRPC:     "https://rpc.sequencer.astria.org/",
-			RollupName:       "",
-			NativeDenom:      "ibc/channel0/utia",
+func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
+	return NetworkConfigs{
+		Configs: map[string]NetworkConfig{
+			"local": {
+				SequencerChainId: "sequencer-test-chain-0",
+				SequencerGRPC:    "http://127.0.0.1:8080",
+				SequencerRPC:     "http://127.0.0.1:26657",
+				RollupName:       "astria-test-chain",
+				NativeDenom:      "nria",
+				Services: map[string]ServiceConfig{
+					"conductor": {
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: KnownBinaries.AstriaConductor.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+					},
+					"composer": {
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: KnownBinaries.AstriaComposer.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+					},
+					"sequencer": {
+						Name:        "astria-sequencer",
+						Version:     "v" + AstriaSequencerVersion,
+						DownloadURL: KnownBinaries.AstriaSequencer.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-sequencer-v"+AstriaSequencerVersion),
+					},
+					"cometbft": {
+						Name:        "cometbft",
+						Version:     "v" + CometbftVersion,
+						DownloadURL: KnownBinaries.CometBFT.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "cometbft-v"+CometbftVersion),
+					},
+				},
+			},
+			"dusk": {
+				SequencerChainId: "astria-dusk-" + duskNum,
+				SequencerGRPC:    "https://grpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
+				RollupName:       "",
+				NativeDenom:      "nria",
+				Services: map[string]ServiceConfig{
+					"conductor": {
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: KnownBinaries.AstriaConductor.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+					},
+					"composer": {
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: KnownBinaries.AstriaComposer.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+					},
+				},
+			},
+			"dawn": {
+				SequencerChainId: "astria-dawn-" + dawnNum,
+				SequencerGRPC:    "https://grpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
+				RollupName:       "",
+				NativeDenom:      "ibc/channel0/utia",
+				Services: map[string]ServiceConfig{
+					"conductor": {
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: KnownBinaries.AstriaConductor.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+					},
+					"composer": {
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: KnownBinaries.AstriaComposer.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+					},
+				},
+			},
+			"mainnet": {
+				SequencerChainId: "astria",
+				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.astria.org/",
+				RollupName:       "",
+				NativeDenom:      "ibc/channel0/utia",
+				Services: map[string]ServiceConfig{
+					"conductor": {
+						Name:        "astria-conductor",
+						Version:     "v" + AstriaConductorVersion,
+						DownloadURL: KnownBinaries.AstriaConductor.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+					},
+					"composer": {
+						Name:        "astria-composer",
+						Version:     "v" + AstriaComposerVersion,
+						DownloadURL: KnownBinaries.AstriaComposer.Url,
+						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+					},
+				},
+			},
 		},
 	}
-	return config
 }
 
 // LoadNetworkConfigsOrPanic loads the NetworksConfig from the given path. If the file
@@ -213,25 +159,30 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 	return config
 }
 
-// CreateNetworksConfig creates a networks configuration file at
-// the given path, populating the file with the network defaults, and overriding
-// the default local denom and local sequencer network chain id .
-// It will skip initialization if the file already exists. It will panic if the
-// file cannot be created or written to.
-func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) {
-
-	_, err := os.Stat(path)
+// CreateNetworksConfig creates a networks configuration file and populates it
+// with the network defaults. The binPath is required to accommodate which CLI
+// instance this particular networks config is for and to build the proper paths
+// to the binaries that will be used for the given instance. The configPath is
+// provided for the same reason; which instance is this config file for and
+// where to put it. This function will also override the default local denom and local
+// sequencer network chain id based on the command line flags provided. It will
+// skip initialization if the file already exists. It will panic if the file
+// cannot be created or written to.
+func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativeDenom string) {
+	_, err := os.Stat(configPath)
 	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", path)
+		log.Infof("%s already exists. Skipping initialization.\n", configPath)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := DefaultNetworksConfigs()
-	config.Local.NativeDenom = localNativeDenom
-	config.Local.SequencerChainId = localSequencerChainId
+	config := DefaultNetworksConfigs(binPath)
+	local := config.Configs["local"]
+	local.NativeDenom = localNativeDenom
+	local.SequencerChainId = localSequencerChainId
+	config.Configs["local"] = local
 
 	// open a file for writing
-	file, err := os.Create(path)
+	file, err := os.Create(configPath)
 	if err != nil {
 		panic(err)
 	}
@@ -241,76 +192,7 @@ func CreateNetworksConfig(path, localSequencerChainId, localNativeDenom string) 
 	if err := toml.NewEncoder(file).Encode(config); err != nil {
 		panic(err)
 	}
-	log.Infof("New network config file created successfully: %s\n", path)
-}
-
-// CreateBaseConfig creates a base configuration file at
-// the given path, populating the file with the service defaults.
-// It will skip initialization if the file already exists. It will panic if the
-// file cannot be created or written to.
-func CreateBaseConfig(path, instance string) {
-
-	_, err := os.Stat(path)
-	if err == nil {
-		log.Infof("%s already exists. Skipping initialization.\n", path)
-		return
-	}
-	// create an instance of the Config struct with some data
-	config := NewBaseConfig(instance)
-
-	// open a file for writing
-	file, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	// encode the struct to TOML and write to the file
-	if err := toml.NewEncoder(file).Encode(config); err != nil {
-		panic(err)
-	}
-	log.Infof("New network config file created successfully: %s\n", path)
-}
-
-// LoadBaseConfigOrPanic loads the BaseConfig from the given path. If the file
-// cannot be loaded or parsed, the function will panic.
-func LoadBaseConfigOrPanic(path string) BaseConfig {
-	viper.SetConfigFile(path)
-
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
-		panic(err)
-	}
-
-	var config BaseConfig
-	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
-		panic(err)
-	}
-
-	return config
-}
-
-// ToSlice creates a []string of "key=value" pairs out of a BaseConfig.
-// The variable name will become the env var key and that variable's value will
-// be the value.
-func (b BaseConfig) ToSlice() []string {
-	val := reflect.ValueOf(b)
-	typ := reflect.TypeOf(b)
-
-	var output []string
-	// ensure the provided variable is a struct
-	for i := 0; i < val.NumField(); i++ {
-		field := typ.Field(i)
-		value := val.Field(i)
-		if value.Kind() == reflect.String {
-			output = append(output, fmt.Sprintf("%s=%s", strings.ToUpper(field.Name), value.String()))
-		} else {
-			output = append(output, fmt.Sprintf("%s=%v", strings.ToUpper(field.Name), value.Interface()))
-		}
-	}
-
-	return output
+	log.Infof("New network config file created successfully: %s\n", configPath)
 }
 
 // GetEndpointOverrides returns a slice of environment variables for supporting
@@ -319,7 +201,11 @@ func (b BaseConfig) ToSlice() []string {
 // the default environment variables for the network configuration. It uses the
 // BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
 func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
-	rollupEndpoint := bc.Astria_composer_rollups
+	rollupEndpoint, exists := bc["astria_composer_rollups"]
+	if !exists {
+		log.Error("ASTRIA_COMPOSER_ROLLUPS not found in BaseConfig")
+		panic(fmt.Errorf("ASTRIA_COMPOSER_ROLLUPS not found in BaseConfig"))
+	}
 	// get the rollup ws endpoint
 	pattern := `ws{1,2}:\/\/.*:\d+`
 	re, err := regexp.Compile(pattern)

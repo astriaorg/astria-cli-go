@@ -3,6 +3,7 @@ package devrunner
 import (
 	"archive/tar"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -41,13 +42,9 @@ func runInitialization(c *cobra.Command, args []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
-	localDefaultDenom := flagHandler.GetValue("local-native-denom")
+	localDenom := flagHandler.GetValue("local-native-denom")
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Error("error getting home dir:", err)
-		return
-	}
+	homeDir := cmd.GetUserHomeDirOrPanic()
 	// TODO: make the default home dir configurable
 	defaultDir := filepath.Join(homeDir, ".astria")
 	instanceDir := filepath.Join(defaultDir, instance)
@@ -55,8 +52,14 @@ func runInitialization(c *cobra.Command, args []string) {
 	log.Info("Creating new instance in:", instanceDir)
 	cmd.CreateDirOrPanic(instanceDir)
 
+	// create the local bin directory for downloaded binaries
+	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
+	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
+	cmd.CreateDirOrPanic(localBinPath)
+
 	networksConfigPath := filepath.Join(defaultDir, instance, config.DefaultNetworksConfigName)
-	config.CreateNetworksConfig(networksConfigPath, localNetworkName, localDefaultDenom)
+	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
+	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
 	cmd.CreateDirOrPanic(configDirPath)
@@ -66,20 +69,22 @@ func runInitialization(c *cobra.Command, args []string) {
 
 	config.CreateComposerDevPrivKeyFile(configDirPath)
 
-	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDefaultDenom)
+	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDenom)
 
-	// create the local bin directory for downloaded binaries
-	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
-	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
-	cmd.CreateDirOrPanic(localBinPath)
-	for _, bin := range config.Binaries {
-		downloadAndUnpack(bin.Url, bin.Name, localBinPath)
+	// download and unpack all services for all networks
+	for label := range networkConfigs.Configs {
+		purpleANSI := "\033[35m"
+		resetANSI := "\033[0m"
+		log.Info(fmt.Sprint("--Downloading binaries for network: ", purpleANSI, label, resetANSI))
+		for _, bin := range networkConfigs.Configs[label].Services {
+			downloadAndUnpack(bin.DownloadURL, bin.Version, bin.Name, localBinPath)
+		}
 	}
 
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
-	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.DefaultConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.CometbftVersion, config.DefaultConfigDirName)
 
 	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
 
@@ -107,7 +112,7 @@ func downloadFile(url, filepath string) error {
 }
 
 // extractTarGz extracts a .tar.gz file to dest.
-func extractTarGz(dest string, gzipStream io.Reader) error {
+func extractTarGz(dest string, version string, gzipStream io.Reader) error {
 	uncompressedStream, err := gzip.NewReader(gzipStream)
 	if err != nil {
 		return err
@@ -128,9 +133,8 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(dest, header.Name)
+		target := filepath.Join(dest, header.Name+"-"+version)
 
-		// the following switch could also be done using if/else statements
 		switch header.Typeflag {
 		case tar.TypeDir:
 			// handle directory
@@ -152,16 +156,21 @@ func extractTarGz(dest string, gzipStream io.Reader) error {
 	}
 }
 
-func downloadAndUnpack(url string, packageName string, placePath string) {
+func downloadAndUnpack(url, version, packageName, placePath string) {
+	if url == "" {
+		log.Infof("No source URL provided for %s. Skipping download.\n", packageName)
+		return
+	}
+
 	// check if the file already exists
-	if _, err := os.Stat(filepath.Join(placePath, packageName)); err == nil {
+	if _, err := os.Stat(filepath.Join(placePath, packageName+"-"+version)); err == nil {
 		log.Infof("%s already exists. Skipping download.\n", packageName)
 		return
 	}
-	log.Infof("Downloading: (%s, %s)\n", packageName, url)
+	log.Infof("Downloading: %s, %s, %s\n", packageName, version, url)
 
 	// download the file
-	dest := filepath.Join(placePath, packageName+".tar.gz")
+	dest := filepath.Join(placePath, packageName+"-"+version+".tar.gz")
 	if err := downloadFile(url, dest); err != nil {
 		panic(err)
 	}
@@ -173,7 +182,7 @@ func downloadAndUnpack(url string, packageName string, placePath string) {
 	defer file.Close()
 
 	// extract the contents
-	if err := extractTarGz(placePath, file); err != nil {
+	if err := extractTarGz(placePath, version, file); err != nil {
 		panic(err)
 	}
 
