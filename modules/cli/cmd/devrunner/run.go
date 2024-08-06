@@ -65,7 +65,11 @@ func runCmdHandler(c *cobra.Command, args []string) {
 	networksConfigPath := filepath.Join(astriaDir, instance, config.DefaultNetworksConfigName)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
-	// TODO: check if the network exists in the networks config
+	// check if the network exists in the networks config
+	if _, ok := networkConfigs.Configs[network]; !ok {
+		log.Fatalf("Network %s not found in config file at %s", network, networksConfigPath)
+		panic("Network not found in config file")
+	}
 
 	// get the log level for the Astria Services using override env vars.
 	// The log level for Cometbft is updated via command line flags and is set
@@ -265,9 +269,10 @@ func getCometbftOKCallback(config []string) func() bool {
 	}
 }
 
-// startProcessInOrder starts the provided ProcessRunners in order they are
-// provided, and returns an array of all successfully started services. It will
-// return an error if any of the ProcessRunners fail to start.
+// startProcessInOrder starts the ProcessRunners in order they are provided, and
+// returns an array of all successfully started services. It will skip any
+// ProcessRunners that are nil. It will return an error if any of the
+// ProcessRunners fail to start.
 func startProcessInOrder(ctx context.Context, runners ...processrunner.ProcessRunner) ([]processrunner.ProcessRunner, error) {
 	if len(runners) < 1 {
 		return nil, fmt.Errorf("no runners provided. Nothing to start")
