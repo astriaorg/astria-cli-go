@@ -15,4 +15,10 @@ const (
 	DefaultServiceLogLevel           = "info"
 	DefaultTargetNetwork             = "local"
 	LocalNativeDenom                 = "nria"
+
+	// NOTE - do not include the 'v' at the beginning of the version number
+	CometbftVersion        = "0.38.8"
+	AstriaSequencerVersion = "0.15.0"
+	AstriaComposerVersion  = "0.8.1"
+	AstriaConductorVersion = "0.19.0"
 )
