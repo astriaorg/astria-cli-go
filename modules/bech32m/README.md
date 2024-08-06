@@ -4,13 +4,15 @@ A Go package for encoding and decoding bech32m addresses.
 
 ## Overview
 
-This package provides functionality to work with bech32m addresses, including encoding, decoding, and validation. It supports creating addresses from byte arrays and ED25519 public keys.
+This package provides functionality to work with bech32m addresses, including
+encoding, decoding, and validation. It supports creating addresses from byte
+arrays and ED25519 public keys.
 
 ## Installation
 
 To install the package, use:
 
-```
+```sh
 go get github.com/astriaorg/astria-cli-go/modules/bech32m
 ```
 
