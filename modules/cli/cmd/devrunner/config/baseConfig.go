@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
@@ -12,66 +11,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-type BaseConfig struct {
-	// conductor
-	Astria_conductor_celestia_block_time_ms        int    `mapstructure:"astria_conductor_celestia_block_time_ms" toml:"astria_conductor_celestia_block_time_ms"`
-	Astria_conductor_celestia_bearer_token         string `mapstructure:"astria_conductor_celestia_bearer_token" toml:"astria_conductor_celestia_bearer_token"`
-	Astria_conductor_celestia_node_http_url        string `mapstructure:"astria_conductor_celestia_node_http_url" toml:"astria_conductor_celestia_node_http_url"`
-	Astria_conductor_execution_rpc_url             string `mapstructure:"astria_conductor_execution_rpc_url" toml:"astria_conductor_execution_rpc_url"`
-	Astria_conductor_execution_commit_level        string `mapstructure:"astria_conductor_execution_commit_level" toml:"astria_conductor_execution_commit_level"`
-	Astria_conductor_log                           string `mapstructure:"astria_conductor_log" toml:"astria_conductor_log"`
-	Astria_conductor_no_otel                       bool   `mapstructure:"astria_conductor_no_otel" toml:"astria_conductor_no_otel"`
-	Astria_conductor_force_stdout                  bool   `mapstructure:"astria_conductor_force_stdout" toml:"astria_conductor_force_stdout"`
-	Astria_conductor_pretty_print                  bool   `mapstructure:"astria_conductor_pretty_print" toml:"astria_conductor_pretty_print"`
-	Astria_conductor_sequencer_grpc_url            string `mapstructure:"astria_conductor_sequencer_grpc_url" toml:"astria_conductor_sequencer_grpc_url"`
-	Astria_conductor_sequencer_cometbft_url        string `mapstructure:"astria_conductor_sequencer_cometbft_url" toml:"astria_conductor_sequencer_cometbft_url"`
-	Astria_conductor_sequencer_block_time_ms       int    `mapstructure:"astria_conductor_sequencer_block_time_ms" toml:"astria_conductor_sequencer_block_time_ms"`
-	Astria_conductor_sequencer_requests_per_second int    `mapstructure:"astria_conductor_sequencer_requests_per_second" toml:"astria_conductor_sequencer_requests_per_second"`
-	Astria_conductor_no_metrics                    bool   `mapstructure:"astria_conductor_no_metrics" toml:"astria_conductor_no_metrics"`
-	Astria_conductor_metrics_http_listener_addr    string `mapstructure:"astria_conductor_metrics_http_listener_addr" toml:"astria_conductor_metrics_http_listener_addr"`
-
-	// sequencer
-	Astria_sequencer_listen_addr                string `mapstructure:"astria_sequencer_listen_addr" toml:"astria_sequencer_listen_addr"`
-	Astria_sequencer_db_filepath                string `mapstructure:"astria_sequencer_db_filepath" toml:"astria_sequencer_db_filepath"`
-	Astria_sequencer_enable_mint                bool   `mapstructure:"astria_sequencer_enable_mint" toml:"astria_sequencer_enable_mint"`
-	Astria_sequencer_grpc_addr                  string `mapstructure:"astria_sequencer_grpc_addr" toml:"astria_sequencer_grpc_addr"`
-	Astria_sequencer_log                        string `mapstructure:"astria_sequencer_log" toml:"astria_sequencer_log"`
-	Astria_sequencer_no_otel                    bool   `mapstructure:"astria_sequencer_no_otel" toml:"astria_sequencer_no_otel"`
-	Astria_sequencer_force_stdout               bool   `mapstructure:"astria_sequencer_force_stdout" toml:"astria_sequencer_force_stdout"`
-	Astria_sequencer_no_metrics                 bool   `mapstructure:"astria_sequencer_no_metrics" toml:"astria_sequencer_no_metrics"`
-	Astria_sequencer_metrics_http_listener_addr string `mapstructure:"astria_sequencer_metrics_http_listener_addr" toml:"astria_sequencer_metrics_http_listener_addr"`
-	Astria_sequencer_pretty_print               bool   `mapstructure:"astria_sequencer_pretty_print" toml:"astria_sequencer_pretty_print"`
-
-	// composer
-	Astria_composer_log                        string `mapstructure:"astria_composer_log" toml:"astria_composer_log"`
-	Astria_composer_no_otel                    bool   `mapstructure:"astria_composer_no_otel" toml:"astria_composer_no_otel"`
-	Astria_composer_force_stdout               bool   `mapstructure:"astria_composer_force_stdout" toml:"astria_composer_force_stdout"`
-	Astria_composer_pretty_print               bool   `mapstructure:"astria_composer_pretty_print" toml:"astria_composer_pretty_print"`
-	Astria_composer_api_listen_addr            string `mapstructure:"astria_composer_api_listen_addr" toml:"astria_composer_api_listen_addr"`
-	Astria_composer_sequencer_url              string `mapstructure:"astria_composer_sequencer_url" toml:"astria_composer_sequencer_url"`
-	Astria_composer_sequencer_chain_id         string `mapstructure:"astria_composer_sequencer_chain_id" toml:"astria_composer_sequencer_chain_id"`
-	Astria_composer_rollups                    string `mapstructure:"astria_composer_rollups" toml:"astria_composer_rollups"`
-	Astria_composer_private_key_file           string `mapstructure:"astria_composer_private_key_file" toml:"astria_composer_private_key_file"`
-	Astria_composer_sequencer_address_prefix   string `mapstructure:"astria_composer_sequencer_address_prefix" toml:"astria_composer_sequencer_address_prefix"`
-	Astria_composer_max_submit_interval_ms     int    `mapstructure:"astria_composer_max_submit_interval_ms" toml:"astria_composer_max_submit_interval_ms"`
-	Astria_composer_max_bytes_per_bundle       int    `mapstructure:"astria_composer_max_bytes_per_bundle" toml:"astria_composer_max_bytes_per_bundle"`
-	Astria_composer_bundle_queue_capacity      int    `mapstructure:"astria_composer_bundle_queue_capacity" toml:"astria_composer_bundle_queue_capacity"`
-	Astria_composer_no_metrics                 bool   `mapstructure:"astria_composer_no_metrics" toml:"astria_composer_no_metrics"`
-	Astria_composer_metrics_http_listener_addr string `mapstructure:"astria_composer_metrics_http_listener_addr" toml:"astria_composer_metrics_http_listener_addr"`
-	Astria_composer_grpc_addr                  string `mapstructure:"astria_composer_grpc_addr" toml:"astria_composer_grpc_addr"`
-	Astria_composer_fee_asset                  string `mapstructure:"astria_composer_fee_asset" toml:"astria_composer_fee_asset"`
-
-	// global
-	No_color string `mapstructure:"no_color" toml:"no_color"`
-
-	// otel
-	Otel_exporter_otlp_endpoint           string `mapstructure:"otel_exporter_otlp_endpoint" toml:"otel_exporter_otlp_endpoint"`
-	Otel_exporter_otlp_traces_endpoint    string `mapstructure:"otel_exporter_otlp_traces_endpoint" toml:"otel_exporter_otlp_traces_endpoint"`
-	Otel_exporter_otlp_traces_timeout     int    `mapstructure:"otel_exporter_otlp_traces_timeout" toml:"otel_exporter_otlp_traces_timeout"`
-	Otel_exporter_otlp_traces_compression string `mapstructure:"otel_exporter_otlp_traces_compression" toml:"otel_exporter_otlp_traces_compression"`
-	Otel_exporter_otlp_headers            string `mapstructure:"otel_exporter_otlp_headers" toml:"otel_exporter_otlp_headers"`
-	Otel_exporter_otlp_trace_headers      string `mapstructure:"otel_exporter_otlp_trace_headers" toml:"otel_exporter_otlp_trace_headers"`
-}
+// BaseConfig is a map of string key-value pairs that represent the base
+// configuration for all services in the Astria stack. The key-values pairs are
+// also parsed into environment variables for the services to consume.
+type BaseConfig map[string]string
 
 func NewBaseConfig(instanceName string) BaseConfig {
 	homePath, err := os.UserHomeDir()
@@ -79,60 +22,65 @@ func NewBaseConfig(instanceName string) BaseConfig {
 		log.WithError(err).Error("Error getting home dir")
 		panic(err)
 	}
-	return BaseConfig{
-		Astria_conductor_celestia_block_time_ms:        1200,
-		Astria_conductor_celestia_bearer_token:         "<JWT Bearer token>",
-		Astria_conductor_celestia_node_http_url:        "http://127.0.0.1:26658",
-		Astria_conductor_execution_rpc_url:             "http://127.0.0.1:50051",
-		Astria_conductor_execution_commit_level:        "SoftOnly",
-		Astria_conductor_log:                           "astria_conductor=info",
-		Astria_conductor_no_otel:                       true,
-		Astria_conductor_force_stdout:                  true,
-		Astria_conductor_pretty_print:                  true,
-		Astria_conductor_sequencer_grpc_url:            "http://127.0.0.1:8080",
-		Astria_conductor_sequencer_cometbft_url:        "http://127.0.0.1:26657",
-		Astria_conductor_sequencer_block_time_ms:       2000,
-		Astria_conductor_sequencer_requests_per_second: 500,
-		Astria_conductor_no_metrics:                    true,
-		Astria_conductor_metrics_http_listener_addr:    "127.0.0.1:9000",
+	return map[string]string{
+		// conductor
+		"astria_conductor_celestia_block_time_ms":        "1200",
+		"astria_conductor_celestia_bearer_token":         "<JWT Bearer token>",
+		"astria_conductor_celestia_node_http_url":        "http://127.0.0.1:26658",
+		"astria_conductor_execution_rpc_url":             "http://127.0.0.1:50051",
+		"astria_conductor_execution_commit_level":        "SoftOnly",
+		"astria_conductor_log":                           "astria_conductor=info",
+		"astria_conductor_no_otel":                       "true",
+		"astria_conductor_force_stdout":                  "true",
+		"astria_conductor_pretty_print":                  "true",
+		"astria_conductor_sequencer_grpc_url":            "http://127.0.0.1:8080",
+		"astria_conductor_sequencer_cometbft_url":        "http://127.0.0.1:26657",
+		"astria_conductor_sequencer_block_time_ms":       "2000",
+		"astria_conductor_sequencer_requests_per_second": "500",
+		"astria_conductor_no_metrics":                    "true",
+		"astria_conductor_metrics_http_listener_addr":    "127.0.0.1:9000",
 
-		Astria_sequencer_listen_addr:                "127.0.0.1:26658",
-		Astria_sequencer_db_filepath:                filepath.Join(homePath, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
-		Astria_sequencer_enable_mint:                false,
-		Astria_sequencer_grpc_addr:                  "127.0.0.1:8080",
-		Astria_sequencer_log:                        "astria_sequencer=info",
-		Astria_sequencer_no_otel:                    true,
-		Astria_sequencer_force_stdout:               true,
-		Astria_sequencer_no_metrics:                 true,
-		Astria_sequencer_metrics_http_listener_addr: "127.0.0.1:9000",
-		Astria_sequencer_pretty_print:               true,
+		// sequencer
+		"astria_sequencer_listen_addr":                "127.0.0.1:26658",
+		"astria_sequencer_db_filepath":                filepath.Join(homePath, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
+		"astria_sequencer_enable_mint":                "false",
+		"astria_sequencer_grpc_addr":                  "127.0.0.1:8080",
+		"astria_sequencer_log":                        "astria_sequencer=info",
+		"astria_sequencer_no_otel":                    "true",
+		"astria_sequencer_force_stdout":               "true",
+		"astria_sequencer_no_metrics":                 "true",
+		"astria_sequencer_metrics_http_listener_addr": "127.0.0.1:9000",
+		"astria_sequencer_pretty_print":               "true",
 
-		Astria_composer_log:                        "astria_composer=info",
-		Astria_composer_no_otel:                    true,
-		Astria_composer_force_stdout:               true,
-		Astria_composer_pretty_print:               true,
-		Astria_composer_api_listen_addr:            "0.0.0.0:0",
-		Astria_composer_sequencer_url:              "http://127.0.0.1:26657",
-		Astria_composer_sequencer_chain_id:         "astria-dusk-" + duskNum,
-		Astria_composer_rollups:                    "astriachain::ws://127.0.0.1:8546",
-		Astria_composer_private_key_file:           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
-		Astria_composer_sequencer_address_prefix:   "astria",
-		Astria_composer_max_submit_interval_ms:     2000,
-		Astria_composer_max_bytes_per_bundle:       200000,
-		Astria_composer_bundle_queue_capacity:      40000,
-		Astria_composer_no_metrics:                 true,
-		Astria_composer_metrics_http_listener_addr: "127.0.0.1:9000",
-		Astria_composer_grpc_addr:                  "0.0.0.0:0",
-		Astria_composer_fee_asset:                  "nria",
+		// composer
+		"astria_composer_log":                        "astria_composer=info",
+		"astria_composer_no_otel":                    "true",
+		"astria_composer_force_stdout":               "true",
+		"astria_composer_pretty_print":               "true",
+		"astria_composer_api_listen_addr":            "0.0.0.0:0",
+		"astria_composer_sequencer_url":              "http://127.0.0.1:26657",
+		"astria_composer_sequencer_chain_id":         "astria-dusk-" + duskNum,
+		"astria_composer_rollups":                    "astriachain::ws://127.0.0.1:8546",
+		"astria_composer_private_key_file":           filepath.Join(homePath, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
+		"astria_composer_sequencer_address_prefix":   "astria",
+		"astria_composer_max_submit_interval_ms":     "2000",
+		"astria_composer_max_bytes_per_bundle":       "200000",
+		"astria_composer_bundle_queue_capacity":      "40000",
+		"astria_composer_no_metrics":                 "true",
+		"astria_composer_metrics_http_listener_addr": "127.0.0.1:9000",
+		"astria_composer_grpc_addr":                  "0.0.0.0:0",
+		"astria_composer_fee_asset":                  "nria",
 
-		No_color: "",
+		// ANSI
+		"no_color": "",
 
-		Otel_exporter_otlp_endpoint:           "http://localhost:4317",
-		Otel_exporter_otlp_traces_endpoint:    "http://localhost:4317/v1/traces",
-		Otel_exporter_otlp_traces_timeout:     10,
-		Otel_exporter_otlp_traces_compression: "gzip",
-		Otel_exporter_otlp_headers:            "key1=value1,key2=value2",
-		Otel_exporter_otlp_trace_headers:      "key1=value1,key2=value2",
+		// otel
+		"otel_exporter_otlp_endpoint":           "http://localhost:4317",
+		"otel_exporter_otlp_traces_endpoint":    "http://localhost:4317/v1/traces",
+		"otel_exporter_otlp_traces_timeout":     "10",
+		"otel_exporter_otlp_traces_compression": "gzip",
+		"otel_exporter_otlp_headers":            "key1=value1,key2=value2",
+		"otel_exporter_otlp_trace_headers":      "key1=value1,key2=value2",
 	}
 }
 
@@ -141,7 +89,6 @@ func NewBaseConfig(instanceName string) BaseConfig {
 // It will skip initialization if the file already exists. It will panic if the
 // file cannot be created or written to.
 func CreateBaseConfig(path, instance string) {
-
 	_, err := os.Stat(path)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", path)
@@ -174,7 +121,8 @@ func LoadBaseConfigOrPanic(path string) BaseConfig {
 		panic(err)
 	}
 
-	var config BaseConfig
+	// var config BaseConfig
+	config := make(map[string]string)
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Fatalf("Unable to decode into struct, %v", err)
 		panic(err)
@@ -187,19 +135,10 @@ func LoadBaseConfigOrPanic(path string) BaseConfig {
 // The variable name will become the env var key and that variable's value will
 // be the value.
 func (b BaseConfig) ToSlice() []string {
-	val := reflect.ValueOf(b)
-	typ := reflect.TypeOf(b)
-
 	var output []string
-	// ensure the provided variable is a struct
-	for i := 0; i < val.NumField(); i++ {
-		field := typ.Field(i)
-		value := val.Field(i)
-		if value.Kind() == reflect.String {
-			output = append(output, fmt.Sprintf("%s=%s", strings.ToUpper(field.Name), value.String()))
-		} else {
-			output = append(output, fmt.Sprintf("%s=%v", strings.ToUpper(field.Name), value.Interface()))
-		}
+
+	for key, value := range b {
+		output = append(output, fmt.Sprintf("%s=%s", strings.ToUpper(key), value))
 	}
 
 	return output

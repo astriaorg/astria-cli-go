@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -197,7 +198,11 @@ func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativ
 // the default environment variables for the network configuration. It uses the
 // BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
 func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
-	rollupEndpoint := bc.Astria_composer_rollups
+	rollupEndpoint, exists := bc["astria_composer_rollups"]
+	if !exists {
+		log.Error("ASTRIA_COMPOSER_ROLLUPS not found in BaseConfig")
+		panic(fmt.Errorf("ASTRIA_COMPOSER_ROLLUPS not found in BaseConfig"))
+	}
 	// get the rollup ws endpoint
 	pattern := `ws{1,2}:\/\/.*:\d+`
 	re, err := regexp.Compile(pattern)
