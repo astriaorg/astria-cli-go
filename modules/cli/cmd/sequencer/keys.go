@@ -13,7 +13,7 @@ var setKeyCmd = &cobra.Command{
 	Run:   setKeyCmdHandler,
 }
 
-func setKeyCmdHandler(cmd *cobra.Command, args []string) {
+func setKeyCmdHandler(_ *cobra.Command, args []string) {
 	key := args[0]
 	val := args[1]
 
@@ -30,7 +30,7 @@ var getKeyCmd = &cobra.Command{
 	Run:   getKeyCmdHandler,
 }
 
-func getKeyCmdHandler(cmd *cobra.Command, args []string) {
+func getKeyCmdHandler(_ *cobra.Command, args []string) {
 	key := args[0]
 
 	val, err := keys.GetKeyring(key)

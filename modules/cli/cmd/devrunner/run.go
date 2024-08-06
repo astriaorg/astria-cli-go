@@ -38,7 +38,7 @@ func init() {
 	flagHandler.BindStringFlag("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 }
 
-func runCmdHandler(c *cobra.Command, args []string) {
+func runCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	ctx := c.Context()
 
