@@ -159,13 +159,16 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 	return config
 }
 
-// CreateNetworksConfig creates a networks configuration file at
-// the given path, populating the file with the network defaults, and overriding
-// the default local denom and local sequencer network chain id.
-// It will skip initialization if the file already exists. It will panic if the
-// file cannot be created or written to.
+// CreateNetworksConfig creates a networks configuration file and populates it
+// with the network defaults. The binPath is required to accommodate which CLI
+// instance this particular networks config is for and to build the proper paths
+// to the binaries that will be used for the given instance. The configPath is
+// provided for the same reason; which instance is this config file for and
+// where to put it. This function will also override the default local denom and local
+// sequencer network chain id based on the command line flags provided. It will
+// skip initialization if the file already exists. It will panic if the file
+// cannot be created or written to.
 func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativeDenom string) {
-
 	_, err := os.Stat(configPath)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", configPath)
