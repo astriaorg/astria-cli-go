@@ -13,9 +13,12 @@ import (
 
 // BaseConfig is a map of string key-value pairs that represent the base
 // configuration for all services in the Astria stack. The key-values pairs are
-// also parsed into environment variables for the services to consume.
+// also parsed into environment variables for the services to consume. A map was
+// used here to allow for dynamically adding new configuration options to the
+// config toml file.
 type BaseConfig map[string]string
 
+// NewBaseConfig returns a BaseConfig with default values.
 func NewBaseConfig(instanceName string) BaseConfig {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
