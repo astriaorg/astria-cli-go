@@ -24,7 +24,7 @@ func init() {
 	flagHandler.BindBoolFlag("json", false, "Output an account's balances in JSON format.")
 }
 
-func blockheightCmdHandler(c *cobra.Command, args []string) {
+func blockheightCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandlerWithUseConfigFlag(c, cmd.EnvPrefix, "network")
 	networkConfig := GetNetworkConfigFromFlags(flagHandler)
 	flagHandler.SetConfig(networkConfig)

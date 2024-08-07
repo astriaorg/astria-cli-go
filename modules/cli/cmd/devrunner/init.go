@@ -33,7 +33,7 @@ func init() {
 	flagHandler.BindStringFlag("local-native-denom", config.LocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
 }
 
-func runInitialization(c *cobra.Command, args []string) {
+func runInitialization(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")

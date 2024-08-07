@@ -9,24 +9,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Bech32MAddress struct {
+type Address struct {
 	address string
 	prefix  string
 	bytes   [20]byte
 }
 
 // String returns the bech32m address as a string
-func (a *Bech32MAddress) String() string {
+func (a *Address) String() string {
 	return a.address
 }
 
 // Prefix returns the prefix of the bech32m address
-func (a *Bech32MAddress) Prefix() string {
+func (a *Address) Prefix() string {
 	return a.prefix
 }
 
 // Bytes returns the underlying bytes for the bech32m address as a [20]byte array
-func (a *Bech32MAddress) Bytes() [20]byte {
+func (a *Address) Bytes() [20]byte {
 	return a.bytes
 }
 
@@ -54,9 +54,9 @@ func Validate(address string) error {
 	return nil
 }
 
-// EncodeFromBytes creates a *Bech32MAddress from a [20]byte array and string
+// EncodeFromBytes creates a *Address from a [20]byte array and string
 // prefix.
-func EncodeFromBytes(prefix string, data [20]byte) (*Bech32MAddress, error) {
+func EncodeFromBytes(prefix string, data [20]byte) (*Address, error) {
 	// Convert the data from 8-bit groups to 5-bit
 	convertedBytes, err := bech32.ConvertBits(data[:], 8, 5, true)
 	if err != nil {
@@ -69,7 +69,7 @@ func EncodeFromBytes(prefix string, data [20]byte) (*Bech32MAddress, error) {
 		return nil, fmt.Errorf("failed to encode address as bech32m: %v", err)
 	}
 
-	return &Bech32MAddress{
+	return &Address{
 		address: address,
 		prefix:  prefix,
 		bytes:   data,
@@ -77,8 +77,8 @@ func EncodeFromBytes(prefix string, data [20]byte) (*Bech32MAddress, error) {
 }
 
 // EncodeFromPublicKey takes an ed25519 public key and string prefix and encodes
-// them into a *Bech32MAddress.
-func EncodeFromPublicKey(prefix string, pubkey ed25519.PublicKey) (*Bech32MAddress, error) {
+// them into a *Address.
+func EncodeFromPublicKey(prefix string, pubkey ed25519.PublicKey) (*Address, error) {
 	hash := sha256.Sum256(pubkey)
 	var addr [20]byte
 	copy(addr[:], hash[:20])
