@@ -39,7 +39,7 @@ func init() {
 	flagHandler.BindBoolFlag("export-logs", false, "Export logs to files.")
 }
 
-func runCmdHandler(c *cobra.Command, args []string) {
+func runCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 	ctx := c.Context()
 

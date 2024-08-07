@@ -11,26 +11,26 @@ import (
 	"github.com/spf13/viper"
 )
 
-// SequencerNetworkConfig is the struct that holds the configuration for
+// NetworkConfig is the struct that holds the configuration for
 // interacting with a given Astria sequencer network.
-type SequencerNetworkConfig struct {
+type NetworkConfig struct {
 	SequencerChainId string `flag:"sequencer-chain-id" mapstructure:"sequencer_chain_id" toml:"sequencer_chain_id"`
 	SequencerURL     string `flag:"sequencer-url" mapstructure:"sequencer_url" toml:"sequencer_url"`
 	Asset            string `flag:"asset" mapstructure:"asset" toml:"asset"`
 	FeeAsset         string `flag:"fee-asset" mapstructure:"fee_asset" toml:"fee_asset"`
 }
 
-// SequencerNetworkConfigs is a map of SequencerNetworkConfig structs.
+// NetworkConfigs is a map of NetworkConfig structs.
 // Using a map here to allow for user to add new networks by adding a new section in the toml
-type SequencerNetworkConfigs struct {
-	Configs map[string]SequencerNetworkConfig `mapstructure:"networks" toml:"networks"`
+type NetworkConfigs struct {
+	Configs map[string]NetworkConfig `mapstructure:"networks" toml:"networks"`
 }
 
 // GetSequencerNetworkConfigsPresets returns a map of all sequencer network presets.
 // Used to generate the initial config file.
-func GetSequencerNetworkConfigsPresets() SequencerNetworkConfigs {
-	return SequencerNetworkConfigs{
-		Configs: map[string]SequencerNetworkConfig{
+func GetSequencerNetworkConfigsPresets() NetworkConfigs {
+	return NetworkConfigs{
+		Configs: map[string]NetworkConfig{
 			"local": {
 				SequencerChainId: "sequencer-test-chain-0",
 				SequencerURL:     "http://127.0.0.1:26657",
@@ -59,9 +59,9 @@ func GetSequencerNetworkConfigsPresets() SequencerNetworkConfigs {
 	}
 }
 
-// LoadSequencerNetworkConfigsOrPanic loads the SequencerNetworkConfigs from the given
+// LoadSequencerNetworkConfigsOrPanic loads the NetworkConfigs from the given
 // path. If the file cannot be loaded or parsed, the function will panic.
-func LoadSequencerNetworkConfigsOrPanic(path string) SequencerNetworkConfigs {
+func LoadSequencerNetworkConfigsOrPanic(path string) NetworkConfigs {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -69,7 +69,7 @@ func LoadSequencerNetworkConfigsOrPanic(path string) SequencerNetworkConfigs {
 		panic(err)
 	}
 
-	var config SequencerNetworkConfigs
+	var config NetworkConfigs
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Fatalf("Unable to decode toml into struct, %v", err)
 		panic(err)
@@ -112,10 +112,10 @@ func CreateSequencerNetworkConfigs(path string) {
 	log.Infof("New network config file created successfully: %s\n", path)
 }
 
-// GetSequencerNetworkSettingsFromConfig returns the SequencerNetworkConfig for
+// GetSequencerNetworkSettingsFromConfig returns the NetworkConfig for
 // the given network. The function automatically checks if the sequencer network
 // config file exists, creates it if it does not, and then loads the config.
-func GetSequencerNetworkSettingsFromConfig(network, path string) SequencerNetworkConfig {
+func GetSequencerNetworkSettingsFromConfig(network, path string) NetworkConfig {
 	sequencerConfig := LoadSequencerNetworkConfigsOrPanic(path)
 
 	if _, ok := sequencerConfig.Configs[network]; !ok {
@@ -126,10 +126,10 @@ func GetSequencerNetworkSettingsFromConfig(network, path string) SequencerNetwor
 	return sequencerConfig.Configs[network]
 }
 
-// GetNetworkConfigFromFlags returns a SequencerNetworkConfig based on the
+// GetNetworkConfigFromFlags returns a NetworkConfig based on the
 // network flag value. It will create the network config file if it does not
 // exist, and then load the config.
-func GetNetworkConfigFromFlags(flagHandler *cmd.CliFlagHandler) SequencerNetworkConfig {
+func GetNetworkConfigFromFlags(flagHandler *cmd.CliFlagHandler) NetworkConfig {
 	network := flagHandler.GetValue("network")
 	networksConfigPath := BuildSequencerNetworkConfigsFilepath()
 	CreateSequencerNetworkConfigs(networksConfigPath)

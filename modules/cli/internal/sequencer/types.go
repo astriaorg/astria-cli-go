@@ -25,7 +25,7 @@ func (a *Bech32MAddress) String() string {
 
 // Account is the struct that holds the account information.
 type Account struct {
-	Address    *bech32m.Bech32MAddress
+	Address    *bech32m.Address
 	PublicKey  ed25519.PublicKey
 	PrivateKey ed25519.PrivateKey
 }
