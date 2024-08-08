@@ -28,13 +28,12 @@ the Astria stack and interact with the Sequencer.
   * [TUI Logs](#tui-logs)
   * [Testing](#testing)
 
-
 ## Installation
 
 ### Install From GitHub Release
 
 The latest release for the CLI can be found here
-[v0.12.0](https://github.com/astriaorg/astria-cli-go/releases/tag/v0.12.0). 
+[v0.12.0](https://github.com/astriaorg/astria-cli-go/releases/tag/v0.12.0).
 There are binaries available for macOS (arm64 and x86_64) and Linux(x86_64) architectures.
 
 ```bash
@@ -53,8 +52,8 @@ mv astria-go /usr/local/bin/
 ### Install Nightly Release
 
 The nightly releases for the cli can be found on the cli [releases
-page](https://github.com/astriaorg/astria-cli-go/releases). 
-Grab the 
+page](https://github.com/astriaorg/astria-cli-go/releases).
+Grab the
 
 ```bash
 export NIGHTLY_URL="download url of the build you need"
@@ -154,7 +153,7 @@ astria-go dev run --network local \
 ```
 
 Or update the local path to the service you want to change in the networks
-config: `~/.astria/<instance>/networks-config.toml` 
+config: `~/.astria/<instance>/networks-config.toml`
 
 ```toml
 [networks.local.services.conductor]
@@ -306,7 +305,7 @@ Then re-run `astria-go dev init` to download that service.
 > binary that is downloaded from the 'download_url'. All downloaded binaries
 > will be placed in the `~/.astria/<instance>/bin` directory and will be of the
 > form `name-version` as specified in the service config within the
-> `networks-config.toml` file. 
+> `networks-config.toml` file.
 
 The releases for all Astria services can be found [here](https://github.com/astriaorg/astria/releases).
 
@@ -323,6 +322,7 @@ local_path = '<path to your local binary>'
 ```
 
 #### Adding a New Network
+
 If you would like to add a new network you can add a new section at the end of
 the `networks-config.toml` file. For example, if you wanted to only run a local
 sequencer (Astria Sequencer and CometBFT) you could add the following to the end
