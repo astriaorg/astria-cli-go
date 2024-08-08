@@ -4,6 +4,7 @@ const (
 	duskNum                          = "9"
 	dawnNum                          = "0"
 	BinariesDirName                  = "bin"
+	LogsDirName                      = "logs"
 	DataDirName                      = "data"
 	DefaultBaseConfigName            = "base-config.toml"
 	DefaultCometbftGenesisFilename   = "genesis.json"

@@ -21,6 +21,8 @@ type ProcessRunner interface {
 	GetOutputAndClearBuf() string
 	GetInfo() string
 	GetEnvironment() []string
+	CanWriteToLog() bool
+	WriteToLog(data string) error
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -41,6 +43,7 @@ type processRunner struct {
 	outputBuf *safebuffer.SafeBuffer
 
 	readyChecker *ReadyChecker
+	logHandler   *LogHandler
 }
 
 type NewProcessRunnerOpts struct {
@@ -49,6 +52,8 @@ type NewProcessRunnerOpts struct {
 	Env        []string
 	Args       []string
 	ReadyCheck *ReadyChecker
+	LogPath    string
+	ExportLogs bool
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -58,6 +63,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
+	logHandler := NewLogHandler(opts.LogPath, opts.ExportLogs)
 	return &processRunner{
 		ctx:          ctx,
 		cmd:          cmd,
@@ -67,6 +73,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		opts:         opts,
 		env:          opts.Env,
 		readyChecker: opts.ReadyCheck,
+		logHandler:   logHandler,
 	}
 }
 
@@ -188,6 +195,9 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 
 // Stop stops the process.
 func (pr *processRunner) Stop() {
+	if err := pr.logHandler.Close(); err != nil {
+		log.WithError(err).Errorf("Error closing log file for process %s", pr.title)
+	}
 	// send SIGINT to the process
 	if err := pr.cmd.Process.Signal(syscall.SIGINT); err != nil {
 		log.WithError(err).Errorf("Error sending SIGINT for process %s", pr.title)
@@ -223,4 +233,17 @@ func (pr *processRunner) GetInfo() string {
 // GetEnvironment returns the environment variables for the process.
 func (pr *processRunner) GetEnvironment() []string {
 	return pr.env
+}
+
+func (pr *processRunner) CanWriteToLog() bool {
+	return pr.logHandler.Writeable()
+}
+
+func (pr *processRunner) WriteToLog(data string) error {
+	err := pr.logHandler.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

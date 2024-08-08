@@ -60,6 +60,14 @@ func (pp *ProcessPane) StartScan() {
 
 			// new, unprocessed data.
 			pp.tApp.QueueUpdateDraw(func() {
+				// write output data to logs if possible
+				if pp.pr.CanWriteToLog() {
+					err := pp.pr.WriteToLog(currentOutput)
+					if err != nil {
+						log.WithError(err).Error("Error writing to log")
+					}
+				}
+				// write output data to ui element
 				_, err := pp.ansiWriter.Write([]byte(currentOutput))
 				if err != nil {
 					log.WithError(err).Error("Error writing to textView")
