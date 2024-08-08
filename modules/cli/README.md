@@ -4,55 +4,42 @@ The `astria-go` cli is a tool designed to make local rollup development as
 simple and dependency free as possible. It provides functionality to easily run
 the Astria stack and interact with the Sequencer.
 
-* [Available Commands](#available-commands)
 * [Installation](#installation)
   * [Install from GitHub release](#install-from-github-release)
+  * [Install from Nightly release](#install-nightly-release)
   * [Build Locally from Source](#build-locally-from-source)
 * [Running the Astria Sequencer](#running-the-astria-sequencer)
   * [Initialize Configuration](#initialize-configuration)
   * [Usage](#usage)
     * [Run a Local Sequencer](#run-a-local-sequencer)
     * [Run Against a Remote Sequencer](#run-against-a-remote-sequencer)
+  * [Run Custom Binaries](#run-custom-binaries)
+  * [Interact with the Sequencer](#interact-with-the-sequencer)
 * [Instances](#instances)
+* [Configuration](#configuration)
+  * [Set Service Env Vars with the
+    `base-config.toml`](#set-service-env-vars-with-the-base-configtoml)
+  * [Configure the Services and Sequencer Networks with
+    `networks-config.toml`](#configure-the-services-and-sequencer-networks-with-networks-configtoml)
+    * [Choosing Specific Services](#choosing-specific-services)
+    * [Adding a New Network](#adding-a-new-network)
+  * [Interact with a Sequencer Network using the `sequencer-networks-config.toml`](#interact-with-a-sequencer-network-using-the-sequencer-networks-configtoml)
 * [Development](#development)
   * [TUI Logs](#tui-logs)
   * [Testing](#testing)
 
-## Available Commands
-
-| Command                   | Description                                                                         |
-|---------------------------|-------------------------------------------------------------------------------------|
-| `version`                 | Prints the cli version.                                                             |
-| `help`                    | Show help.                                                                          |
-| `dev`                     | Root command for cli development functionality.                                     |
-| `dev init`                | Downloads binaries and initializes the local environment.                           |
-| `dev run`                 | Runs a minimal, local Astria stack.                                                 |
-| `dev reset`               | The root command for resetting the local development instance data.                 |
-| `dev reset config`        | Reset config files.                                                                 |
-| `dev reset env`           | Reset environment variable files.                                                   |
-| `dev reset state`         | Reset Sequencer state.                                                              |
-| `dev purge binaries`      | Delete all binaries for a given instance.                                           |
-| `dev purge all`           | Delete all data for a given instance.                                               |
-| `sequencer balances`      | Get the balances of an account on the Sequencer.                                    |
-| `sequencer blockheight`   | Get the current block height of the Sequencer.                                      |
-| `sequencer createaccount` | Generate an account for the Sequencer.                                              |
-| `sequencer nonce`         | Get the current nonce for an account.                                               |
-| `sequencer transfer`      | Make a transfer on the Sequencer.                                      |
-
-> NOTE: Running a `dev purge` command requires you to run `dev init` afterwards to
-> reinitialize the deleted data.
 
 ## Installation
 
-### Install from GitHub release
+### Install From GitHub Release
 
-The CLI binaries are available for download from the
-[releases page](https://github.com/astriaorg/astria-cli-go/releases). There are
-binaries available for macOS and Linux, for both x86_64 and arm64 architectures.
+The latest release for the CLI can be found here
+[v0.12.0](https://github.com/astriaorg/astria-cli-go/releases/tag/v0.12.0). 
+There are binaries available for macOS (arm64 and x86_64) and Linux(x86_64) architectures.
 
 ```bash
 # download the binary for your platform, e.g. macOS silicon
-curl -L https://github.com/astriaorg/astria-cli-go/releases/download/v0.3.0/astria-go-v0.11.0-darwin-arm64.tar.gz \
+curl -L https://github.com/astriaorg/astria-cli-go/releases/download/v0.12.0/astria-go-v0.12.0-darwin-arm64.tar.gz \
   --output astria-go.tar.gz
 # extract the binary
 tar -xzvf astria-go.tar.gz
@@ -61,6 +48,21 @@ tar -xzvf astria-go.tar.gz
 
 # you can move the binary to a location in your PATH if you'd like
 mv astria-go /usr/local/bin/
+```
+
+### Install Nightly Release
+
+The nightly releases for the cli can be found on the cli [releases
+page](https://github.com/astriaorg/astria-cli-go/releases). 
+Grab the 
+
+```bash
+export NIGHTLY_URL="download url of the build you need"
+curl -L $NIGHTLY_URL > astria-cli.tar.gz
+tar -xvzf astria-cli.tar.gz
+mv astria-go /usr/local/bin/
+astria-go version
+
 ```
 
 ### Build Locally from Source
@@ -79,7 +81,8 @@ cd astria-cli-go
 just build
 
 # check the version
-just run "version"
+# will return "development" because you built locally
+just run "version" 
 # or
 go run main.go version
 ```
@@ -92,33 +95,12 @@ go run main.go version
 astria-go dev init
 ```
 
-The `init` command downloads binaries, generates environment and
-configuration files, and initializes CometBFT.
+The `init` command downloads binaries, generates configuration files, downloads
+the service binaries, and initializes CometBFT. These files will be organized
+and place in the `~/.astria` directory within an `/<instance>` directory. See
+the section on [Instances](#instances) for more details.
 
-The following files are generated:
-
-* In `~/.astria/<instance>`
-  * A `networks-config.toml` easily configuring different target networks
-* In `~/.astria/<instance>/config-local`:
-  * A `.env` file for local configuration
-  * `genesis.json` for the sequencer genesis
-  * `priv_validator_key.json` for configuring the sequencer validators
-* In `~/.astria/<instance>/config-remote`:
-  * A `.env` file for remote configuration
-
-The following binaries are downloaded:
-
-| App              | Version |
-|------------------|---------|
-| Cometbft         | v0.38.8 |
-| Astria-Sequencer | v0.11.0 |
-| Astria-Composer  | v0.6.0  |
-| Astria-Conductor | v0.14.1 |
-
-The `init` command will also run the initialization steps required by CometBFT,
-using the `genesis.json` and `priv_validator_key.json` files in the
-`config-local` directory. This will create a `.cometbft` directory in
-`~/.astria/<instance>/data`.
+The `init` command will also run the initialization steps required by CometBFT.
 
 ### Usage
 
@@ -135,16 +117,12 @@ pre-built binaries.
 The simplest way to run Astria:
 
 ```bash
-astria-go dev run
+astria-go dev run --network local
 ```
 
 This will spin up a Sequencer (Cometbft and Astria-Sequencer), a Conductor,
-and a Composer -- all on your local machine, using pre-built binaries of the
+and a Composer all on your local machine, using pre-built binaries of the
 dependencies.
-
-> NOTE: Running a local Sequencer is the default behavior of `dev run` command.
-> Thus, `astria-go dev run` is effectively an alias of
-> `astria-go dev run --network local`.
 
 #### Run Against a Remote Sequencer
 
@@ -175,6 +153,17 @@ astria-go dev run --network local \
   --conductor-path <absolute path to the Astria mono repo>/target/debug/astria-conductor
 ```
 
+Or update the local path to the service you want to change in the networks
+config: `~/.astria/<instance>/networks-config.toml` 
+
+```toml
+[networks.local.services.conductor]
+name = 'astria-conductor'
+version = 'dev' # update the version to be relevant
+download_url = '' # don't need a download url for local binaries
+local_path = 'path to your local conductor'
+```
+
 This will run Composer, Cometbft, and Sequencer using the downloaded pre-built
 binaries, while using a locally built version of the Conductor binary. You can
 swap out some or all binaries for the Astria stack with their appropriate flags:
@@ -187,9 +176,21 @@ astria-go dev run --network local \
   --conductor-path <conductor bin path>
 ```
 
-If additional configuration is required, you can update the `.env` files in
-`~/.astria/<instance>/config-local/` or
-`~/.astria/<instance>/config-remote/` based on your needs.
+Or by updating the specific service in the `networks-config.toml`.
+
+### Interact with the Sequencer
+
+You can use the `astria-go sequencer [command]` commands to interact with the
+sequencer. Run:
+
+```bash
+astria-go sequencer -h
+```
+
+To see a full list of commands available.
+
+You can also use the `--network` flag on the relevant commands to automatically
+configure which sequencer network the commands will be run against.
 
 ## Instances
 
@@ -216,9 +217,181 @@ You will see the following in the `~/.astria` directory:
 ```
 
 Each of these directories will contain configs and binaries for
-running the Astria stack. You can then update the `.env` files in the
-`~/.astria/<instance name>/config-local/` or `~/.astria/<instance
-name>/config-remote/` directories to suit your needs.
+running the Astria stack.
+
+## Configuration
+
+There are three different configuration files that the cli uses:
+
+* `base-config.toml`
+* `networks-config.toml`
+* `sequencer-networks-config.toml`
+
+The `base-config.toml` and `networks-config.toml` are used with the `astria-go
+dev` commands, and the `sequencer-networks-config.toml` is used with the
+`astria-go sequencer` commands.
+
+### Set Service Env Vars with the `base-config.toml`
+
+The base config can be found in the `~/.astria/<instance>/config` directory. It
+contains all of the configuration settings for the services that will be run by
+the CLI. The file is parsed from toml into environment variables that are then
+passed to all services.
+If you need to add or change any of the settings for the services you can add a
+new setting to the file in the form of:
+
+```toml
+lower_snake_case_var_name = 'value' # in single quotes
+```
+
+### Configure the Services and Sequencer Networks with `networks-config.toml`
+
+The `networks-config.toml` can be found in the `~/.astria/<instance>` directory.
+It contains all of the configuration settings for which services are run by the
+cli as well as a short list of useful overrides for different sequencer
+networks.
+Each network in the file will consist of a header section of the form
+`[network.<network name>]`:
+
+```toml
+[networks.local]
+```
+
+And then a list of services that the cli will run and display in the TUI for
+that network in the form of `[networks.<network name>.services.<service name>]`
+
+```toml
+[networks.local.services]
+[networks.local.services.conductor]
+# ...
+
+[networks.local.services.conductor]
+# ...
+```
+
+#### Choosing Specific Services
+
+If you need to use a specific versions of a service that is not one of the
+presets in the `networks-config.toml`, you can update that service for a given
+network by updating the `version`, `download_url`, and `local_path` in the
+services listed under each network.
+For example, if you wanted to roll Composer back a version, you can do the
+following:
+
+Find the Composer within the `local` (or any other) network
+
+```toml
+# presets shown here
+[networks.local.services.composer]
+name = 'astria-composer'
+version = 'v0.8.1'
+download_url = 'https://github.com/astriaorg/astria/releases/download/composer-v0.8.1/astria-composer-aarch64-apple-darwin.tar.gz'
+local_path = '<your home directory>/.astria/default/bin/astria-composer-v0.8.1'
+```
+
+And update it to a previous (or any other) version:
+
+```toml
+# update to a different version
+[networks.local.services.composer]
+name = 'astria-composer'
+version = 'v0.7.0'
+download_url = 'https://github.com/astriaorg/astria/releases/download/composer-v0.7.0/astria-composer-aarch64-apple-darwin.tar.gz'
+local_path = '<your home directory>/.astria/default/bin/astria-composer-v0.7.0'
+```
+
+Then re-run `astria-go dev init` to download that service.
+
+> NOTE: The 'name' and 'version' in the service config are used to name the
+> binary that is downloaded from the 'download_url'. All downloaded binaries
+> will be placed in the `~/.astria/<instance>/bin` directory and will be of the
+> form `name-version` as specified in the service config within the
+> `networks-config.toml` file. 
+
+The releases for all Astria services can be found [here](https://github.com/astriaorg/astria/releases).
+
+If you are developing a service, you can also update the config to point at the
+binary you are building locally:
+
+```toml
+# point the cli to your locally built binary
+[networks.local.services.composer]
+name = 'astria-composer'
+version = 'dev'
+download_url = ''
+local_path = '<path to your local binary>'
+```
+
+#### Adding a New Network
+If you would like to add a new network you can add a new section at the end of
+the `networks-config.toml` file. For example, if you wanted to only run a local
+sequencer (Astria Sequencer and CometBFT) you could add the following to the end
+of the `networks-config.toml`:
+
+```toml
+[networks.sequencer_only]
+sequencer_chain_id = 'sequencer-only'
+sequencer_grpc = 'http://127.0.0.1:8080'
+sequencer_rpc = 'http://127.0.0.1:26657'
+rollup_name = 'astria-test-chain'
+default_denom = 'nria'
+
+[networks.sequencer_only.services]
+[networks.sequencer_only.services.cometbft]
+name = 'cometbft'
+version = 'v0.38.8'
+download_url = 'https://github.com/cometbft/cometbft/releases/download/v0.38.8/cometbft_0.38.8_darwin_arm64.tar.gz'
+# make sure to update the path to the binary
+local_path = '<your home directory>/.astria/default/bin/cometbft-v0.38.8'
+
+[networks.sequencer_only.services.sequencer]
+name = 'astria-sequencer'
+version = 'v0.15.0'
+download_url = 'https://github.com/astriaorg/astria/releases/download/sequencer-v0.15.0/astria-sequencer-aarch64-apple-darwin.tar.gz'
+# make sure to update the path to the binary
+local_path = '<your home directory>/.astria/default/bin/astria-sequencer-v0.15.0'
+```
+
+Then run your new network with the following commands:
+
+```bash
+astria-go dev init
+astria-go dev run --network sequencer_only
+```
+
+> NOTE: It is best practice to re-run `dev init` after updating your
+> `networks-config.toml`. This makes sure that all of the binaries that are used
+> in all your network configurations have been downloaded prior to running.
+
+### Interact with a Sequencer Network using the `sequencer-networks-config.toml`
+
+The `sequencer-networks-config.toml` can be found in the top level `~/.astria`
+directory. It provides presets for interacting with different sequencer networks
+when using `astria-go sequencer` commands. You can use the `--network <network
+name>` flag to simplify your commands when interacting with a sequencer network.
+The config overrides the following flags when using the sequencer commands:
+
+* `--sequencer-url`
+* `--sequencer-chain-id`
+* `--asset`
+* `--fee-asset`
+
+If you need to add presets for a new network, you can add a section to the end
+of the `sequencer-networks-config.toml` file:
+
+```toml
+[networks.new_network]
+sequencer_chain_id = 'new-network'
+sequencer_url = '<rpc endpoint for the sequencer>'
+asset = '<new asset>'
+fee_asset = '<new fee asset>'
+```
+
+Then use the new config with:
+
+```bash
+astria-go sequencer nonce <other args> --network new_network
+```
 
 ## Development
 
