@@ -96,7 +96,6 @@ func purgeLogsCmdHandler(c *cobra.Command, _ []string) {
 
 	log.Infof("Deleting logs for instance '%s'", instance)
 
-	// remove the state files for sequencer and Cometbft
 	err := os.RemoveAll(logDir)
 	if err != nil {
 		fmt.Println("Error removing file:", err)
