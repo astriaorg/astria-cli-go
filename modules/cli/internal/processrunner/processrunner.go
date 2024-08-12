@@ -49,6 +49,7 @@ type NewProcessRunnerOpts struct {
 	Env        []string
 	Args       []string
 	ReadyCheck *ReadyChecker
+	// TODO: add a StartsMinimized bool when TUI config is added
 }
 
 // NewProcessRunner creates a new ProcessRunner.
