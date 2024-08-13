@@ -1,7 +1,7 @@
 # go-sequencer-client
 
 The `go-sequencer-client` is a Go package that enables interacting with an
-Astria sequencer. 
+Astria sequencer.
 
 ## Importing the Sequencer Client
 
@@ -29,7 +29,7 @@ go get github.com/astriaorg/astria-cli-go/modules/bech32m
 
 ## Usage
 
-All sequencer client methods can be found [here](https://github.com/astriaorg/astria-cli-go/blob/main/modules/go-sequencer-client/client/client.go).
+All sequencer client methods can be found [here](./client/client.go).
 
 The example below demonstrates how to create a sequencer client, then build and
 send a transaction to a sequencer.
@@ -38,10 +38,10 @@ send a transaction to a sequencer.
 package main
 
 import (
-	"context"
-	"crypto/ed25519"
-	"encoding/hex"
-	"fmt"
+  "context"
+  "crypto/ed25519"
+  "encoding/hex"
+  "fmt"
 
   "github.com/astriaorg/astria-cli-go/modules/bech32m"
   "github.com/astriaorg/astria-cli-go/modules/go-sequencer-client/client"
@@ -53,71 +53,71 @@ import (
 func main() {
   // create a new sequencer client pointing to the default CometBFT RPC endpoint
   c, err := client.NewClient("http://localhost:26657")
-	if err != nil {
-		log.WithError(err).Error("Error creating sequencer client")
-		panic(err)
-	}
+ if err != nil {
+  log.WithError(err).Error("Error creating sequencer client")
+  panic(err)
+ }
 
   // parse a private key into an ed25519.PrivateKey
-	privKeyBytes, err := hex.DecodeString("hex private key string")
-	if err != nil {
-		panic(err)
-	}
-	from := ed25519.NewKeyFromSeed(privKeyBytes)
+ privKeyBytes, err := hex.DecodeString("hex private key string")
+ if err != nil {
+  panic(err)
+ }
+ from := ed25519.NewKeyFromSeed(privKeyBytes)
 
   // create a FROM address from the private key
-	signer := client.NewSigner(from)
-	fromAddr := signer.Address()
-	addr, err := bech32m.EncodeFromBytes("astria", fromAddr)
-	if err != nil {
-		log.WithError(err).Error("Failed to encode address")
-		panic(err)
-	}
+ signer := client.NewSigner(from)
+ fromAddr := signer.Address()
+ addr, err := bech32m.EncodeFromBytes("astria", fromAddr)
+ if err != nil {
+  log.WithError(err).Error("Failed to encode address")
+  panic(err)
+ }
 
   // automatically get the nonce for the FROM account
-	nonce, err := c.GetNonce(ctx, addr.String())
-	if err != nil {
-		log.WithError(err).Error("Error getting nonce")
-		panic(err)
-	}
+ nonce, err := c.GetNonce(ctx, addr.String())
+ if err != nil {
+  log.WithError(err).Error("Error getting nonce")
+  panic(err)
+ }
 
   // convert the transfer amount to a uint128
   bigInt := new(big.Int)
-	_, ok := bigInt.SetString("1000", 10) // the transfer amount is 1000
-	if !ok {
-		return nil, fmt.Errorf("failed to convert string to big.Int")
-	}
-	if bigInt.Sign() < 0 {
-		panic(fmt.Errorf("negative number not allowed"))
-	} else if bigInt.BitLen() > 128 {
-		panic(fmt.Errorf("value overflows Uint128"))
-	}
-	lo := bigInt.Uint64()
-	hi := bigInt.Rsh(bigInt, 64).Uint64()
-	transferAmount := &primproto.Uint128{
-		Lo: lo,
-		Hi: hi,
-	}
+ _, ok := bigInt.SetString("1000", 10) // the transfer amount is 1000
+ if !ok {
+  return nil, fmt.Errorf("failed to convert string to big.Int")
+ }
+ if bigInt.Sign() < 0 {
+  panic(fmt.Errorf("negative number not allowed"))
+ } else if bigInt.BitLen() > 128 {
+  panic(fmt.Errorf("value overflows Uint128"))
+ }
+ lo := bigInt.Uint64()
+ hi := bigInt.Rsh(bigInt, 64).Uint64()
+ transferAmount := &primproto.Uint128{
+  Lo: lo,
+  Hi: hi,
+ }
 
   // build the transaction
-	unsignedTx := &txproto.UnsignedTransaction{
-		Params: &txproto.TransactionParams{
-			ChainId: "test-sequencer",
-			Nonce:   nonce,
-		},
-		Actions: []*txproto.Action{
-			{
-				Value: &txproto.Action_TransferAction{
-					TransferAction: &txproto.TransferAction{
-						To:       "astria prefixed bech32m TO address",
-						Amount:   transferAmount,
-						Asset:    "asset",
-						FeeAsset: "feeAsset",
-					},
-				},
-			},
-		},
-	}
+ unsignedTx := &txproto.UnsignedTransaction{
+  Params: &txproto.TransactionParams{
+   ChainId: "test-sequencer",
+   Nonce:   nonce,
+  },
+  Actions: []*txproto.Action{
+   {
+    Value: &txproto.Action_TransferAction{
+     TransferAction: &txproto.TransferAction{
+      To:       "astria prefixed bech32m TO address",
+      Amount:   transferAmount,
+      Asset:    "asset",
+      FeeAsset: "feeAsset",
+     },
+    },
+   },
+  },
+ }
 
   signedTx, err := signer.SignTransaction(unsignedTx)
   if err != nil {
