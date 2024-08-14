@@ -7,12 +7,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// LogHandler is a struct that manages the writing of process logs to a file.
 type LogHandler struct {
 	logPath        string
 	exportLogs     bool
 	fileDescriptor *os.File
 }
 
+// NewLogHandler creates a new LogHandler to be used by a ProcessRunner to write
+// the process logs to a file.
 func NewLogHandler(logPath string, exportLogs bool) *LogHandler {
 	var fileDescriptor *os.File
 
@@ -36,10 +39,15 @@ func NewLogHandler(logPath string, exportLogs bool) *LogHandler {
 	}
 }
 
+// Writeable reports if the data sent to the LogHandler.Write() function will be
+// written to the log file. If Writeable() returns false, the data will not be
+// written to a log file. If Writeable() returns true, the data will be written
+// to the log file when the Write() function is called.
 func (lh *LogHandler) Writeable() bool {
 	return lh.exportLogs
 }
 
+// Write writes the data to the log file managed by the LogHandler.
 func (lh *LogHandler) Write(data string) error {
 	// Remove ANSI escape codes from data
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*[mGKH]`)
@@ -53,6 +61,7 @@ func (lh *LogHandler) Write(data string) error {
 	return nil
 }
 
+// Close closes the log file within the LogHandler.
 func (lh *LogHandler) Close() error {
 	if lh.fileDescriptor != nil {
 		return lh.fileDescriptor.Close()
