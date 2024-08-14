@@ -182,7 +182,7 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 		} else {
 			exitStatusMessage := fmt.Sprintf("%s process exited cleanly", pr.title)
 			outputStatusMessage := fmt.Sprintf("[black:white][astria-go] %s[-:-]", exitStatusMessage)
-			log.Infof(exitStatusMessage)
+			log.Info(exitStatusMessage)
 			_, err := pr.outputBuf.WriteString(outputStatusMessage)
 			if err != nil {
 				return
