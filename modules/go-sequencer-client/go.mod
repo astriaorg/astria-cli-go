@@ -1,8 +1,6 @@
 module github.com/astriaorg/astria-cli-go/modules/go-sequencer-client
 
-go 1.21
-
-toolchain go1.22.3
+go 1.22.6
 
 require (
 	buf.build/gen/go/astria/primitives/protocolbuffers/go v1.34.2-20240626163506-691883836b9e.2
