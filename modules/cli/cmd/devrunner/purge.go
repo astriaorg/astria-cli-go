@@ -78,6 +78,35 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 	log.Infof("Successfully deleted instance '%s'", instance)
 }
 
+// purgeLogsCmd represents the 'purge logs' command
+var purgeLogsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "Delete all logs for a given instance. Re-initializing is NOT required after using this command.",
+	Run:   purgeLogsCmdHandler,
+}
+
+func purgeLogsCmdHandler(c *cobra.Command, _ []string) {
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
+	config.IsInstanceNameValidOrPanic(instance)
+
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	logDir := filepath.Join(homeDir, ".astria", instance, config.LogsDirName)
+
+	log.Infof("Deleting logs for instance '%s'", instance)
+
+	err := os.RemoveAll(logDir)
+	if err != nil {
+		fmt.Println("Error removing file:", err)
+		return
+	}
+	cmd.CreateDirOrPanic(logDir)
+
+	log.Infof("Successfully deleted logs for instance '%s'", instance)
+
+}
+
 func init() {
 	// top level command
 	devCmd.AddCommand(purgeCmd)
@@ -85,4 +114,5 @@ func init() {
 	// subcommands
 	purgeCmd.AddCommand(purgeBinariesCmd)
 	purgeCmd.AddCommand(purgeAllCmd)
+	purgeCmd.AddCommand(purgeLogsCmd)
 }

@@ -73,6 +73,7 @@ func (mv *MainView) getHelpInfo() string {
 	output += appendStatus("(a)utoscroll", mv.s.GetIsAutoscroll()) + " | "
 	output += appendStatus("(w)rap lines", mv.s.GetIsWordWrap()) + " | "
 	output += "(up/down) select pane | "
+	output += "toggle (m)inimized | "
 	output += "(enter) fullscreen selected pane"
 	return output
 }
@@ -85,7 +86,14 @@ func (mv *MainView) Render(_ Props) *tview.Flex {
 		pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
 		pp.SetIsBorderless(mv.s.GetIsBorderless())
 		pp.SetIsWordWrap(mv.s.GetIsWordWrap())
-		innerFlex.AddItem(pp.GetTextView(), 0, 1, true)
+		// flexSize controls if the pane is rendered minimized or not
+		var flexSize int
+		if pp.isMinimized {
+			flexSize = 2 // minimized size
+		} else {
+			flexSize = 0 // will fill all available space
+		}
+		innerFlex.AddItem(pp.GetTextView(), flexSize, 1, true)
 	}
 
 	mainWindowHelpInfo := tview.NewTextView().SetDynamicColors(true).SetText(mv.getHelpInfo())
@@ -113,6 +121,11 @@ func (mv *MainView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcel
 					for _, pp := range mv.processPanes {
 						pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
 					}
+				// hotkey for maximizing and minimizing the panels
+				case 'm':
+					index := mv.getSelectedPaneIdx()
+					mv.processPanes[index].SetMinimized(!mv.processPanes[index].isMinimized)
+
 				case 'q':
 					a.Exit()
 					return nil
@@ -163,6 +176,11 @@ func (mv *MainView) decrementSelectedPaneIdx() {
 	paneLen := len(mv.processPanes)
 	mv.selectedPaneIdx = (mv.selectedPaneIdx - 1 + paneLen) % paneLen
 	mv.redraw()
+}
+
+// getSelectedPaneIdx returns the index of the selected panel.
+func (mv *MainView) getSelectedPaneIdx() int {
+	return mv.selectedPaneIdx
 }
 
 // redraw ensures the correct visual state of the panes.
