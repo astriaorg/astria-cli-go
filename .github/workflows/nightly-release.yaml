@@ -1,5 +1,12 @@
 name: Nightly Release
 
+# Creates a nightly release and builds and uploads `astria-go` binaries.
+
+# NOTE - releases created via automation don't trigger actions that should
+#  trigger on release creation, e.g. build-for-release, so we have to have a
+#  build step in this workflow as well.
+#  see: https://github.com/orgs/community/discussions/25281
+
 on:
   schedule:
     - cron: '0 6 * * *'
