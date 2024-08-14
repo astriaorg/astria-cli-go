@@ -1,6 +1,8 @@
 # Astria Go CLI
 
-The `astria-go` CLI simplifies local rollup development and minimizes dependencies. It provides functionality to easily run the Astria stack and interact with the Sequencer.
+The `astria-go` CLI simplifies local rollup development and minimizes
+dependencies. It provides functionality to easily run the Astria stack and
+interact with the Sequencer.
 
 ## Table of Contents
 
@@ -20,7 +22,8 @@ See all releases [here](https://github.com/astriaorg/astria-cli-go/releases).
 
    ```bash
    # For macOS silicon (arm64)
-   curl -L https://github.com/astriaorg/astria-cli-go/releases/download/v0.12.0/astria-go-v0.12.0-darwin-arm64.tar.gz --output astria-go.tar.gz
+   export RELEASE_URL="https://github.com/astriaorg/astria-cli-go/releases/download/v0.12.0/astria-go-v0.12.0-darwin-arm64.tar.gz"
+   curl -L $RELEASE_URL --output astria-go.tar.gz
    ```
 
 2. Extract the binary:
@@ -66,10 +69,12 @@ See all releases [here](https://github.com/astriaorg/astria-cli-go/releases).
 ### Build Locally from Source
 
 Prerequisites:
+
 * [GO](https://go.dev/doc/install)
 * [just](https://github.com/casey/just)
 
 Steps:
+
 1. Clone the repository:
 
    ```bash
@@ -99,7 +104,8 @@ Steps:
 astria-go dev init
 ```
 
-This command downloads binaries, generates configuration files, and initializes CometBFT. Files are organized in the `~/.astria/<instance>` directory.
+This command downloads binaries, generates configuration files, and initializes
+CometBFT. Files are organized in the `~/.astria/<instance>` directory.
 
 ### Usage
 
@@ -109,7 +115,8 @@ This command downloads binaries, generates configuration files, and initializes 
 astria-go dev run --network local
 ```
 
-This command starts a local Sequencer (Cometbft and Astria-Sequencer), Conductor, and Composer using pre-built binaries.
+This command starts a local Sequencer (Cometbft and Astria-Sequencer),
+Conductor, and Composer using pre-built binaries.
 
 #### Run Against a Remote Sequencer
 
@@ -120,11 +127,14 @@ To run Composer and Conductor locally against a remote Astria Sequencer:
 astria-go dev run --network dusk
 ```
 
-When using a remote sequencer, you'll need to create an account on the remote sequencer. For more details, refer to the [Astria documentation](https://docs.astria.org/developer/tutorials/run-local-rollup-against-remote-sequencer#configure-the-local-astria-components).
+When using a remote sequencer, you'll need to create an account on the remote
+sequencer. For more details, refer to the [Astria
+documentation](https://docs.astria.org/developer/tutorials/run-local-rollup-against-remote-sequencer#configure-the-local-astria-components).
 
 ### Run Custom Binaries
 
-You can run components from a local monorepo during development. For example, to use a locally compiled Conductor:
+You can run components from a local monorepo during development. For example, to
+use a locally compiled Conductor:
 
 ```bash
 astria-go dev run --network local \
@@ -153,13 +163,15 @@ astria-go dev run --network local \
 
 ### Interact with the Sequencer
 
-Use `astria-go sequencer [command]` to interact with the sequencer. For a full list of commands:
+Use `astria-go sequencer [command]` to interact with the sequencer. For a full
+list of commands:
 
 ```bash
 astria-go sequencer -h
 ```
 
-Use the `--network` flag to configure which sequencer network the commands will run against.
+Use the `--network` flag to configure which sequencer network the commands will
+run against.
 
 ## Instances
 
@@ -171,7 +183,8 @@ astria-go dev init --instance hello
 astria-go dev init --instance world
 ```
 
-This creates separate directories in `~/.astria/` for each instance, containing configs and binaries for running the Astria stack.
+This creates separate directories in `~/.astria/` for each instance, containing
+configs and binaries for running the Astria stack.
 
 ## Configuration
 
@@ -191,11 +204,14 @@ lower_snake_case_var_name = 'value'
 
 ### Configure Networks and Services
 
-The `~/.astria/<instance>/networks-config.toml` file configures which services are run and provides overrides for different sequencer networks.
+The `~/.astria/<instance>/networks-config.toml` file configures which services
+are run and provides overrides for different sequencer networks.
 
 #### Customizing Service Versions
 
-To use a specific version of a service, update the `version`, `download_url`, and `local_path` in the `networks-config.toml`. For example, to roll back Composer:
+To use a specific version of a service, update the `version`, `download_url`,
+and `local_path` in the `networks-config.toml`. For example, to roll back
+Composer:
 
 ```toml
 [networks.local.services.composer]
@@ -252,7 +268,9 @@ astria-go dev run --network sequencer_only
 
 ### Interact with Sequencer Networks
 
-The `~/.astria/sequencer-networks-config.toml` provides presets for interacting with different sequencer networks when using `astria-go sequencer` commands. Use the `--network <network name>` flag to simplify your commands.
+The `~/.astria/sequencer-networks-config.toml` provides presets for interacting
+with different sequencer networks when using `astria-go sequencer` commands. Use
+the `--network <network name>` flag to simplify your commands.
 
 To add presets for a new network, append to `sequencer-networks-config.toml`:
 
@@ -273,10 +291,12 @@ astria-go sequencer nonce <other args> --network new_network
 ## Development
 
 Requirements:
-- Go version 1.22 or newer
-- Updated `gopls` settings for correct parsing of build tags
 
-The CLI uses [Cobra](https://github.com/spf13/cobra) for structuring the command-line interface. To add new commands:
+* Go version 1.22 or newer
+* Updated `gopls` settings for correct parsing of build tags
+
+The CLI uses [Cobra](https://github.com/spf13/cobra) for structuring the
+command-line interface. To add new commands:
 
 1. Install Cobra CLI:
 
@@ -292,7 +312,8 @@ The CLI uses [Cobra](https://github.com/spf13/cobra) for structuring the command
 
 ### TUI Logs
 
-TUI logs are written to `~/.astria/<instance>/astria-go.log`. This file is overwritten each time you run the TUI.
+TUI logs are written to `~/.astria/<instance>/astria-go.log`. This file is
+overwritten each time you run the TUI.
 
 ### Testing
 
