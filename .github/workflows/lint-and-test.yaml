@@ -15,20 +15,23 @@ jobs:
         uses: taiki-e/install-action@just
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.22.0
+          go-version: 1.22.6
           cache-dependency-path: ./go.sum
+      - name: Lint Go (bech32m)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          working-directory: modules/bech32m
+          version: v1.60.1
       - name: Lint Go (cli)
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
           working-directory: modules/cli
-          version: latest
-          skip-pulls: false
+          version: v1.60.1
       - name: Lint Go (go-sequencer-client)
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
           working-directory: modules/go-sequencer-client
-          version: latest
-          skip-pulls: false
+          version: v1.60.1
       - name: Lint Markdown
         uses: nosborn/github-action-markdown-cli@v3.3.0
         with:
