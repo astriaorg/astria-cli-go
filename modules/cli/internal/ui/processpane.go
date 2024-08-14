@@ -21,7 +21,8 @@ type ProcessPane struct {
 	ansiWriter     io.Writer
 	TickerInterval time.Duration
 
-	Title string
+	Title       string
+	isMinimized bool
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -45,6 +46,7 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 		pr:             pr,
 		Title:          pr.GetTitle(),
 		TickerInterval: 250,
+		isMinimized:    false,
 	}
 }
 
@@ -100,6 +102,11 @@ func (pp *ProcessPane) SetIsBorderless(isBorderless bool) {
 	// therefore, when isBorderless is true, we want to set the border to false
 	// for the textView, and vice versa
 	pp.textView.SetBorder(!isBorderless)
+}
+
+// TODO: description
+func (pp *ProcessPane) SetMinimized(isMinimized bool) {
+	pp.isMinimized = isMinimized
 }
 
 // GetTextView returns the textView associated with the ProcessPane.
