@@ -3,36 +3,44 @@
 The `go-sequencer-client` is a Go package that enables interacting with an
 Astria sequencer.
 
-## Importing the Sequencer Client
+## Table of Contents
 
-```bash
-go get github.com/astriaorg/astria-cli-go/modules/go-sequencer-client
-```
+- [Installation](#installation)
+- [Usage](#usage)
+- [Example](#example)
 
-## Importing Protobuf Types
+## Installation
 
-The Astria sequencer uses ProtoBuf for message passing. A full list of the APIs
-and Primitives can be found [here](https://buf.build/astria).
+To use the `go-sequencer-client`, install the following packages:
 
-```bash
-go get buf.build/gen/go/astria/primitives/protocolbuffers/go
-go get buf.build/gen/go/astria/protocol-apis/protocolbuffers/go
-```
+1. Sequencer Client:
+   ```bash
+   go get github.com/astriaorg/astria-cli-go/modules/go-sequencer-client
+   ```
 
-## Import the `bech32m` Package
+2. Protobuf Types:
+   The Astria sequencer uses ProtoBuf for message passing. A full list of the
+   APIs and Primitives can be found [here](https://buf.build/astria).
+   ```bash
+   go get buf.build/gen/go/astria/primitives/protocolbuffers/go
+   go get buf.build/gen/go/astria/protocol-apis/protocolbuffers/go
+   ```
 
-The Astria sequencer uses "astria" prefixed `bech32m` addresses.
-
-```bash
-go get github.com/astriaorg/astria-cli-go/modules/bech32m
-```
+3. Bech32m Package:
+   The Astria sequencer uses "astria" prefixed `bech32m` addresses.
+   ```bash
+   go get github.com/astriaorg/astria-cli-go/modules/bech32m
+   ```
 
 ## Usage
 
-All sequencer client methods can be found [here](./client/client.go).
+All sequencer client methods can be found in the [client.go](./client/client.go)
+file.
 
-The example below demonstrates how to create a sequencer client, then build and
-send a transaction to a sequencer.
+## Example
+
+The following example demonstrates how to create a sequencer client, then build
+and send a transaction to a sequencer:
 
 ```go
 package main
