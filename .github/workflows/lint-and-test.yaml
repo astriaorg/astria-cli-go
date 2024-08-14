@@ -28,7 +28,7 @@ jobs:
           working-directory: modules/cli
           version: v1.60.1
       - name: Lint Go (go-sequencer-client)
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
           working-directory: modules/go-sequencer-client
           version: v1.60.1
