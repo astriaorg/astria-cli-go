@@ -9,6 +9,7 @@ name: Nightly Release
 
 on:
   schedule:
+    # every day at 6AM UTC. late night for America, early morning for Europe
     - cron: '0 6 * * *'
   workflow_dispatch:
 
