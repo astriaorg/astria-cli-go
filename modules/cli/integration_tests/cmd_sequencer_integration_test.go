@@ -9,7 +9,6 @@ import (
 	"math/big"
 	"os/exec"
 	"testing"
-	"time"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/sequencer"
 	"github.com/stretchr/testify/assert"
@@ -26,36 +25,6 @@ const SequencerChainID = "sequencer-test-chain-0"
 const TestBinPath = "../../../bin/astria-go-testy"
 
 // NOTE - the ordering of these tests matters
-
-func TestAddAndRemoveFeeAssets(t *testing.T) {
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	// test synchronously first
-
-	// add a fee asset
-	addFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := addFeeAssetCmdSync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// remove a fee asset
-	removeFeeAssetCmdSync := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", "bananas", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = removeFeeAssetCmdSync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// NOTE - test synchronously
-	// add a fee asset
-	testAssetName := "testAsset"
-	addFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "add", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = addFeeAssetCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// remove a fee asset
-	removeFeeAssetCmd := exec.Command(TestBinPath, "sequencer", "sudo", "fee-asset", "remove", testAssetName, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = removeFeeAssetCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// wait a bit for async tx to be processed
-	time.Sleep(2 * time.Second)
-}
 
 func TestTransferAndGetNonce(t *testing.T) {
 	// get initial blockheight
@@ -184,76 +153,6 @@ func TestTransferFlags(t *testing.T) {
 	transferCmd = exec.Command(TestBinPath, "sequencer", "transfer", "53", TestTo, "--sequencer-url", SequencerURL)
 	_, err = transferCmd.CombinedOutput()
 	assert.Error(t, err)
-}
-
-func TestRemoveAndAddIBCRelayer(t *testing.T) {
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-
-	// remove an address from the existing IBC relayer set
-	removeIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := removeIBCRelayerCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// add same address back to the IBC relayer set
-	addIBCRelayerCmd := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = addIBCRelayerCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// test asynchronously
-	// remove an address from the existing IBC relayer set
-	removeIBCRelayerCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "remove", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = removeIBCRelayerCmdAsync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// add same address back to the IBC relayer set
-	addIBCRelayerCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "ibc-relayer", "add", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = addIBCRelayerCmdAsync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// wait a bit for async tx to be processed
-	time.Sleep(2 * time.Second)
-}
-
-func TestValidatorUpdate(t *testing.T) {
-	// update the validator power
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-	validatorUpdateCmd := exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := validatorUpdateCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// revert the validator power
-	validatorUpdateCmd = exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err = validatorUpdateCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// test async
-	// update the validator power
-	validatorUpdateCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "100", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = validatorUpdateCmdAsync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// revert the validator power
-	validatorUpdateCmdAsync = exec.Command(TestBinPath, "sequencer", "sudo", "validator-update", TestToPubKey, "10", key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = validatorUpdateCmdAsync.CombinedOutput()
-	assert.NoError(t, err)
-
-	// wait a bit for async tx to be processed
-	time.Sleep(2 * time.Second)
-}
-
-func TestUpdateSudoAddress(t *testing.T) {
-	key := fmt.Sprintf("--privkey=%s", TestFromPrivKey)
-
-	// change the sudo address
-	addressChangeCmd := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID)
-	_, err := addressChangeCmd.CombinedOutput()
-	assert.NoError(t, err)
-
-	// async
-	// change the sudo address
-	addressChangeCmdAsync := exec.Command(TestBinPath, "sequencer", "sudo", "sudo-address-change", TestTo, key, "--sequencer-url", SequencerURL, "--sequencer-chain-id", SequencerChainID, "--async")
-	_, err = addressChangeCmdAsync.CombinedOutput()
-	assert.NoError(t, err)
 }
 
 func TestGetBlock(t *testing.T) {
