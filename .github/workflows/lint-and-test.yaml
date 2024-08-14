@@ -18,13 +18,13 @@ jobs:
           go-version: 1.22.0
           cache-dependency-path: ./go.sum
       - name: Lint Go (cli)
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
           working-directory: modules/cli
           version: latest
           skip-pulls: false
       - name: Lint Go (go-sequencer-client)
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
           working-directory: modules/go-sequencer-client
           version: latest
@@ -47,6 +47,7 @@ jobs:
           screen -d -m just run dev run
           sleep 5
           just test-integration
+
 # FIXME - sequencer client tests are empty
 #      - name: Test Go (go-sequencer-client)
 #        run: go test ./...
