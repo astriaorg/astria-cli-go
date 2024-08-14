@@ -21,6 +21,8 @@ type ProcessRunner interface {
 	GetOutputAndClearBuf() string
 	GetInfo() string
 	GetEnvironment() []string
+	CanWriteToLog() bool
+	WriteToLog(data string) error
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -41,6 +43,7 @@ type processRunner struct {
 	outputBuf *safebuffer.SafeBuffer
 
 	readyChecker *ReadyChecker
+	logHandler   *LogHandler
 }
 
 type NewProcessRunnerOpts struct {
@@ -49,6 +52,8 @@ type NewProcessRunnerOpts struct {
 	Env        []string
 	Args       []string
 	ReadyCheck *ReadyChecker
+	LogPath    string
+	ExportLogs bool
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -58,6 +63,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 	// using exec.CommandContext to allow for cancellation from caller
 	cmd := exec.CommandContext(ctx, opts.BinPath, opts.Args...)
 	cmd.Env = opts.Env
+	logHandler := NewLogHandler(opts.LogPath, opts.ExportLogs)
 	return &processRunner{
 		ctx:          ctx,
 		cmd:          cmd,
@@ -67,6 +73,7 @@ func NewProcessRunner(ctx context.Context, opts NewProcessRunnerOpts) ProcessRun
 		opts:         opts,
 		env:          opts.Env,
 		readyChecker: opts.ReadyCheck,
+		logHandler:   logHandler,
 	}
 }
 
@@ -175,7 +182,7 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 		} else {
 			exitStatusMessage := fmt.Sprintf("%s process exited cleanly", pr.title)
 			outputStatusMessage := fmt.Sprintf("[black:white][astria-go] %s[-:-]", exitStatusMessage)
-			log.Infof(exitStatusMessage)
+			log.Info(exitStatusMessage)
 			_, err := pr.outputBuf.WriteString(outputStatusMessage)
 			if err != nil {
 				return
@@ -188,6 +195,9 @@ func (pr *processRunner) Start(ctx context.Context, depStarted <-chan bool) erro
 
 // Stop stops the process.
 func (pr *processRunner) Stop() {
+	if err := pr.logHandler.Close(); err != nil {
+		log.WithError(err).Errorf("Error closing log file for process %s", pr.title)
+	}
 	// send SIGINT to the process
 	if err := pr.cmd.Process.Signal(syscall.SIGINT); err != nil {
 		log.WithError(err).Errorf("Error sending SIGINT for process %s", pr.title)
@@ -223,4 +233,23 @@ func (pr *processRunner) GetInfo() string {
 // GetEnvironment returns the environment variables for the process.
 func (pr *processRunner) GetEnvironment() []string {
 	return pr.env
+}
+
+// CanWriteToLog returns whether the service terminal outputs can be written to
+// a log file. If CanWriteToLog() returns false, the data will not be written to
+// a log file. If CanWriteToLog() returns true, a log file exists and the data
+// can be written to the log file when the WriteToLog() function is called.
+func (pr *processRunner) CanWriteToLog() bool {
+	return pr.logHandler.Writeable()
+}
+
+// WriteToLog writes the data to the log file managed by the LogHandler within
+// the ProcessRunner.
+func (pr *processRunner) WriteToLog(data string) error {
+	err := pr.logHandler.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
