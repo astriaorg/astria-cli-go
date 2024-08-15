@@ -149,6 +149,7 @@ name = 'astria-conductor'
 version = 'dev'
 download_url = ''
 local_path = 'path to your local conductor'
+args = []
 ```
 
 You can swap out some or all binaries:
@@ -219,6 +220,7 @@ name = 'astria-composer'
 version = 'v0.7.0'
 download_url = 'https://github.com/astriaorg/astria/releases/download/composer-v0.7.0/astria-composer-aarch64-apple-darwin.tar.gz'
 local_path = '<your home directory>/.astria/default/bin/astria-composer-v0.7.0'
+args = []
 ```
 
 Then run `astria-go dev init` to download the specified service.
@@ -231,6 +233,35 @@ name = 'astria-composer'
 version = 'dev'
 download_url = ''
 local_path = '<path to your local binary>'
+args = []
+```
+
+#### Run a Generic Service
+
+Add a local service to your network:
+
+```toml
+[networks.local.services.echo]
+name = 'echo'
+version = ''
+download_url = ''
+local_path = '/bin/bash'
+args = ['-c', 'echo -e "hello world\nhello again!"']
+```
+
+> NOTE: All arguments are interpreted literally. This may affect how some
+> service arguments are parsed. Running through a bash shell command
+> resolves this issue in the case of running an `echo` command above. 
+
+Add a service from a release:
+
+```toml
+[networks.local.services.your_service]
+name = 'your_service'
+version = 'v0.0.0'
+download_url = 'download url to the release'
+local_path = '<your home directory>/.astria/default/bin/<your_service_name-version>'
+args = ['your', 'service', 'args']
 ```
 
 #### Adding a New Network
@@ -251,12 +282,14 @@ name = 'cometbft'
 version = 'v0.38.8'
 download_url = 'https://github.com/cometbft/cometbft/releases/download/v0.38.8/cometbft_0.38.8_darwin_arm64.tar.gz'
 local_path = '<your home directory>/.astria/default/bin/cometbft-v0.38.8'
+args = []
 
 [networks.sequencer_only.services.sequencer]
 name = 'astria-sequencer'
 version = 'v0.15.0'
 download_url = 'https://github.com/astriaorg/astria/releases/download/sequencer-v0.15.0/astria-sequencer-aarch64-apple-darwin.tar.gz'
 local_path = '<your home directory>/.astria/default/bin/astria-sequencer-v0.15.0'
+args = []
 ```
 
 Run your new network with:
