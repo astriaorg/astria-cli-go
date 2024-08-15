@@ -18,7 +18,39 @@ permissions:
   packages: write
 
 jobs:
+  check-for-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check_changes.outputs.should_release }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch all history for all branches and tags
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git fetch --tags
+          LAST_RELEASE=$(git tag -l --sort=-version:refname | head -n 1)
+          if [ -z "$LAST_RELEASE" ]; then
+            echo "No previous release found. Proceeding with release."
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            # check for changes in modules/ directory
+            CHANGES=$(git diff --name-only $LAST_RELEASE..HEAD -- modules)
+            if [ -n "$CHANGES" ]; then
+              echo "Changes detected in modules/ since last release. Proceeding with release."
+              echo "should_release=true" >> $GITHUB_OUTPUT
+            else
+              echo "No changes detected in modules/ since last release. Skipping release."
+              echo "should_release=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
   create-nightly-release:
+    needs: check-for-changes
+    if: needs.check-for-changes.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.set_envars.outputs.TAG_NAME }}
@@ -29,7 +61,6 @@ jobs:
       - name: Set envars
         id: set_envars
         run: |
-          # generate TAG_NAME and RELEASE_DATE envars
           TODAY=$(date +'%Y-%m-%d')
           echo "RELEASE_DATE=$TODAY" >> "$GITHUB_OUTPUT"
           echo "TAG_NAME=nightly-$TODAY" >> "$GITHUB_OUTPUT"
@@ -47,7 +78,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-upload:
-    needs: create-nightly-release
+    needs: [check-for-changes, create-nightly-release]
+    if: needs.check-for-changes.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
