@@ -251,7 +251,7 @@ args = ['-c', 'echo -e "hello world\nhello again!"']
 
 > NOTE: All arguments are interpreted literally. This may affect how some
 > service arguments are parsed. Running through a bash shell command
-> resolves this issue in the case of running an `echo` command above. 
+> resolves this issue in the case of running an `echo` command above.
 
 Add a service from a release:
 
