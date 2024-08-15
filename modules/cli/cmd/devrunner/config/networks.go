@@ -44,7 +44,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "sequencer-test-chain-0",
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
-				RollupName:       "astria-test-chain",
+				RollupName:       "astria-test-chain-1",
 				NativeDenom:      "nria",
 				Services: map[string]ServiceConfig{
 					"conductor": {
