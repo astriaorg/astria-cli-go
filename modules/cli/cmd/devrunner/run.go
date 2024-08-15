@@ -106,11 +106,12 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				HaltIfFailed:  false,
 			}
 			seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
+			log.Debugf("arguments for sequencer service: %v", service.Args)
 			seqOpts := processrunner.NewProcessRunnerOpts{
 				Title:      "Sequencer",
 				BinPath:    sequencerPath,
 				Env:        environment,
-				Args:       nil,
+				Args:       service.Args,
 				ReadyCheck: &seqReadinessCheck,
 				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
 				ExportLogs: exportLogs,
@@ -118,11 +119,12 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
 		case "composer":
 			composerPath := getFlagPath(c, "composer-path", "composer", service.LocalPath)
+			log.Debugf("arguments for composer service: %v", service.Args)
 			composerOpts := processrunner.NewProcessRunnerOpts{
 				Title:      "Composer",
 				BinPath:    composerPath,
 				Env:        environment,
-				Args:       nil,
+				Args:       service.Args,
 				ReadyCheck: nil,
 				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
 				ExportLogs: exportLogs,
@@ -130,11 +132,12 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 			compRunner = processrunner.NewProcessRunner(ctx, composerOpts)
 		case "conductor":
 			conductorPath := getFlagPath(c, "conductor-path", "conductor", service.LocalPath)
+			log.Debugf("arguments for conductor service: %v", service.Args)
 			conductorOpts := processrunner.NewProcessRunnerOpts{
 				Title:      "Conductor",
 				BinPath:    conductorPath,
 				Env:        environment,
-				Args:       nil,
+				Args:       service.Args,
 				ReadyCheck: nil,
 				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
 				ExportLogs: exportLogs,
@@ -152,22 +155,25 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 			cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
 			dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
 			cometDataPath := filepath.Join(dataDir, ".cometbft")
+			args := append([]string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel}, service.Args...)
+			log.Debugf("arguments for cometbft service: %v", args)
 			cometOpts := processrunner.NewProcessRunnerOpts{
 				Title:      "Comet BFT",
 				BinPath:    cometbftPath,
 				Env:        environment,
-				Args:       []string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel},
+				Args:       args,
 				ReadyCheck: &cometReadinessCheck,
 				LogPath:    filepath.Join(logsDir, appStartTime+"-cometbft.log"),
 				ExportLogs: exportLogs,
 			}
 			cometRunner = processrunner.NewProcessRunner(ctx, cometOpts)
 		default:
+			log.Debugf("arguments for %s service: %v", label, service.Args)
 			genericOpts := processrunner.NewProcessRunnerOpts{
 				Title:      service.Name,
 				BinPath:    service.LocalPath,
 				Env:        environment,
-				Args:       nil, // TODO: implement generic args?
+				Args:       service.Args,
 				ReadyCheck: nil,
 				LogPath:    filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
 				ExportLogs: exportLogs,
