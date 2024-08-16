@@ -46,7 +46,7 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 		pr:             pr,
 		Title:          pr.GetTitle(),
 		TickerInterval: 250,
-		isMinimized:    false,
+		isMinimized:    pr.GetStartMinimized(),
 	}
 }
 

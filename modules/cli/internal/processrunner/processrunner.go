@@ -23,6 +23,7 @@ type ProcessRunner interface {
 	GetEnvironment() []string
 	CanWriteToLog() bool
 	WriteToLog(data string) error
+	GetStartMinimized() bool
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -47,14 +48,14 @@ type processRunner struct {
 }
 
 type NewProcessRunnerOpts struct {
-	Title      string
-	BinPath    string
-	Env        []string
-	Args       []string
-	ReadyCheck *ReadyChecker
-	// TODO: add a StartsMinimized bool when TUI config is added
-	LogPath    string
-	ExportLogs bool
+	Title          string
+	BinPath        string
+	Env            []string
+	Args           []string
+	ReadyCheck     *ReadyChecker
+	LogPath        string
+	ExportLogs     bool
+	StartMinimized bool
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -253,4 +254,9 @@ func (pr *processRunner) WriteToLog(data string) error {
 	}
 
 	return nil
+}
+
+// GetStartMinimized returns whether the process should start minimized.
+func (pr *processRunner) GetStartMinimized() bool {
+	return pr.opts.StartMinimized
 }

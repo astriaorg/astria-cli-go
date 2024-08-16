@@ -47,8 +47,16 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 
 	astriaDir := filepath.Join(homeDir, ".astria")
 
+	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfig := config.LoadTUIConfigsOrPanic(tuiConfigPath)
+
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
+
+	// update the instance name, this needs to happen before it can be logged
+	if !flagHandler.GetChanged("instance") {
+		instance = tuiConfig.OverrideInstanceName
+	}
 
 	exportLogs := flagHandler.GetValue("export-logs") == "true"
 	logsDir := filepath.Join(astriaDir, instance, config.LogsDirName)
@@ -56,6 +64,14 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
 	cmd.CreateUILog(filepath.Join(astriaDir, instance))
+
+	// log the instance name in the tui logs once they are created
+	if !flagHandler.GetChanged("instance") {
+		log.Debug("Using overridden default instance name: ", instance)
+	} else {
+		log.Debug("Instance name: ", instance)
+	}
+	log.Debug("TUI Config loaded", tuiConfig)
 
 	network := flagHandler.GetValue("network")
 
@@ -108,39 +124,42 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 			seqReadinessCheck := processrunner.NewReadyChecker(seqRCOpts)
 			log.Debugf("arguments for sequencer service: %v", service.Args)
 			seqOpts := processrunner.NewProcessRunnerOpts{
-				Title:      "Sequencer",
-				BinPath:    sequencerPath,
-				Env:        environment,
-				Args:       service.Args,
-				ReadyCheck: &seqReadinessCheck,
-				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
-				ExportLogs: exportLogs,
+				Title:          "Sequencer",
+				BinPath:        sequencerPath,
+				Env:            environment,
+				Args:           service.Args,
+				ReadyCheck:     &seqReadinessCheck,
+				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
+				ExportLogs:     exportLogs,
+				StartMinimized: tuiConfig.SequencerStartsMinimized,
 			}
 			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
 		case "composer":
 			composerPath := getFlagPath(c, "composer-path", "composer", service.LocalPath)
 			log.Debugf("arguments for composer service: %v", service.Args)
 			composerOpts := processrunner.NewProcessRunnerOpts{
-				Title:      "Composer",
-				BinPath:    composerPath,
-				Env:        environment,
-				Args:       service.Args,
-				ReadyCheck: nil,
-				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
-				ExportLogs: exportLogs,
+				Title:          "Composer",
+				BinPath:        composerPath,
+				Env:            environment,
+				Args:           service.Args,
+				ReadyCheck:     nil,
+				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
+				ExportLogs:     exportLogs,
+				StartMinimized: tuiConfig.ComposerStartsMinimized,
 			}
 			compRunner = processrunner.NewProcessRunner(ctx, composerOpts)
 		case "conductor":
 			conductorPath := getFlagPath(c, "conductor-path", "conductor", service.LocalPath)
 			log.Debugf("arguments for conductor service: %v", service.Args)
 			conductorOpts := processrunner.NewProcessRunnerOpts{
-				Title:      "Conductor",
-				BinPath:    conductorPath,
-				Env:        environment,
-				Args:       service.Args,
-				ReadyCheck: nil,
-				LogPath:    filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
-				ExportLogs: exportLogs,
+				Title:          "Conductor",
+				BinPath:        conductorPath,
+				Env:            environment,
+				Args:           service.Args,
+				ReadyCheck:     nil,
+				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
+				ExportLogs:     exportLogs,
+				StartMinimized: tuiConfig.ConductorStartsMinimized,
 			}
 			condRunner = processrunner.NewProcessRunner(ctx, conductorOpts)
 		case "cometbft":
@@ -158,25 +177,27 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 			args := append([]string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel}, service.Args...)
 			log.Debugf("arguments for cometbft service: %v", args)
 			cometOpts := processrunner.NewProcessRunnerOpts{
-				Title:      "Comet BFT",
-				BinPath:    cometbftPath,
-				Env:        environment,
-				Args:       args,
-				ReadyCheck: &cometReadinessCheck,
-				LogPath:    filepath.Join(logsDir, appStartTime+"-cometbft.log"),
-				ExportLogs: exportLogs,
+				Title:          "Comet BFT",
+				BinPath:        cometbftPath,
+				Env:            environment,
+				Args:           args,
+				ReadyCheck:     &cometReadinessCheck,
+				LogPath:        filepath.Join(logsDir, appStartTime+"-cometbft.log"),
+				ExportLogs:     exportLogs,
+				StartMinimized: tuiConfig.CometBFTStartsMinimized,
 			}
 			cometRunner = processrunner.NewProcessRunner(ctx, cometOpts)
 		default:
 			log.Debugf("arguments for %s service: %v", label, service.Args)
 			genericOpts := processrunner.NewProcessRunnerOpts{
-				Title:      service.Name,
-				BinPath:    service.LocalPath,
-				Env:        environment,
-				Args:       service.Args,
-				ReadyCheck: nil,
-				LogPath:    filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
-				ExportLogs: exportLogs,
+				Title:          service.Name,
+				BinPath:        service.LocalPath,
+				Env:            environment,
+				Args:           service.Args,
+				ReadyCheck:     nil,
+				LogPath:        filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
+				ExportLogs:     exportLogs,
+				StartMinimized: tuiConfig.GenericStartsMinimized,
 			}
 			genericRunner := processrunner.NewProcessRunner(ctx, genericOpts)
 			genericRunners = append(genericRunners, genericRunner)
@@ -193,7 +214,10 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 
 	// create and start ui app
 	app := ui.NewApp(runners)
-	app.Start()
+	// start the app with initial setting from the tui config, the border will
+	// always start on
+	appStartState := ui.BuildStateStore(tuiConfig.AutoScroll, tuiConfig.WrapLines, tuiConfig.Borderless)
+	app.Start(appStartState)
 }
 
 // getFlagPath gets the override path from the flag. It returns the default

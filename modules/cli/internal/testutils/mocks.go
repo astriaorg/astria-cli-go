@@ -68,3 +68,7 @@ func (m *MockProcessRunner) WriteToLog(data string) error {
 	args := m.Called(data)
 	return args.Error(0)
 }
+
+func (m *MockProcessRunner) GetStartMinimized() bool {
+	return false
+}
