@@ -15,14 +15,15 @@ import (
 // purgeCmd represents the root purge command
 var purgeCmd = &cobra.Command{
 	Use:   "purge",
-	Short: "The root command for purging the local development instance data. Re-initializing is required after using a purge command.",
-	Long:  `The root command for purging the local development instance data. Whenever a purge command is run, it will delete the specified data. Re-initializing is required after using a purge command.`,
+	Short: "The root command for deleting data and files for the local development instance.",
+	Long:  `The root command for deleting data and files for the local development instance. Whenever a purge command is run, it will delete the specified data.`,
 }
 
 // purgeBinariesCmd represents the 'purge binaries' command
 var purgeBinariesCmd = &cobra.Command{
 	Use:   "binaries",
-	Short: "Delete all binaries for a given instance. Re-initializing is required after using this command.",
+	Short: "Delete all locally downloaded service binaries for a given instance.",
+	Long:  "Delete all locally downloaded service binaries for a given instance. Re-initializing is required after using this command to redownload the service binaries.",
 	Run:   purgeBinariesCmdHandler,
 }
 
@@ -52,8 +53,7 @@ func purgeBinariesCmdHandler(c *cobra.Command, _ []string) {
 // purgeAllCmd represents the 'purge all' command
 var purgeAllCmd = &cobra.Command{
 	Use:   "all",
-	Short: "Delete all data for a given instance. Re-initializing is required after using this command.",
-	Long:  "Delete all data for a given instance. This will remove all data, binaries, and configuration files for the specified instance. Re-initializing is required after using this command.",
+	Short: "Delete an instance. This includes chain state, configuration, and the service binaries for that instance.",
 	Run:   purgeAllCmdHandler,
 }
 
@@ -81,7 +81,8 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 // purgeLogsCmd represents the 'purge logs' command
 var purgeLogsCmd = &cobra.Command{
 	Use:   "logs",
-	Short: "Delete all logs for a given instance. Re-initializing is NOT required after using this command.",
+	Short: "Delete all logs for a given instance.",
+	Long:  "Delete all logs for a given instance. Re-initializing is NOT required after using this command.",
 	Run:   purgeLogsCmdHandler,
 }
 
@@ -104,7 +105,6 @@ func purgeLogsCmdHandler(c *cobra.Command, _ []string) {
 	cmd.CreateDirOrPanic(logDir)
 
 	log.Infof("Successfully deleted logs for instance '%s'", instance)
-
 }
 
 func init() {
