@@ -33,7 +33,7 @@ type TUIConfig struct {
 func DefaultTUIConfig() TUIConfig {
 	return TUIConfig{
 		AutoScroll:               true,
-		WrapLines:                true,
+		WrapLines:                false,
 		Borderless:               false,
 		OverrideInstanceName:     "default",
 		CometBFTStartsMinimized:  false,

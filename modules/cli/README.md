@@ -189,11 +189,17 @@ configs and binaries for running the Astria stack.
 
 ## Configuration
 
-The CLI uses three configuration files:
+The CLI uses four configuration files:
 
-1. `base-config.toml`: Sets service environment variables
-2. `networks-config.toml`: Configures services and sequencer networks
-3. `sequencer-networks-config.toml`: Used for `astria-go sequencer` commands
+1. `tui-config.toml`: Controls app start state of the devrunner TUI
+2. `base-config.toml`: Sets service environment variables
+3. `networks-config.toml`: Configures services and sequencer networks
+4. `sequencer-networks-config.toml`: Used for `astria-go sequencer` commands
+
+### Set TUI App Start State
+
+Once `astria-go dev init` has been run, edit `~/.astria/tui-config.toml` to
+control the starting settings of the TUI app.
 
 ### Set Service Environment Variables
 
