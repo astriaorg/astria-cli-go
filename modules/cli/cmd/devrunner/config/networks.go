@@ -18,11 +18,11 @@ type NetworkConfigs struct {
 }
 
 type ServiceConfig struct {
-	Name        string `mapstructure:"name" toml:"name"`
-	Version     string `mapstructure:"version" toml:"version"`
-	DownloadURL string `mapstructure:"download_url" toml:"download_url"`
-	LocalPath   string `mapstructure:"local_path" toml:"local_path"`
-	// TODO: implement generic args?
+	Name        string   `mapstructure:"name" toml:"name"`
+	Version     string   `mapstructure:"version" toml:"version"`
+	DownloadURL string   `mapstructure:"download_url" toml:"download_url"`
+	LocalPath   string   `mapstructure:"local_path" toml:"local_path"`
+	Args        []string `mapstructure:"args" toml:"args"`
 }
 
 // NetworkConfig is the struct that holds the configuration for an individual Astria network.
@@ -44,7 +44,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "sequencer-test-chain-0",
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
-				RollupName:       "astria-test-chain",
+				RollupName:       "astria-test-chain-1",
 				NativeDenom:      "nria",
 				Services: map[string]ServiceConfig{
 					"conductor": {
@@ -52,24 +52,28 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 						Version:     "v" + AstriaConductorVersion,
 						DownloadURL: KnownBinaries.AstriaConductor.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + AstriaComposerVersion,
 						DownloadURL: KnownBinaries.AstriaComposer.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+						Args:        nil,
 					},
 					"sequencer": {
 						Name:        "astria-sequencer",
 						Version:     "v" + AstriaSequencerVersion,
 						DownloadURL: KnownBinaries.AstriaSequencer.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-sequencer-v"+AstriaSequencerVersion),
+						Args:        nil,
 					},
 					"cometbft": {
 						Name:        "cometbft",
 						Version:     "v" + CometbftVersion,
 						DownloadURL: KnownBinaries.CometBFT.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "cometbft-v"+CometbftVersion),
+						Args:        nil,
 					},
 				},
 			},
@@ -85,12 +89,14 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 						Version:     "v" + AstriaConductorVersion,
 						DownloadURL: KnownBinaries.AstriaConductor.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + AstriaComposerVersion,
 						DownloadURL: KnownBinaries.AstriaComposer.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+						Args:        nil,
 					},
 				},
 			},
@@ -106,12 +112,14 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 						Version:     "v" + AstriaConductorVersion,
 						DownloadURL: KnownBinaries.AstriaConductor.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + AstriaComposerVersion,
 						DownloadURL: KnownBinaries.AstriaComposer.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+						Args:        nil,
 					},
 				},
 			},
@@ -127,12 +135,14 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 						Version:     "v" + AstriaConductorVersion,
 						DownloadURL: KnownBinaries.AstriaConductor.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+AstriaConductorVersion),
+						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + AstriaComposerVersion,
 						DownloadURL: KnownBinaries.AstriaComposer.Url,
 						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+AstriaComposerVersion),
+						Args:        nil,
 					},
 				},
 			},
