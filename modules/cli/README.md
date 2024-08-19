@@ -201,6 +201,14 @@ The CLI uses four configuration files:
 Once `astria-go dev init` has been run, edit `~/.astria/tui-config.toml` to
 control the starting settings of the TUI app.
 
+The `highlight_color` and `border_color` accept both named colors and
+hexadecimal notation:
+
+```toml
+highlight_color = "blue"
+border_color = "#808080"
+```
+
 ### Set Service Environment Variables
 
 Edit `~/.astria/<instance>/config/base-config.toml` to add or change settings:

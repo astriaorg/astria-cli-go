@@ -12,7 +12,7 @@ import (
 // TUIConfig is the struct that holds the configuration and start state for the
 // TUI.
 type TUIConfig struct {
-	// Service settings
+	// Log viewer settings for services
 	AutoScroll bool `mapstructure:"auto_scroll" toml:"auto_scroll"`
 	WrapLines  bool `mapstructure:"wrap_lines" toml:"wrap_lines"`
 	Borderless bool `mapstructure:"borderless" toml:"borderless"`
@@ -27,6 +27,10 @@ type TUIConfig struct {
 	SequencerStartsMinimized bool `mapstructure:"sequencer_starts_minimized" toml:"sequencer_starts_minimized"`
 	// Generic services start minimized
 	GenericStartsMinimized bool `mapstructure:"generic_starts_minimized" toml:"generic_starts_minimized"`
+
+	// Accessibility settings
+	HighlightColor string `mapstructure:"highlight_color" toml:"highlight_color"`
+	BorderColor    string `mapstructure:"border_color" toml:"border_color"`
 }
 
 // DefaultTUIConfig returns a TUIConfig struct populated with all default
@@ -36,12 +40,14 @@ func DefaultTUIConfig() TUIConfig {
 		AutoScroll:               true,
 		WrapLines:                false,
 		Borderless:               false,
-		OverrideInstanceName:     "default",
+		OverrideInstanceName:     DefaultInstanceName,
 		CometBFTStartsMinimized:  false,
 		ConductorStartsMinimized: false,
 		ComposerStartsMinimized:  false,
 		SequencerStartsMinimized: false,
 		GenericStartsMinimized:   true,
+		HighlightColor:           DefaultHighlightColor,
+		BorderColor:              DefaultBorderColor,
 	}
 }
 
@@ -57,6 +63,8 @@ func (c TUIConfig) String() string {
 	output += fmt.Sprintf("ComposerStartsMinimized: %v, ", c.ComposerStartsMinimized)
 	output += fmt.Sprintf("SequencerStartsMinimized: %v, ", c.SequencerStartsMinimized)
 	output += fmt.Sprintf("GenericStartsMinimized: %v", c.GenericStartsMinimized)
+	output += fmt.Sprintf("HighlightColor: %s, ", c.HighlightColor)
+	output += fmt.Sprintf("BorderColor: %s", c.BorderColor)
 	output += "}"
 	return output
 }

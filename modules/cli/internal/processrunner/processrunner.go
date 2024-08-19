@@ -24,6 +24,8 @@ type ProcessRunner interface {
 	CanWriteToLog() bool
 	WriteToLog(data string) error
 	GetStartMinimized() bool
+	GetHighlightColor() string
+	GetBorderColor() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -56,6 +58,8 @@ type NewProcessRunnerOpts struct {
 	LogPath        string
 	ExportLogs     bool
 	StartMinimized bool
+	HighlightColor string
+	BorderColor    string
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -259,4 +263,12 @@ func (pr *processRunner) WriteToLog(data string) error {
 // GetStartMinimized returns whether the process should start minimized.
 func (pr *processRunner) GetStartMinimized() bool {
 	return pr.opts.StartMinimized
+}
+
+func (pr *processRunner) GetHighlightColor() string {
+	return pr.opts.HighlightColor
+}
+
+func (pr *processRunner) GetBorderColor() string {
+	return pr.opts.BorderColor
 }

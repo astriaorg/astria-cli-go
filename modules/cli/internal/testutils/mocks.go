@@ -72,3 +72,11 @@ func (m *MockProcessRunner) WriteToLog(data string) error {
 func (m *MockProcessRunner) GetStartMinimized() bool {
 	return false
 }
+
+func (m *MockProcessRunner) GetHighlightColor() string {
+	return "blue"
+}
+
+func (m *MockProcessRunner) GetBorderColor() string {
+	return "gray"
+}

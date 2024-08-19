@@ -133,6 +133,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.SequencerStartsMinimized,
+				HighlightColor: tuiConfig.HighlightColor,
+				BorderColor:    tuiConfig.BorderColor,
 			}
 			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
 		case "composer":
@@ -147,6 +149,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ComposerStartsMinimized,
+				HighlightColor: tuiConfig.HighlightColor,
+				BorderColor:    tuiConfig.BorderColor,
 			}
 			compRunner = processrunner.NewProcessRunner(ctx, composerOpts)
 		case "conductor":
@@ -161,6 +165,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ConductorStartsMinimized,
+				HighlightColor: tuiConfig.HighlightColor,
+				BorderColor:    tuiConfig.BorderColor,
 			}
 			condRunner = processrunner.NewProcessRunner(ctx, conductorOpts)
 		case "cometbft":
@@ -186,6 +192,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				LogPath:        filepath.Join(logsDir, appStartTime+"-cometbft.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.CometBFTStartsMinimized,
+				HighlightColor: tuiConfig.HighlightColor,
+				BorderColor:    tuiConfig.BorderColor,
 			}
 			cometRunner = processrunner.NewProcessRunner(ctx, cometOpts)
 		default:
@@ -199,6 +207,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				LogPath:        filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.GenericStartsMinimized,
+				HighlightColor: tuiConfig.HighlightColor,
+				BorderColor:    tuiConfig.BorderColor,
 			}
 			genericRunner := processrunner.NewProcessRunner(ctx, genericOpts)
 			genericRunners = append(genericRunners, genericRunner)

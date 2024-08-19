@@ -17,6 +17,8 @@ const (
 	DefaultTargetNetwork             = "local"
 	LocalNativeDenom                 = "nria"
 	DefaultTUIConfigName             = "tui-config.toml"
+	DefaultHighlightColor            = "blue"
+	DefaultBorderColor               = "gray"
 
 	// NOTE - do not include the 'v' at the beginning of the version number
 	CometbftVersion        = "0.38.8"
