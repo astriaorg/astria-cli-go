@@ -53,7 +53,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	// update the instance name, this needs to happen before it can be logged
+	// set the instance name from the correct source so that logging is handled
+	// correctly
 	if !flagHandler.GetChanged("instance") {
 		instance = tuiConfig.OverrideInstanceName
 	}
@@ -71,7 +72,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	} else {
 		log.Debug("Instance name: ", instance)
 	}
-	log.Debug("TUI Config loaded", tuiConfig)
+	log.Debug(tuiConfig)
 
 	network := flagHandler.GetValue("network")
 

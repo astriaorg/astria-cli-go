@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pelletier/go-toml/v2"
@@ -42,6 +43,22 @@ func DefaultTUIConfig() TUIConfig {
 		SequencerStartsMinimized: false,
 		GenericStartsMinimized:   true,
 	}
+}
+
+// String returns a string representation of the TUIConfig struct.
+func (c TUIConfig) String() string {
+	output := "TUI Config: {"
+	output += fmt.Sprintf("AutoScroll: %v, ", c.AutoScroll)
+	output += fmt.Sprintf("WrapLines: %v, ", c.WrapLines)
+	output += fmt.Sprintf("Borderless: %v, ", c.Borderless)
+	output += fmt.Sprintf("OverrideInstanceName: %s, ", c.OverrideInstanceName)
+	output += fmt.Sprintf("CometBFTStartsMinimized: %v, ", c.CometBFTStartsMinimized)
+	output += fmt.Sprintf("ConductorStartsMinimized: %v, ", c.ConductorStartsMinimized)
+	output += fmt.Sprintf("ComposerStartsMinimized: %v, ", c.ComposerStartsMinimized)
+	output += fmt.Sprintf("SequencerStartsMinimized: %v, ", c.SequencerStartsMinimized)
+	output += fmt.Sprintf("GenericStartsMinimized: %v", c.GenericStartsMinimized)
+	output += "}"
+	return output
 }
 
 // LoadTUIConfigsOrPanic loads the TUIConfigs from the given path. If the file
