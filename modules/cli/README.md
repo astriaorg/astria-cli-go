@@ -206,7 +206,7 @@ colors](https://www.w3schools.com/tags/ref_colornames.asp) and hexadecimal
 notation:
 
 ```toml
-highlight_color = "blue"
+highlight_color = "deepskyblue" # names should be all lowercase with no spaces
 border_color = "#808080"
 ```
 
