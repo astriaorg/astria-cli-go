@@ -165,3 +165,26 @@ func (f *CliFlagHandler) GetValue(flagName string) string {
 	log.Debugf("%s flag is not set, using default: %s", flagName, value)
 	return value
 }
+
+// GetChanged returns a boolean indicating if the flag was changed.
+func (f *CliFlagHandler) GetChanged(flagName string) bool {
+	// confirm the flag exists
+	flag := f.Cmd.Flags().Lookup(flagName)
+	if flag == nil {
+		log.Errorf("Flag '%s' doesn't exist. Has it been bound?", flagName)
+		panic(fmt.Sprintf("getValue: flag doesn't exist: %s", flagName))
+	}
+
+	// check if the flag was changed via a config override
+	if f.useConfigFlag != "" && f.Cmd.Flag(f.useConfigFlag).Changed {
+		// check if value exists in config
+		if f.config != nil {
+			_, found := GetFieldValueByTag(f.config, "flag", flagName)
+			if found {
+				return true
+			}
+		}
+	}
+
+	return f.Cmd.Flag(flagName).Changed
+}

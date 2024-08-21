@@ -10,7 +10,7 @@ import (
 // AppController is an interface for the App to control the views and itself.
 type AppController interface {
 	// Start starts the app.
-	Start()
+	Start(*StateStore)
 	// Exit exits the app.
 	Exit()
 	// SetView sets the current view.
@@ -45,9 +45,11 @@ func NewApp(processrunners []processrunner.ProcessRunner) *App {
 }
 
 // Start starts the tview application.
-func (a *App) Start() {
-	// create the state store for views to share ui state
-	stateStore := NewStateStore()
+func (a *App) Start(stateStore *StateStore) {
+	// if a state store wasn't passed in, create a default one
+	if stateStore == nil {
+		stateStore = DefaultStateStore()
+	}
 
 	// create the views
 	mainView := NewMainView(a.Application, a.processRunners, stateStore)

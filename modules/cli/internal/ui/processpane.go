@@ -23,6 +23,9 @@ type ProcessPane struct {
 
 	Title       string
 	isMinimized bool
+
+	HighlightColor tcell.Color
+	BorderColor    tcell.Color
 }
 
 // NewProcessPane creates a new ProcessPane with a textView and processrunner.ProcessRunner
@@ -34,10 +37,21 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 			tApp.Draw()
 		})
 	tv.SetBorder(true).
-		SetBorderColor(tcell.ColorGray).
 		SetTitle(pr.GetTitle())
 
 	ansiWriter := tview.ANSIWriter(tv)
+
+	highlightColor := tcell.GetColor(pr.GetHighlightColor())
+	if highlightColor == 0 {
+		log.Debugf("Highlight color %s could not be parsed, using default %s", pr.GetHighlightColor(), tcell.ColorBlue.Name())
+		highlightColor = tcell.ColorBlue
+	}
+
+	borderColor := tcell.GetColor(pr.GetBorderColor())
+	if borderColor == 0 {
+		log.Debugf("Border color %s could not be parsed, using default %s", pr.GetBorderColor(), tcell.ColorGray.Name())
+		borderColor = tcell.ColorGray
+	}
 
 	return &ProcessPane{
 		tApp:           tApp,
@@ -46,7 +60,9 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 		pr:             pr,
 		Title:          pr.GetTitle(),
 		TickerInterval: 250,
-		isMinimized:    false,
+		isMinimized:    pr.GetStartMinimized(),
+		HighlightColor: highlightColor,
+		BorderColor:    borderColor,
 	}
 }
 
@@ -116,11 +132,12 @@ func (pp *ProcessPane) GetTextView() *tview.TextView {
 
 // Highlight highlights or unhighlights the ProcessPane's textView.
 func (pp *ProcessPane) Highlight(highlight bool) {
+	highlightTitleFormat := "[black:" + pp.HighlightColor.Name() + "]"
 	if highlight {
-		title := "[black:blue]" + pp.Title + "[::-]"
-		pp.textView.SetBorderColor(tcell.ColorBlue).SetTitle(title)
+		title := highlightTitleFormat + pp.Title + "[::-]"
+		pp.textView.SetBorderColor(pp.HighlightColor).SetTitle(title)
 	} else {
-		pp.textView.SetBorderColor(tcell.ColorGray).SetTitle(pp.Title)
+		pp.textView.SetBorderColor(pp.BorderColor).SetTitle(pp.Title)
 	}
 }
 

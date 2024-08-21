@@ -65,6 +65,9 @@ func runInitialization(c *cobra.Command, _ []string) {
 	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
+	tuiConfigBath := filepath.Join(defaultDir, config.DefaultTUIConfigName)
+	config.CreateTUIConfig(tuiConfigBath)
+
 	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
 	cmd.CreateDirOrPanic(configDirPath)
 

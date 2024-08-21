@@ -84,8 +84,8 @@ func (mv *MainView) Render(_ Props) *tview.Flex {
 	for _, pp := range mv.processPanes {
 		// propagate the shared state to the process panes
 		pp.SetIsAutoScroll(mv.s.GetIsAutoscroll())
-		pp.SetIsBorderless(mv.s.GetIsBorderless())
 		pp.SetIsWordWrap(mv.s.GetIsWordWrap())
+		pp.SetIsBorderless(false) // main view is never borderless
 		// flexSize controls if the pane is rendered minimized or not
 		var flexSize int
 		if pp.isMinimized {
@@ -243,6 +243,8 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 		SetChangedFunc(func() {
 			fv.tApp.Draw()
 		})
+	// update the borderless state of the text view before rendering
+	fv.processPane.textView.SetBorder(!fv.s.GetIsBorderless())
 	flex := tview.NewFlex().AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(info, 4, 0, true).
 		AddItem(fv.processPane.GetTextView(), 0, 1, true).
@@ -253,9 +255,6 @@ func (fv *FullscreenView) Render(p Props) *tview.Flex {
 // GetKeyboard is a callback for defining keyboard shortcuts.
 func (fv *FullscreenView) GetKeyboard(a AppController) func(evt *tcell.EventKey) *tcell.EventKey {
 	backToMain := func() {
-		// reset borderless state before going back to main view
-		fv.s.ResetBorderless()
-		fv.processPane.SetIsBorderless(fv.s.GetIsBorderless())
 		// rerender the process Pane to apply all settings
 		a.RefreshView(fv.processPane)
 		// change views
