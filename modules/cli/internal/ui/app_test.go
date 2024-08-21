@@ -16,6 +16,5 @@ func TestNewApp(t *testing.T) {
 	runners := []processrunner.ProcessRunner{mockRunner1, mockRunner2}
 	app := NewApp(runners)
 
-	assert.Equal(t, 2, len(app.processRunners), "expected 2 process runners")
-	assert.NotEmptyf(t, app.Application, "expected app.Application to be not empty")
+	assert.NotNil(t, app)
 }

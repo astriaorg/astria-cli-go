@@ -42,7 +42,7 @@ type MainView struct {
 }
 
 // NewMainView creates a new MainView with the given tview.Application and ProcessPanes.
-func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner, s *StateStore) *MainView {
+func NewMainView(tApp *tview.Application, processrunners []processrunner.ProcessRunner, s *StateStore) View {
 	// create process panes for the runners
 	var processPanes []*ProcessPane
 	for _, pr := range processrunners {

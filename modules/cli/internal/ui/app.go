@@ -36,7 +36,7 @@ type App struct {
 }
 
 // NewApp creates a new tview.Application with the necessary components
-func NewApp(processrunners []processrunner.ProcessRunner) *App {
+func NewApp(processrunners []processrunner.ProcessRunner) AppController {
 	tviewApp := tview.NewApplication()
 	return &App{
 		Application:    tviewApp,
