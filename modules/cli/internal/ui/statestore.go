@@ -15,8 +15,8 @@ type StateStore struct {
 	mutex sync.Mutex
 }
 
-// NewStateStore creates a new default StateStore
-func NewStateStore() *StateStore {
+// DefaultStateStore creates a new default StateStore
+func DefaultStateStore() *StateStore {
 	return &StateStore{
 		state: AppState{
 			isAutoScroll: true,
@@ -26,8 +26,8 @@ func NewStateStore() *StateStore {
 	}
 }
 
-// BuildStateStore creates a new StateStore with the given parameters
-func BuildStateStore(isAutoScroll, isWordWrap, isBorderless bool) *StateStore {
+// NewStateStore creates a new StateStore with the given parameters
+func NewStateStore(isAutoScroll, isWordWrap, isBorderless bool) *StateStore {
 	return &StateStore{
 		state: AppState{
 			isAutoScroll: isAutoScroll,

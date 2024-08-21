@@ -69,9 +69,9 @@ func (c TUIConfig) String() string {
 	return output
 }
 
-// LoadTUIConfigsOrPanic loads the TUIConfigs from the given path. If the file
+// LoadTUIConfigOrPanic loads the TUIConfigs from the given path. If the file
 // cannot be loaded or parsed, the function will panic.
-func LoadTUIConfigsOrPanic(path string) TUIConfig {
+func LoadTUIConfigOrPanic(path string) TUIConfig {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -88,7 +88,7 @@ func LoadTUIConfigsOrPanic(path string) TUIConfig {
 	return config
 }
 
-// CreateNetworksConfig creates a TUI configuration file and populates it
+// CreateTUIConfig creates a TUI configuration file and populates it
 // with the defaults for the devrunner TUI. It will panic if the file
 // cannot be created or written to.
 func CreateTUIConfig(configPath string) {

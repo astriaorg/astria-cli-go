@@ -46,9 +46,9 @@ func NewApp(processrunners []processrunner.ProcessRunner) *App {
 
 // Start starts the tview application.
 func (a *App) Start(stateStore *StateStore) {
-	// if a state store wans't passed in, create a default one
+	// if a state store wasn't passed in, create a default one
 	if stateStore == nil {
-		stateStore = NewStateStore()
+		stateStore = DefaultStateStore()
 	}
 
 	// create the views

@@ -189,7 +189,7 @@ configs and binaries for running the Astria stack.
 
 ## Configuration
 
-The CLI uses four configuration files:
+The CLI uses the following configuration files:
 
 1. `tui-config.toml`: Controls app start state of the devrunner TUI
 2. `base-config.toml`: Sets service environment variables
@@ -201,8 +201,9 @@ The CLI uses four configuration files:
 Once `astria-go dev init` has been run, edit `~/.astria/tui-config.toml` to
 control the starting settings of the TUI app.
 
-The `highlight_color` and `border_color` accept both named colors and
-hexadecimal notation:
+The `highlight_color` and `border_color` accept both [W3C named
+colors](https://www.w3schools.com/tags/ref_colornames.asp) and hexadecimal
+notation:
 
 ```toml
 highlight_color = "blue"

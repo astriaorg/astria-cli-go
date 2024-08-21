@@ -48,7 +48,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	astriaDir := filepath.Join(homeDir, ".astria")
 
 	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
-	tuiConfig := config.LoadTUIConfigsOrPanic(tuiConfigPath)
+	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
@@ -227,7 +227,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	app := ui.NewApp(runners)
 	// start the app with initial setting from the tui config, the border will
 	// always start on
-	appStartState := ui.BuildStateStore(tuiConfig.AutoScroll, tuiConfig.WrapLines, tuiConfig.Borderless)
+	appStartState := ui.NewStateStore(tuiConfig.AutoScroll, tuiConfig.WrapLines, tuiConfig.Borderless)
 	app.Start(appStartState)
 }
 
