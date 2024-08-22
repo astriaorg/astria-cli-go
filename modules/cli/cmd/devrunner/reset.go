@@ -15,15 +15,15 @@ import (
 // resetCmd represents the root reset command
 var resetCmd = &cobra.Command{
 	Use:   "reset",
-	Short: "The root command for resetting the local development instance data. Re-initializing is not required after using a reset command.",
-	Long:  `The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run. Re-initializing is not required after using a reset command.`,
+	Short: "The root command for resetting the local development instance data.",
+	Long:  "The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run.",
 }
 
 // resetConfigCmd represents the 'reset config' command
 var resetConfigCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Reset config files. Re-initializing is not required after using this command.",
-	Long:  "Reset config files. This will return all files in the config directory to their default state as though initially created. Re-initializing is not required after using this command.",
+	Short: "Reset the base config files to their initial default state.",
+	Long:  "Reset the base config files to their initial default state. This will return all files in the ~/.astria/<instance>/config directory to their default state as though initially created.",
 	Run:   resetConfigCmdHandler,
 }
 
@@ -70,8 +70,8 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 // resetNetworksCmd represents the 'reset networks' command
 var resetNetworksCmd = &cobra.Command{
 	Use:   "networks",
-	Short: "Reset the networks config. Re-initializing is not required after using this command.",
-	Long:  `Reset the networks config for the cli. This command only resets the networks-config.toml file. No other config files are affected. Re-initializing is not required after using this command.`,
+	Short: "Reset the networks config to its default values.",
+	Long:  "Reset the networks config to its default values. This command only resets the ~/.astria/<instance>/networks-config.toml file.",
 	Run:   resetNetworksCmdHandler,
 }
 
@@ -101,8 +101,8 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 // resetStateCmd represents the 'reset state' command
 var resetStateCmd = &cobra.Command{
 	Use:   "state",
-	Short: "Reset Sequencer state. Re-initializing is not required after using this command.",
-	Long:  "Reset Sequencer state. This will reset both the sequencer and Cometbft data to their initial state. Re-initializing is not required after using this command.",
+	Short: "Reset Sequencer chain state to its initial state.",
+	Long:  "Reset Sequencer chain state to its initial state. This will reset both the Astria Sequencer and Cometbft chain state to their initial value.",
 	Run:   resetStateCmdHandler,
 }
 
