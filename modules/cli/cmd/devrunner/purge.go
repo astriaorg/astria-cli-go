@@ -23,7 +23,7 @@ var purgeCmd = &cobra.Command{
 var purgeBinariesCmd = &cobra.Command{
 	Use:   "binaries",
 	Short: "Delete all locally downloaded service binaries for a given instance.",
-	Long:  "Delete all locally downloaded service binaries for a given instance. Re-initializing is required after using this command to redownload the service binaries.",
+	Long:  "Delete all locally downloaded service binaries for a given instance. Reinitializing is required after using this command to redownload the service binaries.",
 	Run:   purgeBinariesCmdHandler,
 }
 
@@ -82,7 +82,7 @@ func purgeAllCmdHandler(c *cobra.Command, _ []string) {
 var purgeLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Delete all logs for a given instance.",
-	Long:  "Delete all logs for a given instance. Re-initializing is NOT required after using this command.",
+	Long:  "Delete all logs for a given instance. Reinitializing is NOT required after using this command.",
 	Run:   purgeLogsCmdHandler,
 }
 
