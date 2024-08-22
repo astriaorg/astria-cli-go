@@ -16,7 +16,7 @@ import (
 var purgeCmd = &cobra.Command{
 	Use:   "purge",
 	Short: "The root command for deleting data and files for the local development instance.",
-	Long:  `The root command for deleting data and files for the local development instance. Whenever a purge command is run, it will delete the specified data.`,
+	Long:  "The root command for deleting data and files for the local development instance. Whenever a purge command is run, it will delete the specified data.",
 }
 
 // purgeBinariesCmd represents the 'purge binaries' command

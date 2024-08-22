@@ -16,14 +16,14 @@ import (
 var resetCmd = &cobra.Command{
 	Use:   "reset",
 	Short: "The root command for resetting the local development instance data.",
-	Long:  `The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run.`,
+	Long:  "The root command for resetting the local development instance data. The specified data will be reset to its initial state as though initialization was just run.",
 }
 
 // resetConfigCmd represents the 'reset config' command
 var resetConfigCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Reset the base config files to their initial default state.",
-	Long:  `Reset the base config files to their initial default state. This will return all files in the ~/.astria/<instance>/config directory to their default state as though initially created.`,
+	Long:  "Reset the base config files to their initial default state. This will return all files in the ~/.astria/<instance>/config directory to their default state as though initially created.",
 	Run:   resetConfigCmdHandler,
 }
 
@@ -71,7 +71,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 var resetNetworksCmd = &cobra.Command{
 	Use:   "networks",
 	Short: "Reset the networks config to its default values.",
-	Long:  `Reset the networks config to its default values. This command only resets the ~/.astria/<instance>/networks-config.toml file.`,
+	Long:  "Reset the networks config to its default values. This command only resets the ~/.astria/<instance>/networks-config.toml file.",
 	Run:   resetNetworksCmdHandler,
 }
 
@@ -102,7 +102,7 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 var resetStateCmd = &cobra.Command{
 	Use:   "state",
 	Short: "Reset Sequencer chain state to its initial state.",
-	Long:  `Reset Sequencer chain state to its initial state. This will reset both the Astria Sequencer and Cometbft chain state to their initial value.`,
+	Long:  "Reset Sequencer chain state to its initial state. This will reset both the Astria Sequencer and Cometbft chain state to their initial value.",
 	Run:   resetStateCmdHandler,
 }
 
