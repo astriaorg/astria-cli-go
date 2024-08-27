@@ -9,8 +9,8 @@ const (
 	DefaultAddressPrefix                   = "astria"
 	DefaultSequencerURL                    = "https://rpc.sequencer.dusk-" + config.DuskNum + ".devnet.astria.org"
 	DefaultSequencerChainID                = "astria-dusk-" + config.DuskNum
-	DefaultAsset                           = "nria"
-	DefaultFeeAsset                        = "nria"
+	DefaultAsset                           = "ntia"
+	DefaultFeeAsset                        = "ntia"
 	DefaultSequencerNetworksConfigFilename = "sequencer-networks-config.toml"
 	DefaultTargetNetwork                   = "dusk"
 )

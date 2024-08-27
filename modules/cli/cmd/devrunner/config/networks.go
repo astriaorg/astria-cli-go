@@ -45,7 +45,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
 				RollupName:       "astria-test-chain-1",
-				NativeDenom:      "nria",
+				NativeDenom:      LocalNativeDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
@@ -82,7 +82,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerGRPC:    "https://grpc.sequencer.dusk-" + DuskNum + ".devnet.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dusk-" + DuskNum + ".devnet.astria.org/",
 				RollupName:       "",
-				NativeDenom:      "nria",
+				NativeDenom:      LocalNativeDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",

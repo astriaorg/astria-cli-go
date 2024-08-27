@@ -15,7 +15,7 @@ const (
 	DefaultNetworksConfigName        = "networks-config.toml"
 	DefaultServiceLogLevel           = "info"
 	DefaultTargetNetwork             = "local"
-	LocalNativeDenom                 = "nria"
+	LocalNativeDenom                 = "ntia"
 	DefaultTUIConfigName             = "tui-config.toml"
 	DefaultHighlightColor            = "blue"
 	DefaultBorderColor               = "gray"
