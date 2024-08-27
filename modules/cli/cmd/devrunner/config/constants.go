@@ -1,8 +1,8 @@
 package config
 
 const (
-	duskNum                          = "9"
-	dawnNum                          = "0"
+	DuskNum                          = "10"
+	DawnNum                          = "0"
 	BinariesDirName                  = "bin"
 	LogsDirName                      = "logs"
 	DataDirName                      = "data"
@@ -22,7 +22,7 @@ const (
 
 	// NOTE - do not include the 'v' at the beginning of the version number
 	CometbftVersion        = "0.38.8"
-	AstriaSequencerVersion = "0.15.0"
-	AstriaComposerVersion  = "0.8.1"
-	AstriaConductorVersion = "0.19.0"
+	AstriaSequencerVersion = "0.16.0"
+	AstriaComposerVersion  = "0.8.2"
+	AstriaConductorVersion = "0.20.0"
 )

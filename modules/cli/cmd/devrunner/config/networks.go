@@ -78,9 +78,9 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				},
 			},
 			"dusk": {
-				SequencerChainId: "astria-dusk-" + duskNum,
-				SequencerGRPC:    "https://grpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
+				SequencerChainId: "astria-dusk-" + DuskNum,
+				SequencerGRPC:    "https://grpc.sequencer.dusk-" + DuskNum + ".devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dusk-" + DuskNum + ".devnet.astria.org/",
 				RollupName:       "",
 				NativeDenom:      "nria",
 				Services: map[string]ServiceConfig{
@@ -101,9 +101,9 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				},
 			},
 			"dawn": {
-				SequencerChainId: "astria-dawn-" + dawnNum,
-				SequencerGRPC:    "https://grpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
+				SequencerChainId: "astria-dawn-" + DawnNum,
+				SequencerGRPC:    "https://grpc.sequencer.dawn-" + DawnNum + ".devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dawn-" + DawnNum + ".devnet.astria.org/",
 				RollupName:       "",
 				NativeDenom:      "ibc/channel0/utia",
 				Services: map[string]ServiceConfig{

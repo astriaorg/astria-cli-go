@@ -25,6 +25,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 	return map[string]string{
 		// conductor
 		"astria_conductor_celestia_block_time_ms":        "1200",
+		"astria_conductor_no_celestia_auth":              "true",
 		"astria_conductor_celestia_bearer_token":         "<JWT Bearer token>",
 		"astria_conductor_celestia_node_http_url":        "http://127.0.0.1:26658",
 		"astria_conductor_execution_rpc_url":             "http://127.0.0.1:50051",
@@ -59,7 +60,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_pretty_print":               "true",
 		"astria_composer_api_listen_addr":            "0.0.0.0:0",
 		"astria_composer_sequencer_url":              "http://127.0.0.1:26657",
-		"astria_composer_sequencer_chain_id":         "astria-dusk-" + duskNum,
+		"astria_composer_sequencer_chain_id":         "astria-dusk-" + DuskNum,
 		"astria_composer_rollups":                    "astriachain::ws://127.0.0.1:8546",
 		"astria_composer_private_key_file":           filepath.Join(homeDir, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		"astria_composer_sequencer_address_prefix":   "astria",
