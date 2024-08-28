@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pelletier/go-toml/v2"
@@ -45,7 +46,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
 				RollupName:       "astria-test-chain-1",
-				NativeDenom:      "nria",
+				NativeDenom:      DefaultLocalNativeDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
@@ -78,11 +79,11 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				},
 			},
 			"dusk": {
-				SequencerChainId: "astria-dusk-" + duskNum,
-				SequencerGRPC:    "https://grpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.dusk-" + duskNum + ".devnet.astria.org/",
+				SequencerChainId: "astria-dusk-" + cmd.DefaultDuskNum,
+				SequencerGRPC:    "https://grpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org/",
 				RollupName:       "",
-				NativeDenom:      "nria",
+				NativeDenom:      DefaultLocalNativeDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
@@ -101,9 +102,9 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				},
 			},
 			"dawn": {
-				SequencerChainId: "astria-dawn-" + dawnNum,
-				SequencerGRPC:    "https://grpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.dawn-" + dawnNum + ".devnet.astria.org/",
+				SequencerChainId: "astria-dawn-" + cmd.DefaultDawnNum,
+				SequencerGRPC:    "https://grpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".devnet.astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".devnet.astria.org/",
 				RollupName:       "",
 				NativeDenom:      "ibc/channel0/utia",
 				Services: map[string]ServiceConfig{
