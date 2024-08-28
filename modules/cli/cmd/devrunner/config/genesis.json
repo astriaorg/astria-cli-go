@@ -1,38 +1,39 @@
 {
+  "genesis_time": "2024-02-21T22:23:22.87689Z",
+  "chain_id": "sequencer-test-chain-0",
+  "initial_height": "0",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "22020096",
+      "max_gas": "-1"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000",
+      "max_bytes": "1048576"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    },
+    "version": {
+      "app": "0"
+    }
+  },
+  "validators": [
+    {
+      "address": "36B4C386F431C45A30CED70DB22286EDEC943D76",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "iHh+KduNUkfGrfrJkJtW5rJwXDEgsuOIXo7IqkFqEPE="
+      },
+      "power": "10",
+      "name": ""
+    }
+  ],
   "app_hash": "",
   "app_state": {
-    "native_asset_base_denomination": "nria",
-    "fees": {
-      "transferBaseFee": {
-        "lo": "12"
-      },
-      "sequenceBaseFee": {
-        "lo": "32"
-      },
-      "sequenceByteCostMultiplier": {
-        "lo": "1"
-      },
-      "initBridgeAccountBaseFee": {
-        "lo": "48"
-      },
-      "bridgeLockByteCostMultiplier": {
-        "lo": "1"
-      },
-      "bridgeSudoChangeFee": {
-        "lo": "24"
-      },
-      "ics20WithdrawalBaseFee": {
-        "lo": "24"
-      }
-    },
-    "allowed_fee_assets": [
-     "nria"
-    ],
-    "ibc_parameters": {
-      "ibc_enabled": true,
-      "inbound_ics20_transfers_enabled": true,
-      "outbound_ics20_transfers_enabled": true
-    },
     "address_prefixes": {
       "base": "astria"
     },
@@ -75,39 +76,38 @@
       {
         "bech32m": "astria1xnlvg0rle2u6auane79t4p27g8hxnj36ja960z"
       }
-    ]
-  },
-  "chain_id": "sequencer-test-chain-0",
-  "consensus_params": {
-    "block": {
-      "max_bytes": "22020096",
-      "max_gas": "-1"
+    ],
+    "ibc_parameters": {
+      "ibc_enabled": true,
+      "inbound_ics20_transfers_enabled": true,
+      "outbound_ics20_transfers_enabled": true
     },
-    "evidence": {
-      "max_age_num_blocks": "100000",
-      "max_age_duration": "172800000000000",
-      "max_bytes": "1048576"
-    },
-    "validator": {
-      "pub_key_types": [
-        "ed25519"
-      ]
-    },
-    "version": {
-      "app": "0"
-    }
-  },
-  "genesis_time": "2024-02-21T22:23:22.87689Z",
-  "initial_height": "0",
-  "validators": [
-    {
-      "address": "36B4C386F431C45A30CED70DB22286EDEC943D76",
-      "pub_key": {
-        "type": "tendermint/PubKeyEd25519",
-        "value": "iHh+KduNUkfGrfrJkJtW5rJwXDEgsuOIXo7IqkFqEPE="
+    "fees": {
+      "transferBaseFee": {
+        "lo": "12"
       },
-      "power": "10",
-      "name": ""
-    }
-  ]
+      "sequenceBaseFee": {
+        "lo": "32"
+      },
+      "sequenceByteCostMultiplier": {
+        "lo": "1"
+      },
+      "initBridgeAccountBaseFee": {
+        "lo": "48"
+      },
+      "bridgeLockByteCostMultiplier": {
+        "lo": "1"
+      },
+      "bridgeSudoChangeFee": {
+        "lo": "24"
+      },
+      "ics20WithdrawalBaseFee": {
+        "lo": "24"
+      }
+    },
+    "native_asset_base_denomination": "nria",
+    "allowed_fee_assets": [
+     "nria"
+    ]
+  }
 }
