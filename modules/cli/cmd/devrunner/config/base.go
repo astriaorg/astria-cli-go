@@ -60,7 +60,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_pretty_print":               "true",
 		"astria_composer_api_listen_addr":            "0.0.0.0:0",
 		"astria_composer_sequencer_url":              "http://127.0.0.1:26657",
-		"astria_composer_sequencer_chain_id":         "astria-dusk-" + DuskNum,
+		"astria_composer_sequencer_chain_id":         "astria-dusk-" + cmd.DefaultDuskNum,
 		"astria_composer_rollups":                    "astriachain::ws://127.0.0.1:8546",
 		"astria_composer_private_key_file":           filepath.Join(homeDir, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		"astria_composer_sequencer_address_prefix":   "astria",

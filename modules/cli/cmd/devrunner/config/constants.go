@@ -1,8 +1,6 @@
 package config
 
 const (
-	DuskNum                          = "10"
-	DawnNum                          = "0"
 	BinariesDirName                  = "bin"
 	LogsDirName                      = "logs"
 	DataDirName                      = "data"
@@ -15,7 +13,7 @@ const (
 	DefaultNetworksConfigName        = "networks-config.toml"
 	DefaultServiceLogLevel           = "info"
 	DefaultTargetNetwork             = "local"
-	LocalNativeDenom                 = "ntia"
+	DefaultLocalNativeDenom          = "ntia"
 	DefaultTUIConfigName             = "tui-config.toml"
 	DefaultHighlightColor            = "blue"
 	DefaultBorderColor               = "gray"
