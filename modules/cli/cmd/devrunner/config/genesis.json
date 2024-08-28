@@ -107,7 +107,7 @@
     },
     "native_asset_base_denomination": "nria",
     "allowed_fee_assets": [
-     "nria"
+      "nria"
     ]
   }
 }
