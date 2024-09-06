@@ -103,8 +103,8 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 			},
 			"dawn": {
 				SequencerChainId: "astria-dawn-" + cmd.DefaultDawnNum,
-				SequencerGRPC:    "https://grpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".devnet.astria.org/",
-				SequencerRPC:     "https://rpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".devnet.astria.org/",
+				SequencerGRPC:    "https://grpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
+				SequencerRPC:     "https://rpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
 				RollupName:       "",
 				NativeDenom:      "ibc/channel0/utia",
 				Services: map[string]ServiceConfig{
