@@ -20,7 +20,11 @@ const (
 
 	// NOTE - do not include the 'v' at the beginning of the version number
 	CometbftVersion        = "0.38.8"
-	AstriaSequencerVersion = "0.17.0"
-	AstriaComposerVersion  = "0.8.3"
-	AstriaConductorVersion = "0.20.1"
+	AstriaSequencerVersion = "0.16.0"
+	AstriaComposerVersion  = "0.8.2"
+	AstriaConductorVersion = "0.20.0"
+
+	LocalSequencerVersion = "0.17.0"
+	LocalComposerVersion  = "0.8.3"
+	LocalConductorVersion = "0.20.1"
 )
