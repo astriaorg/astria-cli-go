@@ -38,14 +38,14 @@ func GetSequencerNetworkConfigsPresets() NetworkConfigs {
 				FeeAsset:         "nria",
 			},
 			"dusk": {
-				SequencerChainId: DefaultSequencerChainID,
-				SequencerURL:     DefaultSequencerURL,
+				SequencerChainId: "astria-dusk-10",
+				SequencerURL:     "https://rpc.sequencer.astria-dusk-10.devnet.astria.org",
 				Asset:            "nria",
 				FeeAsset:         "nria",
 			},
 			"dawn": {
-				SequencerChainId: "astria-dawn-0",
-				SequencerURL:     "https://rpc.sequencer.dawn-0.devnet.astria.org",
+				SequencerChainId: DefaultSequencerChainID,
+				SequencerURL:     DefaultSequencerURL,
 				Asset:            "ibc/channel0/utia",
 				FeeAsset:         "ibc/channel0/utia",
 			},

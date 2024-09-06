@@ -7,8 +7,8 @@ import (
 const (
 	DefaultConfigDirName                   = ".astria"
 	DefaultAddressPrefix                   = "astria"
-	DefaultSequencerURL                    = "https://rpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org"
-	DefaultSequencerChainID                = "astria-dusk-" + cmd.DefaultDuskNum
+	DefaultSequencerURL                    = "https://rpc.sequencer.dusk-" + cmd.DefaultDawnNum + ".astria.org"
+	DefaultSequencerChainID                = "dawn-" + cmd.DefaultDawnNum
 	DefaultAsset                           = "ntia"
 	DefaultFeeAsset                        = "ntia"
 	DefaultSequencerNetworksConfigFilename = "sequencer-networks-config.toml"
