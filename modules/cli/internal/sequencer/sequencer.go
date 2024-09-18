@@ -231,8 +231,7 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	return tr, nil
 }
 
-// Transfer transfers an amount from one address to another.
-// It returns the hash of the transaction.
+// IbcTransfer performs an ICS20 withdrawal from the sequencer to a recipient on another chain.
 func IbcTransfer(opts IbcTransferOpts) (*IbcTransferResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -276,7 +275,7 @@ func IbcTransfer(opts IbcTransferOpts) (*IbcTransferResponse, error) {
 							RevisionNumber: math.MaxUint64,
 							RevisionHeight: math.MaxUint64,
 						},
-						TimeoutTime:   1726643394000000000,
+						TimeoutTime:   nowPlusFiveMinutes(),
 						SourceChannel: opts.SourceChannelID,
 						FeeAsset:      opts.FeeAsset,
 					},
