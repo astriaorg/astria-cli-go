@@ -23,4 +23,8 @@ const (
 	AstriaSequencerVersion = "0.16.0"
 	AstriaComposerVersion  = "0.8.2"
 	AstriaConductorVersion = "0.20.0"
+
+	LocalSequencerVersion = "0.17.0"
+	LocalComposerVersion  = "0.8.3"
+	LocalConductorVersion = "0.20.1"
 )

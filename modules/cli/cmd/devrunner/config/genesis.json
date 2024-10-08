@@ -35,7 +35,8 @@
   "app_hash": "",
   "app_state": {
     "address_prefixes": {
-      "base": "astria"
+      "base": "astria",
+      "ibcCompat": "astriacompat"
     },
     "accounts": [
       {
