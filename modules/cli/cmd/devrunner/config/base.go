@@ -40,7 +40,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_conductor_sequencer_requests_per_second": "500",
 		"astria_conductor_no_metrics":                    "true",
 		"astria_conductor_metrics_http_listener_addr":    "127.0.0.1:9000",
-		"astria_conductor_expected_sequencer_chain_id":   "astria-dusk-" + cmd.DefaultDuskNum,
+		"astria_conductor_expected_sequencer_chain_id":   DefaultLocalNetworkName,
 		"astria_conductor_expected_celestia_chain_id":    "",
 
 		// sequencer
@@ -63,7 +63,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_api_listen_addr":            "0.0.0.0:0",
 		"astria_composer_sequencer_abci_endpoint":    "http://127.0.0.1:26657",
 		"astria_composer_sequencer_grpc_endpoint":    "http://127.0.0.1:8080",
-		"astria_composer_sequencer_chain_id":         "astria-dusk-" + cmd.DefaultDuskNum,
+		"astria_composer_sequencer_chain_id":         DefaultLocalNetworkName,
 		"astria_composer_rollups":                    "astriachain::ws://127.0.0.1:8546",
 		"astria_composer_private_key_file":           filepath.Join(homeDir, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		"astria_composer_sequencer_address_prefix":   "astria",
