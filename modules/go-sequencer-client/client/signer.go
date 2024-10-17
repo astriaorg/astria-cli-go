@@ -51,12 +51,11 @@ func (s *Signer) SignTransaction(tx *txproto.TransactionBody) (*txproto.Transact
 	if err != nil {
 		return nil, err
 	}
-	sig := ed25519.Sign(s.private, bytes)
-
-	transactionBody, err := anypb.New(tx)
-	if err != nil {
-		return nil, err
+	transactionBody := &anypb.Any{
+		TypeUrl: "/astria.protocol.transactions.v1.TransactionBody",
+		Value:   bytes,
 	}
+	sig := ed25519.Sign(s.private, bytes)
 	return &txproto.Transaction{
 		Body:      transactionBody,
 		Signature: sig,
