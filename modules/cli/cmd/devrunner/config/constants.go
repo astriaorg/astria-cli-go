@@ -19,7 +19,7 @@ const (
 	DefaultBorderColor               = "gray"
 
 	// NOTE - do not include the 'v' at the beginning of the version number
-	CometbftVersion        = "0.38.12"
+	CometbftVersion        = "0.38.8"
 	AstriaSequencerVersion = "1.0.0-rc.1"
 	AstriaComposerVersion  = "1.0.0-rc.1"
 	AstriaConductorVersion = "1.0.0-rc.1"
