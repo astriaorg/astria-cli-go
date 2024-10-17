@@ -84,63 +84,61 @@
       "outbound_ics20_transfers_enabled": true
     },
     "fees": {
-      "fees": {
-        "bridge_lock": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 1 }
-        },
-        "bridge_sudo_change": {
-          "base": { "lo": 24 },
-          "multiplier": { "lo": 0 }
-        },
-        "bridge_unlock": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "fee_asset_change": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "fee_change": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "ibc_relay": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "ibc_relayer_change": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "ibc_sudo_change": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "ics20_withdrawal": {
-          "base": { "lo": 24 },
-          "multiplier": { "lo": 0 }
-        },
-        "init_bridge_account": {
-          "base": { "lo": 48 },
-          "multiplier": { "lo": 0 }
-        },
-        "rollup_data_submission": {
-          "base": { "lo": 32 },
-          "multiplier": { "lo": 1 }
-        },
-        "sudo_address_change": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        },
-        "transfer": {
-          "base": { "lo": 12 },
-          "multiplier": { "lo": 0 }
-        },
-        "validator_update": {
-          "base": { "lo": 0 },
-          "multiplier": { "lo": 0 }
-        }
+      "bridge_lock": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 1 }
+      },
+      "bridge_sudo_change": {
+        "base": { "lo": 24 },
+        "multiplier": { "lo": 0 }
+      },
+      "bridge_unlock": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "fee_asset_change": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "fee_change": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "ibc_relay": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "ibc_relayer_change": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "ibc_sudo_change": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "ics20_withdrawal": {
+        "base": { "lo": 24 },
+        "multiplier": { "lo": 0 }
+      },
+      "init_bridge_account": {
+        "base": { "lo": 48 },
+        "multiplier": { "lo": 0 }
+      },
+      "rollup_data_submission": {
+        "base": { "lo": 32 },
+        "multiplier": { "lo": 1 }
+      },
+      "sudo_address_change": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
+      },
+      "transfer": {
+        "base": { "lo": 12 },
+        "multiplier": { "lo": 0 }
+      },
+      "validator_update": {
+        "base": { "lo": 0 },
+        "multiplier": { "lo": 0 }
       }
     },
     "native_asset_base_denomination": "nria",
