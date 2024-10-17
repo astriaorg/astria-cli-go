@@ -227,10 +227,12 @@ func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
 	match := re.FindString(rollupEndpoint)
 
 	return []string{
-		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
 		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
 		"ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL=" + n.SequencerRPC,
-		"ASTRIA_COMPOSER_SEQUENCER_URL=" + n.SequencerRPC,
+		"ASTRIA_CONDUCTOR_EXPECTED_SEQUENCER_CHAIN_ID" + "=" + n.SequencerChainId,
+		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
+		"ASTRIA_COMPOSER_SEQUENCER_ABCI_ENDPOINT=" + n.SequencerRPC,
+		"ASTRIA_COMPOSER_SEQUENCER_GRPC_ENDPOINT=" + n.SequencerGRPC,
 		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::" + match,
 	}
 }

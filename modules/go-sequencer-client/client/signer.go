@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transaction/v1"
 )
 
 const DefaultAstriaAsset = "nria"
@@ -33,16 +33,16 @@ func GenerateSigner() (*Signer, error) {
 	}, nil
 }
 
-func (s *Signer) SignTransaction(tx *txproto.UnsignedTransaction) (*txproto.SignedTransaction, error) {
+func (s *Signer) SignTransaction(tx *txproto.TransactionBody) (*txproto.Transaction, error) {
 	for _, action := range tx.Actions {
 		switch v := action.Value.(type) {
-		case *txproto.Action_TransferAction:
-			if len(v.TransferAction.FeeAsset) == 0 {
-				v.TransferAction.FeeAsset = DefaultAstriaAsset[:]
+		case *txproto.Action_Transfer:
+			if len(v.Transfer.FeeAsset) == 0 {
+				v.Transfer.FeeAsset = DefaultAstriaAsset[:]
 			}
-		case *txproto.Action_SequenceAction:
-			if len(v.SequenceAction.FeeAsset) == 0 {
-				v.SequenceAction.FeeAsset = DefaultAstriaAsset[:]
+		case *txproto.Action_RollupDataSubmission:
+			if len(v.RollupDataSubmission.FeeAsset) == 0 {
+				v.RollupDataSubmission.FeeAsset = DefaultAstriaAsset[:]
 			}
 		}
 	}
@@ -51,17 +51,15 @@ func (s *Signer) SignTransaction(tx *txproto.UnsignedTransaction) (*txproto.Sign
 	if err != nil {
 		return nil, err
 	}
-
-	transaction := &anypb.Any{
-		TypeUrl: "/astria.protocol.transactions.v1alpha1.UnsignedTransaction",
+	transactionBody := &anypb.Any{
+		TypeUrl: "/astria.protocol.transaction.v1.TransactionBody",
 		Value:   bytes,
 	}
-
 	sig := ed25519.Sign(s.private, bytes)
-	return &txproto.SignedTransaction{
-		Transaction: transaction,
-		Signature:   sig,
-		PublicKey:   s.private.Public().(ed25519.PublicKey),
+	return &txproto.Transaction{
+		Body:      transactionBody,
+		Signature: sig,
+		PublicKey: s.private.Public().(ed25519.PublicKey),
 	}, nil
 }
 

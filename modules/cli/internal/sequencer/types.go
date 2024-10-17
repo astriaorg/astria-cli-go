@@ -341,6 +341,59 @@ func (tr *TransferResponse) TableRows() [][]string {
 	}
 }
 
+type IbcTransferOpts struct {
+	// Choose to wait for the transaction to be included in a block.
+	IsAsync bool
+	// AddressPrefix is the prefix that will be used when generating the address
+	// from the FromKey private key.
+	AddressPrefix string
+	// SequencerURL is the URL of the sequencer
+	SequencerURL string
+	// FromKey is the private key of the sender
+	FromKey ed25519.PrivateKey
+	// ToAddress is the address of the receiver
+	DestinationChainAddressAddress string
+	// ReturnAddress is the address to return funds to in case of a failed ibc transfer
+	ReturnAddress *primproto.Address
+	// Amount is the amount to be transferred. Using string type to support huge numbers
+	Amount *primproto.Uint128
+	// Asset is the name of the asset to lock
+	Asset string
+	// FeeAsset is the name of the asset to use for the transaction fee
+	FeeAsset string
+	// SequencerChainID is the chain ID of the sequencer
+	SequencerChainID string
+	// SourceChannelID is the channel ID of the source chain
+	SourceChannelID string
+}
+
+type IbcTransferResponse struct {
+	// From is the address of the sender
+	From string `json:"from"`
+	// To is the address of the receiver
+	To string `json:"to"`
+	// Amount is the amount transferred
+	Amount string `json:"amount"`
+	// Nonce is the nonce of the transaction
+	Nonce uint32 `json:"nonce"`
+	// TxHash is the hash of the transaction
+	TxHash string `json:"txHash"`
+}
+
+func (tr *IbcTransferResponse) JSON() ([]byte, error) {
+	return json.MarshalIndent(tr, "", "  ")
+}
+
+func (tr *IbcTransferResponse) TableHeader() []string {
+	return []string{"From", "To", "Amount", "Nonce", "TxHash"}
+}
+
+func (tr *IbcTransferResponse) TableRows() [][]string {
+	return [][]string{
+		{tr.From, tr.To, tr.Amount, strconv.Itoa(int(tr.Nonce)), tr.TxHash},
+	}
+}
+
 type FeeAssetOpts struct {
 	// Choose to wait for the transaction to be included in a block.
 	IsAsync bool

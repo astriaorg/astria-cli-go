@@ -5,12 +5,12 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"time"
 
-	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transaction/v1"
 	"github.com/astriaorg/astria-cli-go/modules/bech32m"
 	"github.com/astriaorg/astria-cli-go/modules/go-sequencer-client/client"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -183,15 +183,15 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 	log.Debugf("Nonce: %v", nonce)
 
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
 			{
-				Value: &txproto.Action_TransferAction{
-					TransferAction: &txproto.TransferAction{
+				Value: &txproto.Action_Transfer{
+					Transfer: &txproto.Transfer{
 						To:       opts.ToAddress,
 						Amount:   opts.Amount,
 						Asset:    opts.Asset,
@@ -231,6 +231,88 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	return tr, nil
 }
 
+// IbcTransfer performs an ICS20 withdrawal from the sequencer to a recipient on another chain.
+func IbcTransfer(opts IbcTransferOpts) (*IbcTransferResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// client
+	log.Debug("Creating CometBFT client with url: ", opts.SequencerURL)
+	c, err := client.NewClient(opts.SequencerURL)
+	if err != nil {
+		log.WithError(err).Error("Error creating sequencer client")
+		return &IbcTransferResponse{}, err
+	}
+
+	signer := client.NewSigner(opts.FromKey)
+	fromAddr := signer.Address()
+	addr, err := bech32m.EncodeFromBytes(opts.AddressPrefix, fromAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to encode address")
+		return nil, err
+	}
+	nonce, err := c.GetNonce(ctx, addr.String())
+	if err != nil {
+		log.WithError(err).Error("Error getting nonce")
+		return &IbcTransferResponse{}, err
+	}
+	log.Debugf("Nonce: %v", nonce)
+
+	tx := &txproto.TransactionBody{
+		Params: &txproto.TransactionParams{
+			ChainId: opts.SequencerChainID,
+			Nonce:   nonce,
+		},
+		Actions: []*txproto.Action{
+			{
+				Value: &txproto.Action_Ics20Withdrawal{
+					Ics20Withdrawal: &txproto.Ics20Withdrawal{
+						Amount:                  opts.Amount,
+						Denom:                   opts.Asset,
+						DestinationChainAddress: opts.DestinationChainAddressAddress,
+						ReturnAddress:           opts.ReturnAddress,
+						TimeoutHeight: &txproto.IbcHeight{
+							RevisionNumber: math.MaxUint64,
+							RevisionHeight: math.MaxUint64,
+						},
+						TimeoutTime:   nowPlusFiveMinutes(),
+						SourceChannel: opts.SourceChannelID,
+						FeeAsset:      opts.FeeAsset,
+					},
+				},
+			},
+		},
+	}
+
+	// sign transaction
+	signed, err := signer.SignTransaction(tx)
+	if err != nil {
+		log.WithError(err).Error("Error signing transaction")
+		return &IbcTransferResponse{}, err
+	}
+
+	// broadcast tx
+	resp, err := c.BroadcastTx(ctx, signed, opts.IsAsync)
+	if err != nil {
+		log.WithError(err).Error("Error broadcasting transaction")
+		return &IbcTransferResponse{}, err
+	}
+	log.Debugf("Broadcast response: %v", resp)
+	// response
+	hash := hex.EncodeToString(resp.Hash)
+	amount := fmt.Sprint(client.ProtoU128ToBigInt(opts.Amount))
+	tr := &IbcTransferResponse{
+		From:   addr.String(),
+		To:     opts.DestinationChainAddressAddress,
+		Nonce:  nonce,
+		Amount: amount,
+		TxHash: hash,
+	}
+
+	log.Debugf("Transfer hash: %v", hash)
+	return tr, nil
+}
+
 func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -258,15 +340,15 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 
 	// build transaction
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
 			{
-				Value: &txproto.Action_InitBridgeAccountAction{
-					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
+				Value: &txproto.Action_InitBridgeAccount{
+					InitBridgeAccount: &txproto.InitBridgeAccount{
 						RollupId:          rollupIdFromText(opts.RollupName),
 						Asset:             opts.Asset,
 						FeeAsset:          opts.FeeAsset,
@@ -335,15 +417,15 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		return &BridgeLockResponse{}, err
 	}
 
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
 			{
-				Value: &txproto.Action_BridgeLockAction{
-					BridgeLockAction: &txproto.BridgeLockAction{
+				Value: &txproto.Action_BridgeLock{
+					BridgeLock: &txproto.BridgeLock{
 						To:                      opts.ToAddress,
 						Amount:                  opts.Amount,
 						Asset:                   opts.Asset,
@@ -382,5 +464,4 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 
 	log.Debugf("Transfer hash: %v", hash)
 	return tr, nil
-
 }
