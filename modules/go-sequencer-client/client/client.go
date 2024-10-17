@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	accountsproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/accounts/v1alpha1"
-	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+	accountsproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/accounts/v1"
+	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transaction/v1"
 	"github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -54,7 +54,7 @@ func NewClient(url string) (*Client, error) {
 // submitting the transaction. It does not confirm that the data has been
 // included on chain. If async is false, the function will wait for the
 // transaction to be seen on the network.
-func (c *Client) BroadcastTx(ctx context.Context, tx *txproto.SignedTransaction, async bool) (*coretypes.ResultBroadcastTx, error) {
+func (c *Client) BroadcastTx(ctx context.Context, tx *txproto.Transaction, async bool) (*coretypes.ResultBroadcastTx, error) {
 	if async {
 		return c.BroadcastTxAsync(ctx, tx)
 	}
@@ -62,7 +62,7 @@ func (c *Client) BroadcastTx(ctx context.Context, tx *txproto.SignedTransaction,
 }
 
 // BroadcastTxAsync broadcasts a transaction and returns immediately.
-func (c *Client) BroadcastTxAsync(ctx context.Context, tx *txproto.SignedTransaction) (*coretypes.ResultBroadcastTx, error) {
+func (c *Client) BroadcastTxAsync(ctx context.Context, tx *txproto.Transaction) (*coretypes.ResultBroadcastTx, error) {
 	bytes, err := proto.Marshal(tx)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (c *Client) BroadcastTxAsync(ctx context.Context, tx *txproto.SignedTransac
 
 // BroadcastTxSync broadcasts a transaction and waits for the response that
 // confirms the transaction was included.
-func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.SignedTransaction) (*coretypes.ResultBroadcastTx, error) {
+func (c *Client) BroadcastTxSync(ctx context.Context, tx *txproto.Transaction) (*coretypes.ResultBroadcastTx, error) {
 	bytes, err := proto.Marshal(tx)
 	if err != nil {
 		return nil, err

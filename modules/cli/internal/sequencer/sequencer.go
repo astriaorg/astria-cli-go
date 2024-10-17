@@ -8,7 +8,7 @@ import (
 	"math"
 	"time"
 
-	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transactions/v1alpha1"
+	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transaction/v1"
 	"github.com/astriaorg/astria-cli-go/modules/bech32m"
 	"github.com/astriaorg/astria-cli-go/modules/go-sequencer-client/client"
 	log "github.com/sirupsen/logrus"
@@ -183,15 +183,15 @@ func Transfer(opts TransferOpts) (*TransferResponse, error) {
 	}
 	log.Debugf("Nonce: %v", nonce)
 
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
 			{
-				Value: &txproto.Action_TransferAction{
-					TransferAction: &txproto.TransferAction{
+				Value: &txproto.Action_Transfer{
+					Transfer: &txproto.Transfer{
 						To:       opts.ToAddress,
 						Amount:   opts.Amount,
 						Asset:    opts.Asset,
@@ -258,7 +258,7 @@ func IbcTransfer(opts IbcTransferOpts) (*IbcTransferResponse, error) {
 	}
 	log.Debugf("Nonce: %v", nonce)
 
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
@@ -340,15 +340,15 @@ func InitBridgeAccount(opts InitBridgeOpts) (*InitBridgeResponse, error) {
 	}
 
 	// build transaction
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
 			{
-				Value: &txproto.Action_InitBridgeAccountAction{
-					InitBridgeAccountAction: &txproto.InitBridgeAccountAction{
+				Value: &txproto.Action_InitBridgeAccount{
+					InitBridgeAccount: &txproto.InitBridgeAccount{
 						RollupId:          rollupIdFromText(opts.RollupName),
 						Asset:             opts.Asset,
 						FeeAsset:          opts.FeeAsset,
@@ -417,15 +417,15 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 		return &BridgeLockResponse{}, err
 	}
 
-	tx := &txproto.UnsignedTransaction{
+	tx := &txproto.TransactionBody{
 		Params: &txproto.TransactionParams{
 			ChainId: opts.SequencerChainID,
 			Nonce:   nonce,
 		},
 		Actions: []*txproto.Action{
 			{
-				Value: &txproto.Action_BridgeLockAction{
-					BridgeLockAction: &txproto.BridgeLockAction{
+				Value: &txproto.Action_BridgeLock{
+					BridgeLock: &txproto.BridgeLock{
 						To:                      opts.ToAddress,
 						Amount:                  opts.Amount,
 						Asset:                   opts.Asset,
@@ -464,5 +464,4 @@ func BridgeLock(opts BridgeLockOpts) (*BridgeLockResponse, error) {
 
 	log.Debugf("Transfer hash: %v", hash)
 	return tr, nil
-
 }
