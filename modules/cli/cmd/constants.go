@@ -1,6 +1,6 @@
 package cmd
 
 const (
-	DefaultDuskNum = "10"
-	DefaultDawnNum = "0"
+	DefaultDuskNum = "11"
+	DefaultDawnNum = "1"
 )

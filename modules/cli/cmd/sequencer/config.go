@@ -38,8 +38,8 @@ func GetSequencerNetworkConfigsPresets() NetworkConfigs {
 				FeeAsset:         "nria",
 			},
 			"dusk": {
-				SequencerChainId: "astria-dusk-" + cmd.DefaultDuskNum,
-				SequencerURL:     "https://rpc.sequencer.astria-dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org",
+				SequencerChainId: "dusk-" + cmd.DefaultDuskNum,
+				SequencerURL:     "https://rpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org",
 				Asset:            "nria",
 				FeeAsset:         "nria",
 			},
