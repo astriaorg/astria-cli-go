@@ -178,7 +178,7 @@ func init() {
 
 	bridgeCmd.AddCommand(bridgeInitCmd)
 	bifh := cmd.CreateCliFlagHandler(bridgeInitCmd, cmd.EnvPrefix)
-	bifh.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
+	bifh.BindStringFlag("network", cmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	bifh.BindStringPFlag("sequencer-chain-id", "c", DefaultSequencerChainID, "The chain ID of the sequencer.")
 	bifh.BindStringFlag("asset", DefaultAsset, "The name of the asset we want to bridge.")
 	bifh.BindStringFlag("fee-asset", DefaultFeeAsset, "The name of the asset used for fees.")
@@ -198,7 +198,7 @@ func init() {
 
 	bridgeCmd.AddCommand(bridgeLockCmd)
 	blfh := cmd.CreateCliFlagHandler(bridgeLockCmd, cmd.EnvPrefix)
-	blfh.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
+	blfh.BindStringFlag("network", cmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	blfh.BindStringFlag("sequencer-chain-id", DefaultSequencerChainID, "The chain ID of the sequencer.")
 	blfh.BindStringFlag("asset", DefaultAsset, "The asset to be locked and transferred.")
 	blfh.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used to pay the transaction fee.")

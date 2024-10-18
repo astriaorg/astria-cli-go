@@ -73,7 +73,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_no_metrics":                 "true",
 		"astria_composer_metrics_http_listener_addr": "127.0.0.1:9000",
 		"astria_composer_grpc_addr":                  "0.0.0.0:0",
-		"astria_composer_fee_asset":                  "nria",
+		"astria_composer_fee_asset":                  "ntia",
 
 		// ANSI
 		"no_color": "",

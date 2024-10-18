@@ -27,7 +27,7 @@ func init() {
 	flagHandler.BindStringFlag("privkey", "", "The private key of the sender.")
 	flagHandler.BindStringFlag("asset", DefaultAsset, "The asset to be transferred.")
 	flagHandler.BindStringFlag("fee-asset", DefaultFeeAsset, "The asset used for paying fees.")
-	flagHandler.BindStringFlag("network", DefaultTargetNetwork, "Configure the values to target a specific network.")
+	flagHandler.BindStringFlag("network", cmd.DefaultTargetNetwork, "Configure the values to target a specific network.")
 	flagHandler.BindBoolFlag("async", false, "If true, the function will return immediately. If false, the function will wait for the transaction to be seen on the network.")
 
 	transferCmd.MarkFlagsOneRequired("keyfile", "keyring-address", "privkey")
