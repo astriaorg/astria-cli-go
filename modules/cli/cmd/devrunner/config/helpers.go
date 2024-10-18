@@ -337,3 +337,23 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 	}
 	return serviceLogLevelOverrides
 }
+
+// Build the release URLs for the known CometBFT service.
+func (ksru *KnownServiceReleaseUrlsParts) BuildCometBftReleaseUrl(version string) string {
+	return ksru.CometBFT.UrlPrefix + version + ksru.CometBFT.UrlMiddle + version + ksru.CometBFT.UrlSuffix
+}
+
+// Build the release URLs for the known Astria Sequencer service.
+func (ksru *KnownServiceReleaseUrlsParts) BuildAstriaSequencerReleaseUrl(version string) string {
+	return ksru.AstriaSequencer.UrlPrefix + version + ksru.AstriaSequencer.UrlSuffix
+}
+
+// Build the release URLs for the known Astria Composer service.
+func (ksru *KnownServiceReleaseUrlsParts) BuildAstriaComposerReleaseUrl(version string) string {
+	return ksru.AstriaComposer.UrlPrefix + version + ksru.AstriaComposer.UrlSuffix
+}
+
+// Build the release URLs for the known Astria Conductor service.
+func (ksru *KnownServiceReleaseUrlsParts) BuildAstriaConductorReleaseUrl(version string) string {
+	return ksru.AstriaConductor.UrlPrefix + version + ksru.AstriaConductor.UrlSuffix
+}
