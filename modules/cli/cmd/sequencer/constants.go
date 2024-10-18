@@ -12,5 +12,4 @@ const (
 	DefaultAsset                           = "ntia"
 	DefaultFeeAsset                        = "ntia"
 	DefaultSequencerNetworksConfigFilename = "sequencer-networks-config.toml"
-	DefaultTargetNetwork                   = "dusk"
 )

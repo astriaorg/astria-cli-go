@@ -72,8 +72,8 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 					"cometbft": {
 						Name:        "cometbft",
 						Version:     "v" + CometbftVersion,
-						DownloadURL: DownloadUrlParts.CometBFT.UrlPrefix + CometbftVersion + DownloadUrlParts.CometBFT.UrlMiddle + CometbftVersion + DownloadUrlParts.CometBFT.UrlSuffix,
-						LocalPath:   filepath.Join(defaultBinDir, "cometbft-v"+CometbftVersion),
+						DownloadURL: DownloadUrlParts.CometBFT.UrlPrefix + LocalCometbftVersion + DownloadUrlParts.CometBFT.UrlMiddle + CometbftVersion + DownloadUrlParts.CometBFT.UrlSuffix,
+						LocalPath:   filepath.Join(defaultBinDir, "cometbft-v"+LocalCometbftVersion),
 						Args:        nil,
 					},
 				},
