@@ -141,9 +141,9 @@
         "multiplier": { "lo": 0 }
       }
     },
-    "native_asset_base_denomination": "nria",
+    "native_asset_base_denomination": "ntia",
     "allowed_fee_assets": [
-      "nria"
+      "ntia"
     ]
   }
 }

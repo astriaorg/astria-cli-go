@@ -10,7 +10,7 @@ import (
 	txproto "buf.build/gen/go/astria/protocol-apis/protocolbuffers/go/astria/protocol/transaction/v1"
 )
 
-const DefaultAstriaAsset = "nria"
+const DefaultAstriaAsset = "ntia"
 
 type Signer struct {
 	private ed25519.PrivateKey

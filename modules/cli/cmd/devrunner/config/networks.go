@@ -106,7 +106,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerGRPC:    "https://grpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
 				RollupName:       "",
-				NativeDenom:      "ibc/channel0/utia",
+				NativeDenom:      "ibc/channel-0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
@@ -129,7 +129,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.astria.org/",
 				RollupName:       "",
-				NativeDenom:      "ibc/channel0/utia",
+				NativeDenom:      "ibc/channel-0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",

@@ -289,7 +289,7 @@ sequencer_chain_id = 'sequencer-only'
 sequencer_grpc = 'http://127.0.0.1:8080'
 sequencer_rpc = 'http://127.0.0.1:26657'
 rollup_name = 'astria-test-chain'
-default_denom = 'nria'
+default_denom = 'ntia'
 
 [networks.sequencer_only.services]
 [networks.sequencer_only.services.cometbft]
