@@ -32,13 +32,13 @@ jobs:
         id: check_changes
         run: |
           git fetch --tags
-          LAST_RELEASE=$(git tag -l --sort=-version:refname | head -n 1)
-          if [ -z "$LAST_RELEASE" ]; then
+          LAST_TAG=$(git tag --points-at HEAD --sort=-version:refname | head -n 1 )
+          if [ -z "$LAST_TAG" ]; then
             echo "No previous release found. Proceeding with release."
             echo "should_release=true" >> $GITHUB_OUTPUT
           else
             # check for changes in modules/ directory
-            CHANGES=$(git diff --name-only $LAST_RELEASE..HEAD -- modules)
+            CHANGES=$(git diff --name-only $LAST_TAG..HEAD -- modules)
             if [ -n "$CHANGES" ]; then
               echo "Changes detected in modules/ since last release. Proceeding with release."
               echo "should_release=true" >> $GITHUB_OUTPUT
