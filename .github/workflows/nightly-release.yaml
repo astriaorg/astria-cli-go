@@ -32,7 +32,7 @@ jobs:
         id: check_changes
         run: |
           git fetch --tags
-          LAST_TAG=$(git tag --points-at HEAD --sort=-version:refname | head -n 1 )
+          LAST_TAG=$(git tag -l --sort=-creatordate | head -n 1)
           if [ -z "$LAST_TAG" ]; then
             echo "No previous release found. Proceeding with release."
             echo "should_release=true" >> $GITHUB_OUTPUT
