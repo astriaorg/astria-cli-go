@@ -125,7 +125,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 		return
 	}
 	cmd.CreateDirOrPanic(dataDir)
-	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.CometbftVersion, config.DefaultConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.MainnetCometbftVersion, config.DefaultConfigDirName)
 
 	log.Infof("Successfully reset state for instance '%s'", instance)
 }

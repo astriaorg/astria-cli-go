@@ -19,14 +19,20 @@ const (
 
 	// NOTE - do not include the 'v' at the beginning of the version number
 	// Service versions matched to live networks
-	CometbftVersion        = "0.38.8"
-	AstriaSequencerVersion = "1.0.0-rc.1"
-	AstriaComposerVersion  = "1.0.0-rc.1"
-	AstriaConductorVersion = "1.0.0-rc.1"
+	MainnetCometbftVersion        = "0.38.11"
+	MainnetAstriaSequencerVersion = "1.0.0"
+	MainnetAstriaComposerVersion  = "1.0.0"
+	MainnetAstriaConductorVersion = "1.0.0"
 
-	// Local service versions in case of differences between networks
-	LocalCometbftVersion  = "0.38.8"
-	LocalSequencerVersion = "1.0.0-rc.1"
-	LocalComposerVersion  = "1.0.0-rc.1"
-	LocalConductorVersion = "1.0.0-rc.1"
+	// Testnet service versions
+	TestnetCometbftVersion  = "0.38.11"
+	TestnetSequencerVersion = "1.0.0-rc.2"
+	TestnetComposerVersion  = "1.0.0-rc.2"
+	TestnetConductorVersion = "1.0.0-rc.2"
+
+	// Devnet service versions
+	DevnetCometbftVersion  = "0.38.11"
+	DevnetSequencerVersion = "1.0.0-rc.2"
+	DevnetComposerVersion  = "1.0.0-rc.2"
+	DevnetConductorVersion = "1.0.0-rc.2"
 )

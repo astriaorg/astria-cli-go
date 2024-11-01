@@ -91,7 +91,7 @@ func runInitialization(c *cobra.Command, _ []string) {
 	// create the data directory for cometbft and sequencer
 	dataPath := filepath.Join(instanceDir, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
-	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.CometbftVersion, config.DefaultConfigDirName)
+	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.MainnetCometbftVersion, config.DefaultConfigDirName)
 
 	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
 

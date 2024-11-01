@@ -51,7 +51,7 @@ func GetSequencerNetworkConfigsPresets() NetworkConfigs {
 			},
 			"mainnet": {
 				SequencerChainId: "astria",
-				SequencerURL:     "https://rpc.sequencer.astria.org/",
+				SequencerURL:     "https://rpc.astria.org",
 				Asset:            "ibc/channel-0/utia",
 				FeeAsset:         "ibc/channel-0/utia",
 			},
