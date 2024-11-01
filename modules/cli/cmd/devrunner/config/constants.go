@@ -12,15 +12,27 @@ const (
 	DefaultLocalNetworkName          = "sequencer-test-chain-0"
 	DefaultNetworksConfigName        = "networks-config.toml"
 	DefaultServiceLogLevel           = "info"
-	DefaultTargetNetwork             = "local"
 	DefaultLocalNativeDenom          = "ntia"
 	DefaultTUIConfigName             = "tui-config.toml"
 	DefaultHighlightColor            = "blue"
 	DefaultBorderColor               = "gray"
 
 	// NOTE - do not include the 'v' at the beginning of the version number
-	CometbftVersion        = "0.38.8"
-	AstriaSequencerVersion = "1.0.0-rc.1"
-	AstriaComposerVersion  = "1.0.0-rc.1"
-	AstriaConductorVersion = "1.0.0-rc.1"
+	// Service versions matched to live networks
+	MainnetCometbftVersion        = "0.38.11"
+	MainnetAstriaSequencerVersion = "1.0.0"
+	MainnetAstriaComposerVersion  = "1.0.0"
+	MainnetAstriaConductorVersion = "1.0.0"
+
+	// Testnet service versions
+	TestnetCometbftVersion  = "0.38.11"
+	TestnetSequencerVersion = "1.0.0-rc.2"
+	TestnetComposerVersion  = "1.0.0-rc.2"
+	TestnetConductorVersion = "1.0.0-rc.2"
+
+	// Devnet service versions
+	DevnetCometbftVersion  = "0.38.11"
+	DevnetSequencerVersion = "1.0.0-rc.2"
+	DevnetComposerVersion  = "1.0.0-rc.2"
+	DevnetConductorVersion = "1.0.0-rc.2"
 )
