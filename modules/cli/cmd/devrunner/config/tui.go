@@ -28,6 +28,9 @@ type TUIConfig struct {
 	// Generic services start minimized
 	GenericStartsMinimized bool `mapstructure:"generic_starts_minimized" toml:"generic_starts_minimized"`
 
+	// Generic services start position relative to known services
+	GenericStartPosition string `mapstructure:"generic_start_position" toml:"generic_start_position"`
+
 	// Accessibility settings
 	HighlightColor string `mapstructure:"highlight_color" toml:"highlight_color"`
 	BorderColor    string `mapstructure:"border_color" toml:"border_color"`
@@ -46,6 +49,7 @@ func DefaultTUIConfig() TUIConfig {
 		ComposerStartsMinimized:  false,
 		SequencerStartsMinimized: false,
 		GenericStartsMinimized:   true,
+		GenericStartPosition:     "after",
 		HighlightColor:           DefaultHighlightColor,
 		BorderColor:              DefaultBorderColor,
 	}
@@ -63,6 +67,7 @@ func (c TUIConfig) String() string {
 	output += fmt.Sprintf("ComposerStartsMinimized: %v, ", c.ComposerStartsMinimized)
 	output += fmt.Sprintf("SequencerStartsMinimized: %v, ", c.SequencerStartsMinimized)
 	output += fmt.Sprintf("GenericStartsMinimized: %v", c.GenericStartsMinimized)
+	output += fmt.Sprintf("GenericStartPosition: %v", c.GenericStartPosition)
 	output += fmt.Sprintf("HighlightColor: %s, ", c.HighlightColor)
 	output += fmt.Sprintf("BorderColor: %s", c.BorderColor)
 	output += "}"
@@ -83,6 +88,16 @@ func LoadTUIConfigOrPanic(path string) TUIConfig {
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Fatalf("Unable to decode into struct, %v", err)
 		panic(err)
+	}
+
+	// validate the generic start position value
+	switch config.GenericStartPosition {
+	case "before", "after", "default":
+		// valid values; do nothing
+	default:
+		log.Warnf("Invalid value for generic_start_position: %q. Valid values are: 'before', 'after', 'default'", config.GenericStartPosition)
+		log.Warnf("Setting generic_start_position to 'default'")
+		config.GenericStartPosition = "default"
 	}
 
 	return config
