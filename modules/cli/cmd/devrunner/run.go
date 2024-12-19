@@ -138,6 +138,14 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 			}
 			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
 		case "composer":
+			compRCOpts := processrunner.ReadyCheckerOpts{
+				CallBackName:  "Sequencer gRPC server is OK",
+				Callback:      getComposerOKCallback(environment),
+				RetryCount:    10,
+				RetryInterval: 100 * time.Millisecond,
+				HaltIfFailed:  false,
+			}
+			compReadinessCheck := processrunner.NewReadyChecker(compRCOpts)
 			composerPath := getFlagPath(c, "composer-path", "composer", service.LocalPath)
 			log.Debugf("arguments for composer service: %v", service.Args)
 			composerOpts := processrunner.NewProcessRunnerOpts{
@@ -145,7 +153,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				BinPath:        composerPath,
 				Env:            environment,
 				Args:           service.Args,
-				ReadyCheck:     nil,
+				ReadyCheck:     &compReadinessCheck,
 				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ComposerStartsMinimized,
@@ -215,8 +223,17 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 		}
 	}
 
-	// set the order of the services to start
-	allRunners := append([]processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}, genericRunners...)
+	// set the start order of the services
+	var allRunners []processrunner.ProcessRunner
+
+	switch tuiConfig.GenericStartPosition {
+	case "before":
+		allRunners = append(genericRunners, []processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}...)
+	case "after":
+		allRunners = append([]processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}, genericRunners...)
+	default:
+		allRunners = append([]processrunner.ProcessRunner{seqRunner, cometRunner, compRunner, condRunner}, genericRunners...)
+	}
 
 	runners, err := startProcessInOrder(ctx, allRunners...)
 	if err != nil {
@@ -252,10 +269,10 @@ func getFlagPath(c *cobra.Command, flag string, serviceName string, defaultValue
 // is started by the sequencer is OK by making an HTTP request to the health
 // endpoint. Being able to connect to the gRPC server is a requirement for both
 // the Conductor and Composer services.
-func getSequencerOKCallback(config []string) func() bool {
+func getSequencerOKCallback(environment []string) func() bool {
 	// get the sequencer gRPC address from the environment
 	var seqGRPCAddr string
-	for _, envVar := range config {
+	for _, envVar := range environment {
 		if strings.HasPrefix(envVar, "ASTRIA_SEQUENCER_GRPC_ADDR") {
 			seqGRPCAddr = strings.Split(envVar, "=")[1]
 			break
@@ -289,10 +306,10 @@ func getSequencerOKCallback(config []string) func() bool {
 // is started by Cometbft is OK by making an HTTP request to the health
 // endpoint. Being able to connect to the rpc server is a requirement for both
 // the Conductor and Composer services.
-func getCometbftOKCallback(config []string) func() bool {
+func getCometbftOKCallback(environment []string) func() bool {
 	// get the CometBFT rpc address from the environment
 	var seqRPCAddr string
-	for _, envVar := range config {
+	for _, envVar := range environment {
 		if strings.HasPrefix(envVar, "ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL") {
 			seqRPCAddr = strings.Split(envVar, "=")[1]
 			break
@@ -316,6 +333,42 @@ func getCometbftOKCallback(config []string) func() bool {
 			return true
 		} else {
 			log.Debugf("CometBFT rpc status code: %d", cometbftResp.StatusCode)
+			return false
+		}
+	}
+}
+
+// getComposerOKCallback builds an anonymous function for use in a ProcessRunner
+// ReadyChecker callback. The anonymous function checks if the rpc server that
+// is started by Composer is OK by making an HTTP request to the health
+// endpoint to confirm that the service and its rpc server have started.
+func getComposerOKCallback(environment []string) func() bool {
+	// get the CometBFT rpc address from the environment
+	var composerRPCAddr string
+	for _, envVar := range environment {
+		if strings.HasPrefix(envVar, "ASTRIA_COMPOSER_GRPC_ADDR") {
+			composerRPCAddr = strings.Split(envVar, "=")[1]
+			break
+		}
+	}
+	composerRPCHealthURL := composerRPCAddr + "/health"
+
+	// return the anonymous callback function
+	return func() bool {
+		// make the HTTP request
+		composerResp, err := http.Get(composerRPCHealthURL)
+		if err != nil {
+			log.WithError(err).Debug("Startup callback check to CometBFT rpc /health did not succeed")
+			return false
+		}
+		defer composerResp.Body.Close()
+
+		// check status code
+		if composerResp.StatusCode == 200 {
+			log.Debug("CometBFT rpc server started")
+			return true
+		} else {
+			log.Debugf("CometBFT rpc status code: %d", composerResp.StatusCode)
 			return false
 		}
 	}
