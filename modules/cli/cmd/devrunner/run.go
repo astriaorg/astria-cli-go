@@ -3,6 +3,7 @@ package devrunner
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -343,7 +344,7 @@ func getCometbftOKCallback(environment []string) func() bool {
 // is started by Composer is OK by making an HTTP request to the health
 // endpoint to confirm that the service and its rpc server have started.
 func getComposerOKCallback(environment []string) func() bool {
-	// get the CometBFT rpc address from the environment
+	// get the Composer rpc address from the environment
 	var composerRPCAddr string
 	for _, envVar := range environment {
 		if strings.HasPrefix(envVar, "ASTRIA_COMPOSER_GRPC_ADDR") {
@@ -351,26 +352,26 @@ func getComposerOKCallback(environment []string) func() bool {
 			break
 		}
 	}
-	composerRPCHealthURL := composerRPCAddr + "/health"
+
+	// Split address into host and port
+	host, port, err := net.SplitHostPort(composerRPCAddr)
+	if err != nil {
+		log.WithError(err).Error("Failed to split address into host and port")
+		return func() bool { return false }
+	}
 
 	// return the anonymous callback function
 	return func() bool {
-		// make the HTTP request
-		composerResp, err := http.Get(composerRPCHealthURL)
+		// Try to establish TCP connection
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 5*time.Second)
 		if err != nil {
-			log.WithError(err).Debug("Startup callback check to CometBFT rpc /health did not succeed")
+			log.WithError(err).Debug("Startup callback TCP connection to Composer failed")
 			return false
 		}
-		defer composerResp.Body.Close()
+		defer conn.Close()
 
-		// check status code
-		if composerResp.StatusCode == 200 {
-			log.Debug("CometBFT rpc server started")
-			return true
-		} else {
-			log.Debugf("CometBFT rpc status code: %d", composerResp.StatusCode)
-			return false
-		}
+		log.Debug("Successfully established TCP connection to Composer")
+		return true
 	}
 }
 
