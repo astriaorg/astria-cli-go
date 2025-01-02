@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	log "github.com/sirupsen/logrus"
@@ -212,19 +211,11 @@ func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativ
 // the default environment variables for the network configuration. It uses the
 // BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
 func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
-	rollupEndpoint, exists := bc["astria_composer_rollups"]
+	rollups, exists := bc["astria_composer_rollups"]
 	if !exists {
 		log.Error("ASTRIA_COMPOSER_ROLLUPS not found in BaseConfig")
 		panic(fmt.Errorf("ASTRIA_COMPOSER_ROLLUPS not found in BaseConfig"))
 	}
-	// get the rollup ws endpoint
-	pattern := `ws{1,2}:\/\/.*:\d+`
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		log.Error("Error compiling regex")
-		panic(err)
-	}
-	match := re.FindString(rollupEndpoint)
 
 	return []string{
 		"ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL=" + n.SequencerGRPC,
@@ -233,6 +224,6 @@ func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
 		"ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID=" + n.SequencerChainId,
 		"ASTRIA_COMPOSER_SEQUENCER_ABCI_ENDPOINT=" + n.SequencerRPC,
 		"ASTRIA_COMPOSER_SEQUENCER_GRPC_ENDPOINT=" + n.SequencerGRPC,
-		"ASTRIA_COMPOSER_ROLLUPS=" + n.RollupName + "::" + match,
+		"ASTRIA_COMPOSER_ROLLUPS=" + rollups,
 	}
 }
