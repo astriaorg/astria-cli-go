@@ -30,15 +30,23 @@ var resetConfigCmd = &cobra.Command{
 func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	astriaDir := filepath.Join(homeDir, ".astria")
+	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
+
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
+
+	if !flagHandler.GetChanged("instance") {
+		instance = tuiConfig.OverrideInstanceName
+	}
 
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
 	localDenom := flagHandler.GetValue("local-native-denom")
 
-	homeDir := cmd.GetUserHomeDirOrPanic()
 	localConfigDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
 	baseConfigPath := filepath.Join(localConfigDir, config.DefaultBaseConfigName)
 
@@ -78,15 +86,23 @@ var resetNetworksCmd = &cobra.Command{
 func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	astriaDir := filepath.Join(homeDir, ".astria")
+	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
+
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
+
+	if !flagHandler.GetChanged("instance") {
+		instance = tuiConfig.OverrideInstanceName
+	}
 
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
 	localDenom := flagHandler.GetValue("local-native-denom")
 
-	homeDir := cmd.GetUserHomeDirOrPanic()
 	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
 
 	err := os.Remove(networksConfigPath)
@@ -109,10 +125,18 @@ var resetStateCmd = &cobra.Command{
 func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	astriaDir := filepath.Join(homeDir, ".astria")
+	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
+
 	instance := flagHandler.GetValue("instance")
 	config.IsInstanceNameValidOrPanic(instance)
 
-	homeDir := cmd.GetUserHomeDirOrPanic()
+	if !flagHandler.GetChanged("instance") {
+		instance = tuiConfig.OverrideInstanceName
+	}
+
 	instanceDir := filepath.Join(homeDir, ".astria", instance)
 	dataDir := filepath.Join(instanceDir, config.DataDirName)
 
