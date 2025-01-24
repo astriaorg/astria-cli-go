@@ -55,6 +55,13 @@ func (a *App) Start(stateStore *StateStore) {
 	mainView := NewMainView(a.Application, a.processRunners, stateStore)
 	fullscreenView := NewFullscreenView(a.Application, nil, stateStore)
 
+	// check if there are any process panes
+	if len(mainView.processPanes) == 0 {
+		fmt.Printf("Error: No process panes found\n")
+		a.Exit()
+		return
+	}
+
 	// set the views
 	a.viewMap = map[string]View{
 		"main":       mainView,
