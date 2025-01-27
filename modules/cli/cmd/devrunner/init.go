@@ -93,7 +93,7 @@ func runInitialization(c *cobra.Command, _ []string) {
 	cmd.CreateDirOrPanic(dataPath)
 	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.MainnetCometbftVersion, config.DefaultConfigDirName)
 
-	log.Infof("Initialization of instance \"%s\" completed successfuly.", instance)
+	log.Infof("Initialization of instance \"%s\" completed successfully.", instance)
 
 }
 
