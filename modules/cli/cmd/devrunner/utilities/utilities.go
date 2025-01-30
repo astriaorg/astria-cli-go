@@ -3,6 +3,7 @@ package utilities
 import (
 	"io"
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -61,4 +62,20 @@ func PathExists(path string) bool {
 	}
 
 	return true
+}
+
+// ShellExpand shell expands the given string.
+//
+// Panics if the home directory cannot be found.
+func ShellExpand(value string) string {
+	expanded := os.ExpandEnv(value)
+	if strings.HasPrefix(expanded, "~") {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatalf("Error getting home directory: %v", err)
+			panic(err)
+		}
+		expanded = homeDir + expanded[1:]
+	}
+	return expanded
 }
