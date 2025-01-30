@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
+	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pelletier/go-toml/v2"
@@ -17,12 +18,35 @@ type NetworkConfigs struct {
 	Configs map[string]NetworkConfig `mapstructure:"networks" toml:"networks"`
 }
 
+// Expand shell expands all the fields in the NetworkConfigs struct.
+func (n NetworkConfigs) Expand() NetworkConfigs {
+	for networkName, networkConfig := range n.Configs {
+		n.Configs[networkName] = networkConfig.Expand()
+	}
+
+	return n
+}
+
 type ServiceConfig struct {
 	Name        string   `mapstructure:"name" toml:"name"`
 	Version     string   `mapstructure:"version" toml:"version"`
 	DownloadURL string   `mapstructure:"download_url" toml:"download_url"`
 	LocalPath   string   `mapstructure:"local_path" toml:"local_path"`
 	Args        []string `mapstructure:"args" toml:"args"`
+}
+
+// Expand shell expands all the fields in the ServiceConfig struct.
+func (s ServiceConfig) Expand() ServiceConfig {
+	s.Name = util.ShellExpand(s.Name)
+	s.Version = util.ShellExpand(s.Version)
+	s.DownloadURL = util.ShellExpand(s.DownloadURL)
+	s.LocalPath = util.ShellExpand(s.LocalPath)
+
+	for i, arg := range s.Args {
+		s.Args[i] = util.ShellExpand(arg)
+	}
+
+	return s
 }
 
 // NetworkConfig is the struct that holds the configuration for an individual Astria network.
@@ -33,6 +57,21 @@ type NetworkConfig struct {
 	RollupName       string                   `mapstructure:"rollup_name" toml:"rollup_name"`
 	NativeDenom      string                   `mapstructure:"default_denom" toml:"default_denom"`
 	Services         map[string]ServiceConfig `mapstructure:"services" toml:"services"`
+}
+
+// Expand shell expands all the fields in the NetworkConfig struct.
+func (n NetworkConfig) Expand() NetworkConfig {
+	n.SequencerChainId = util.ShellExpand(n.SequencerChainId)
+	n.SequencerGRPC = util.ShellExpand(n.SequencerGRPC)
+	n.SequencerRPC = util.ShellExpand(n.SequencerRPC)
+	n.RollupName = util.ShellExpand(n.RollupName)
+	n.NativeDenom = util.ShellExpand(n.NativeDenom)
+
+	for serviceName, serviceConfig := range n.Services {
+		n.Services[serviceName] = serviceConfig.Expand()
+	}
+
+	return n
 }
 
 // DefaultNetworksConfigs returns a NetworksConfig struct populated with all
@@ -150,8 +189,9 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 	}
 }
 
-// LoadNetworkConfigsOrPanic loads the NetworksConfig from the given path. If the file
-// cannot be loaded or parsed, the function will panic.
+// LoadNetworkConfigsOrPanic loads the NetworksConfig from the given path.
+//
+// Panics if the file cannot be loaded or parsed.
 func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 	viper.SetConfigFile(path)
 
@@ -166,19 +206,27 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 		panic(err)
 	}
 
+	// shell expand all the fields in the config
+	config = config.Expand()
+
 	return config
 }
 
 // CreateNetworksConfig creates a networks configuration file and populates it
-// with the network defaults. The binPath is required to accommodate which CLI
-// instance this particular networks config is for and to build the proper paths
-// to the binaries that will be used for the given instance. The configPath is
-// provided for the same reason; which instance is this config file for and
-// where to put it. This function will also override the default local denom and local
+// with the network defaults.
+//   - configPath: the path to the networks configuration file
+//   - binPath: the path to the binaries directory within a given instance
+//   - localSequencerChainId: the chain id for the local sequencer
+//   - localNativeDenom: the native denom for the local sequencer
+//
+// Note: The configPath and binPath should be part of the same instance.
+//
+// This function will also override the default local denom and local
 // sequencer network chain id based on the command line flags provided. It will
-// skip initialization if the file already exists. It will panic if the file
-// cannot be created or written to.
-func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativeDenom string) {
+// skip initialization if the file already exists.
+//
+// Panic if the file cannot be created or written to.
+func CreateNetworksConfig(configPath, binPath, localSequencerChainId, localNativeDenom string) {
 	_, err := os.Stat(configPath)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", configPath)
@@ -210,6 +258,17 @@ func CreateNetworksConfig(binPath, configPath, localSequencerChainId, localNativ
 // dynamically configure endpoints for Conductor and Composer to override
 // the default environment variables for the network configuration. It uses the
 // BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
+//
+// The overrides this function returns are:
+//   - ASTRIA_CONDUCTOR_SEQUENCER_GRPC_URL
+//   - ASTRIA_CONDUCTOR_SEQUENCER_COMETBFT_URL
+//   - ASTRIA_CONDUCTOR_EXPECTED_SEQUENCER_CHAIN_ID
+//   - ASTRIA_COMPOSER_SEQUENCER_CHAIN_ID
+//   - ASTRIA_COMPOSER_SEQUENCER_ABCI_ENDPOINT
+//   - ASTRIA_COMPOSER_SEQUENCER_GRPC_ENDPOINT
+//   - ASTRIA_COMPOSER_ROLLUPS
+//
+// Panics if the ASTRIA_COMPOSER_ROLLUPS env var is not found.
 func (n NetworkConfig) GetEndpointOverrides(bc BaseConfig) []string {
 	rollups, exists := bc["astria_composer_rollups"]
 	if !exists {

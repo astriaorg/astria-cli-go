@@ -31,8 +31,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-	astriaDir := filepath.Join(homeDir, ".astria")
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -48,7 +47,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	localDenom := flagHandler.GetValue("local-native-denom")
 
 	localConfigDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
-	baseConfigPath := filepath.Join(localConfigDir, config.DefaultBaseConfigName)
+	baseConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
@@ -111,7 +110,7 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 		return
 	}
 	localBinPath := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
-	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
+	config.CreateNetworksConfig(networksConfigPath, localBinPath, localNetworkName, localDenom)
 }
 
 // resetStateCmd represents the 'reset state' command

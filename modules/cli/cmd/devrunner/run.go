@@ -113,6 +113,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	// for each service, with special treatment for "known" services like
 	// sequencer, composer, conductor, and cometbft
 	for label, service := range networkConfigs.Configs[network].Services {
+		service.LocalPath = util.ShellExpand(service.LocalPath)
 		switch label {
 		case "sequencer":
 			sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", service.LocalPath)

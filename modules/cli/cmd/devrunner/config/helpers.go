@@ -17,7 +17,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// IsInstanceNameValidOrPanic checks if the instance name is valid and panics if it's not.
+// IsInstanceNameValidOrPanic checks if the instance name is valid.
+//
+// Panics if the instance name is not valid.
 func IsInstanceNameValidOrPanic(instance string) {
 	re, err := regexp.Compile(`^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`)
 	if err != nil {
@@ -31,7 +33,9 @@ func IsInstanceNameValidOrPanic(instance string) {
 	}
 }
 
-// IsSequencerChainIdValidOrPanic checks if the instance name is valid and panics if it's not.
+// IsSequencerChainIdValidOrPanic checks if the instance name is valid.
+//
+// Panics if the instance name is not valid.
 func IsSequencerChainIdValidOrPanic(id string) {
 	if len(id) < 1 || len(id) > 50 {
 		log.Errorf("Invalid sequencer chain id length: %s", id)
@@ -56,6 +60,7 @@ var embeddedDevPrivKey embed.FS
 
 // CreateComposerDevPrivKeyFile creates a new composer_dev_priv_key file in the specified directory.
 func CreateComposerDevPrivKeyFile(dir string) {
+	dir = util.ShellExpand(dir)
 	// read the content from the embedded file
 	devPrivKeyData, err := fs.ReadFile(embeddedDevPrivKey, "composer_dev_priv_key")
 	if err != nil {
@@ -95,10 +100,14 @@ var embeddedCometbftGenesisFile embed.FS
 var embeddedCometbftValidatorFile embed.FS
 
 // RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json
-// and priv_validator_key.json file at the specified path. It uses the local
-// network name and local default denomination to update the chain id and
-// default denom for the local sequencer network.
+// and priv_validator_key.json file at the specified path.
+//   - path: the path to the directory where the new files will be created.
+//   - localNetworkName: the name of the local sequencer network.
+//   - localNativeDenom: the native denomination for the local sequencer network.
+//
+// Panics if the files cannot be created.
 func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNativeDenom string) {
+	path = util.ShellExpand(path)
 	// read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
@@ -180,6 +189,7 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 
 // InitCometbft initializes CometBFT for running a local sequencer.
 func InitCometbft(defaultDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
+	defaultDir = util.ShellExpand(defaultDir)
 	log.Info("Initializing CometBFT for running local sequencer:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
@@ -328,6 +338,13 @@ func validateServiceLogLevelOrPanic(logLevel string) {
 
 // GetServiceLogLevelOverrides returns a slice of strings that can be used to
 // update the log level for the Astria services.
+//
+// The env var log levels that are returned are:
+//   - ASTRIA_SEQUENCER_LOG
+//   - ASTRIA_COMPOSER_LOG
+//   - ASTRIA_CONDUCTOR_LOG
+//
+// Panics if the service log level is not one of the following: debug, info, error.
 func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 	validateServiceLogLevelOrPanic(serviceLogLevel)
 	serviceLogLevelOverrides := []string{
