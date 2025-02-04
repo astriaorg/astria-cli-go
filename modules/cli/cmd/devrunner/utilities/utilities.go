@@ -88,13 +88,13 @@ func IsValidPortOrPanic(port string) {
 	// Convert string to integer
 	portNum, err := strconv.Atoi(port)
 	if err != nil {
-		log.Error("Error converting port to integer: %v", err)
+		log.Errorf("Error converting port to integer: %v", err)
 		panic("Error converting port to integer")
 	}
 
 	// Valid ports are between 1 and 65535
 	if !(portNum > 0 && portNum < 65536) {
-		log.Error("Invalid port number: out of range: %v", portNum)
+		log.Errorf("Invalid port number: out of range: %v", portNum)
 		panic("Invalid port number")
 	}
 }
