@@ -10,12 +10,14 @@ const (
 	DefaultConfigDirName             = "config"
 	DefaultInstanceName              = "default"
 	DefaultLocalNetworkName          = "sequencer-test-chain-0"
+	DefaultRollupName                = "astria-test-chain-0"
 	DefaultNetworksConfigName        = "networks-config.toml"
 	DefaultServiceLogLevel           = "info"
 	DefaultLocalNativeDenom          = "ntia"
 	DefaultTUIConfigName             = "tui-config.toml"
 	DefaultHighlightColor            = "blue"
 	DefaultBorderColor               = "gray"
+	DefaultRollupPort                = "8546"
 
 	// NOTE - do not include the 'v' at the beginning of the version number
 	// Service versions matched to live networks

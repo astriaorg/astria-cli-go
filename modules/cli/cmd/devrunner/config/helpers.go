@@ -11,13 +11,16 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// IsInstanceNameValidOrPanic checks if the instance name is valid and panics if it's not.
+// IsInstanceNameValidOrPanic checks if the instance name is valid.
+//
+// Panics if the instance name is not valid.
 func IsInstanceNameValidOrPanic(instance string) {
 	re, err := regexp.Compile(`^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`)
 	if err != nil {
@@ -31,7 +34,9 @@ func IsInstanceNameValidOrPanic(instance string) {
 	}
 }
 
-// IsSequencerChainIdValidOrPanic checks if the instance name is valid and panics if it's not.
+// IsSequencerChainIdValidOrPanic checks if the instance name is valid.
+//
+// Panics if the instance name is not valid.
 func IsSequencerChainIdValidOrPanic(id string) {
 	if len(id) < 1 || len(id) > 50 {
 		log.Errorf("Invalid sequencer chain id length: %s", id)
@@ -56,6 +61,7 @@ var embeddedDevPrivKey embed.FS
 
 // CreateComposerDevPrivKeyFile creates a new composer_dev_priv_key file in the specified directory.
 func CreateComposerDevPrivKeyFile(dir string) {
+	dir = util.ShellExpand(dir)
 	// read the content from the embedded file
 	devPrivKeyData, err := fs.ReadFile(embeddedDevPrivKey, "composer_dev_priv_key")
 	if err != nil {
@@ -95,10 +101,14 @@ var embeddedCometbftGenesisFile embed.FS
 var embeddedCometbftValidatorFile embed.FS
 
 // RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json
-// and priv_validator_key.json file at the specified path. It uses the local
-// network name and local default denomination to update the chain id and
-// default denom for the local sequencer network.
+// and priv_validator_key.json file at the specified path.
+//   - path: the path to the directory where the new files will be created.
+//   - localNetworkName: the name of the local sequencer network.
+//   - localNativeDenom: the native denomination for the local sequencer network.
+//
+// Panics if the files cannot be created.
 func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNativeDenom string) {
+	path = util.ShellExpand(path)
 	// read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
@@ -180,6 +190,7 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 
 // InitCometbft initializes CometBFT for running a local sequencer.
 func InitCometbft(defaultDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
+	defaultDir = util.ShellExpand(defaultDir)
 	log.Info("Initializing CometBFT for running local sequencer:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 
@@ -229,7 +240,7 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	oldValue := `timeout_commit = "1s"`
 	newValue := `timeout_commit = "2s"`
 
-	if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
+	if err := ReplaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 		log.Error("Error updating the file:", cometbftConfigPath, ":", err)
 		return
 	} else {
@@ -237,9 +248,9 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	}
 }
 
-// replaceInFile replaces oldValue with newValue in the file at filename.
+// ReplaceInFile replaces oldValue with newValue in the file at filename.
 // it is used here to update the block time in the cometbft config.toml file.
-func replaceInFile(filename, oldValue, newValue string) error {
+func ReplaceInFile(filename, oldValue, newValue string) error {
 	// read the original file.
 	content, err := os.ReadFile(filename)
 	if err != nil {
@@ -269,6 +280,18 @@ func replaceInFile(filename, oldValue, newValue string) error {
 			return err
 		}
 		return fmt.Errorf("failed to rename temporary file to original: %w", err)
+	}
+
+	// remove the backup file.
+	backupFile, err := os.Open(backupFilename)
+	if err != nil {
+		return fmt.Errorf("failed to open backup file: %w", err)
+	}
+	if err := backupFile.Close(); err != nil {
+		return fmt.Errorf("failed to close backup file: %w", err)
+	}
+	if err := os.Remove(backupFilename); err != nil {
+		return fmt.Errorf("failed to remove backup file: %w", err)
 	}
 
 	return nil
@@ -328,6 +351,13 @@ func validateServiceLogLevelOrPanic(logLevel string) {
 
 // GetServiceLogLevelOverrides returns a slice of strings that can be used to
 // update the log level for the Astria services.
+//
+// The env var log levels that are returned are:
+//   - ASTRIA_SEQUENCER_LOG
+//   - ASTRIA_COMPOSER_LOG
+//   - ASTRIA_CONDUCTOR_LOG
+//
+// Panics if the service log level is not one of the following: debug, info, error.
 func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 	validateServiceLogLevelOrPanic(serviceLogLevel)
 	serviceLogLevelOverrides := []string{
@@ -336,4 +366,20 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
 	}
 	return serviceLogLevelOverrides
+}
+
+// IsValidDenom checks if the input string is a valid denomination.
+//
+// A valid denomination is a string that contains only letters.
+//
+// Panics if the input string is not a valid denomination.
+func IsValidDenomOrPanic(denom string) {
+	denom = strings.ToLower(denom)
+
+	for _, r := range denom {
+		if !unicode.IsLetter(r) {
+			log.Error("Error validating denomination:", denom, "Denominations must contain only letters.")
+			panic("Invalid denomination: " + denom + ", denominations must contain only letters.")
+		}
+	}
 }
