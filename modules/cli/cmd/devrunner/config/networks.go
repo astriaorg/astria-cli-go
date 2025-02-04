@@ -76,15 +76,15 @@ func (n NetworkConfig) Expand() NetworkConfig {
 
 // DefaultNetworksConfigs returns a NetworksConfig struct populated with all
 // network defaults.
-func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
+func DefaultNetworksConfigs(defaultBinDir, sequencerNetworkName, rollupName, defaultDenom string) NetworkConfigs {
 	return NetworkConfigs{
 		Configs: map[string]NetworkConfig{
 			"local": {
-				SequencerChainId: "sequencer-test-chain-0",
+				SequencerChainId: sequencerNetworkName,
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
-				RollupName:       "astria-test-chain-1",
-				NativeDenom:      DefaultLocalNativeDenom,
+				RollupName:       rollupName,
+				NativeDenom:      defaultDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
@@ -120,8 +120,8 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "astria-dusk-" + cmd.DefaultDuskNum,
 				SequencerGRPC:    "https://grpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org/",
-				RollupName:       "",
-				NativeDenom:      DefaultLocalNativeDenom,
+				RollupName:       rollupName,
+				NativeDenom:      defaultDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
@@ -143,7 +143,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "dawn-" + cmd.DefaultDawnNum,
 				SequencerGRPC:    "https://grpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
-				RollupName:       "",
+				RollupName:       rollupName,
 				NativeDenom:      "ibc/channel-0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
@@ -166,7 +166,7 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "astria",
 				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.astria.org/",
-				RollupName:       "",
+				RollupName:       rollupName,
 				NativeDenom:      "ibc/channel-0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
@@ -217,6 +217,7 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 //   - configPath: the path to the networks configuration file
 //   - binPath: the path to the binaries directory within a given instance
 //   - localSequencerChainId: the chain id for the local sequencer
+//   - rollupName: the name of the rollup
 //   - localNativeDenom: the native denom for the local sequencer
 //
 // Note: The configPath and binPath should be part of the same instance.
@@ -226,18 +227,14 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 // skip initialization if the file already exists.
 //
 // Panic if the file cannot be created or written to.
-func CreateNetworksConfig(configPath, binPath, localSequencerChainId, localNativeDenom string) {
+func CreateNetworksConfig(configPath, binPath, localSequencerChainId, rollupName, localNativeDenom string) {
 	_, err := os.Stat(configPath)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", configPath)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := DefaultNetworksConfigs(binPath)
-	local := config.Configs["local"]
-	local.NativeDenom = localNativeDenom
-	local.SequencerChainId = localSequencerChainId
-	config.Configs["local"] = local
+	config := DefaultNetworksConfigs(binPath, localSequencerChainId, rollupName, localNativeDenom)
 
 	// open a file for writing
 	file, err := os.Create(configPath)

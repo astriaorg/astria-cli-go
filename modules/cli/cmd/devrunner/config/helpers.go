@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
 
@@ -239,7 +240,7 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	oldValue := `timeout_commit = "1s"`
 	newValue := `timeout_commit = "2s"`
 
-	if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
+	if err := ReplaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 		log.Error("Error updating the file:", cometbftConfigPath, ":", err)
 		return
 	} else {
@@ -247,9 +248,9 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	}
 }
 
-// replaceInFile replaces oldValue with newValue in the file at filename.
+// ReplaceInFile replaces oldValue with newValue in the file at filename.
 // it is used here to update the block time in the cometbft config.toml file.
-func replaceInFile(filename, oldValue, newValue string) error {
+func ReplaceInFile(filename, oldValue, newValue string) error {
 	// read the original file.
 	content, err := os.ReadFile(filename)
 	if err != nil {
@@ -279,6 +280,18 @@ func replaceInFile(filename, oldValue, newValue string) error {
 			return err
 		}
 		return fmt.Errorf("failed to rename temporary file to original: %w", err)
+	}
+
+	// remove the backup file.
+	backupFile, err := os.Open(backupFilename)
+	if err != nil {
+		return fmt.Errorf("failed to open backup file: %w", err)
+	}
+	if err := backupFile.Close(); err != nil {
+		return fmt.Errorf("failed to close backup file: %w", err)
+	}
+	if err := os.Remove(backupFilename); err != nil {
+		return fmt.Errorf("failed to remove backup file: %w", err)
 	}
 
 	return nil
@@ -353,4 +366,20 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
 	}
 	return serviceLogLevelOverrides
+}
+
+// IsValidDenom checks if the input string is a valid denomination.
+//
+// A valid denomination is a string that contains only letters.
+//
+// Panics if the input string is not a valid denomination.
+func IsValidDenomOrPanic(denom string) {
+	denom = strings.ToLower(denom)
+
+	for _, r := range denom {
+		if !unicode.IsLetter(r) {
+			log.Error("Error validating denomination:", denom, "Denominations must contain only letters.")
+			panic("Invalid denomination: " + denom + ", denominations must contain only letters.")
+		}
+	}
 }
