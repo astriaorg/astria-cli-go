@@ -66,7 +66,7 @@ func PathExists(path string) bool {
 
 // ShellExpand shell expands the given string.
 //
-// Panics if the home directory cannot be found.
+// Panics if path includes tilde but homedir can't be found.
 func ShellExpand(value string) string {
 	expanded := os.ExpandEnv(value)
 	if strings.HasPrefix(expanded, "~") {

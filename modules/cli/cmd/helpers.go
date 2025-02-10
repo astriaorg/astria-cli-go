@@ -4,17 +4,14 @@ import (
 	"os"
 	"reflect"
 
-	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
-
 	log "github.com/sirupsen/logrus"
 )
 
 // CreateDirOrPanic creates a directory with the given name with 0755
-// permissions. It will shell expand the directory path provided.
+// permissions.
 //
 // Panics if the directory cannot be created.
 func CreateDirOrPanic(dirName string) {
-	dirName = util.ShellExpand(dirName)
 	err := os.MkdirAll(dirName, 0755)
 	if err != nil {
 		log.WithError(err).Error("Error creating data directory")

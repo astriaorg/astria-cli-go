@@ -107,8 +107,6 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 //
 // Panics if the file cannot be created or written to.
 func CreateBaseConfig(path, instance string) {
-	path = util.ShellExpand(path)
-
 	_, err := os.Stat(path)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", path)

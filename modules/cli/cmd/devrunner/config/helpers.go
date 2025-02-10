@@ -60,7 +60,6 @@ var embeddedDevPrivKey embed.FS
 
 // CreateComposerDevPrivKeyFile creates a new composer_dev_priv_key file in the specified directory.
 func CreateComposerDevPrivKeyFile(dir string) {
-	dir = util.ShellExpand(dir)
 	// read the content from the embedded file
 	devPrivKeyData, err := fs.ReadFile(embeddedDevPrivKey, "composer_dev_priv_key")
 	if err != nil {
@@ -107,7 +106,6 @@ var embeddedCometbftValidatorFile embed.FS
 //
 // Panics if the files cannot be created.
 func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNativeDenom string) {
-	path = util.ShellExpand(path)
 	// read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
 	if err != nil {
@@ -189,7 +187,6 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 
 // InitCometbft initializes CometBFT for running a local sequencer.
 func InitCometbft(defaultDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
-	defaultDir = util.ShellExpand(defaultDir)
 	log.Info("Initializing CometBFT for running local sequencer:")
 	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
 

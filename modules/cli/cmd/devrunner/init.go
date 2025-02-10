@@ -11,7 +11,6 @@ import (
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/config"
-	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
 
 	log "github.com/sirupsen/logrus"
 
@@ -46,17 +45,16 @@ func runInitialization(c *cobra.Command, _ []string) {
 	localDenom := flagHandler.GetValue("local-native-denom")
 
 	// TODO: make the default home dir configurable
-	homeDir := "~"
+	homeDir := cmd.GetUserHomeDirOrPanic()
 	instanceDir := filepath.Join(homeDir, ".astria", instance)
 
 	// paths must be absolute
-	// directories do not need to be absolute
 	logsDir := filepath.Join(homeDir, ".astria", instance, config.LogsDirName)
 	localBinDir := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
-	networksConfigPath := util.ShellExpand(filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName))
-	tuiConfigPath := util.ShellExpand(filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName))
+	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	configDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
-	baseConfigPath := util.ShellExpand(filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName))
+	baseConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 
 	log.Info("Creating new instance in:", instanceDir)
 	cmd.CreateDirOrPanic(instanceDir)
@@ -83,12 +81,12 @@ func runInitialization(c *cobra.Command, _ []string) {
 		resetANSI := "\033[0m"
 		log.Info(fmt.Sprint("--Downloading binaries for network: ", purpleANSI, label, resetANSI))
 		for _, bin := range networkConfigs.Configs[label].Services {
-			downloadAndUnpack(bin.DownloadURL, bin.Version, bin.Name, util.ShellExpand(localBinDir))
+			downloadAndUnpack(bin.DownloadURL, bin.Version, bin.Name, localBinDir)
 		}
 	}
 
 	// create the data directory for cometbft and sequencer
-	dataPath := filepath.Join(instanceDir, config.DataDirName)
+	dataPath := filepath.Join(homeDir, ".astria", instance, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
 	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.MainnetCometbftVersion, config.DefaultConfigDirName)
 
