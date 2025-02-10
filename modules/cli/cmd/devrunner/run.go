@@ -58,11 +58,12 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	exportLogs := flagHandler.GetValue("export-logs") == "true"
-	logsDir := filepath.Join(homeDir, ".astria", instance, config.LogsDirName)
+	serviceLogsDir := filepath.Join(homeDir, ".astria", instance, config.LogsDirName)
 	currentTime := time.Now()
 	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
-	cmd.CreateUILog(filepath.Join(homeDir, ".astria", instance))
+	uiLogsPath := filepath.Join(homeDir, ".astria", instance)
+	cmd.CreateUILog(uiLogsPath)
 
 	// log the instance name in the tui logs once they are created
 	if !flagHandler.GetChanged("instance") {
@@ -128,7 +129,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     &seqReadinessCheck,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-astria-sequencer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.SequencerStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -152,7 +153,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     &compReadinessCheck,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-astria-composer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ComposerStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -168,7 +169,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     nil,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-astria-conductor.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ConductorStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -195,7 +196,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           args,
 				ReadyCheck:     &cometReadinessCheck,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-cometbft.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-cometbft.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.CometBFTStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -210,7 +211,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     nil,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-"+service.Name+".log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.GenericStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
