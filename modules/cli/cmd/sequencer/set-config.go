@@ -29,6 +29,8 @@ func setAssetCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	sequencerNetworksConfigPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", DefaultSequencerNetworksConfigFilename)
+	// create the networks config file if it doesn't exist. Will skip if the
+	// file already exists.
 	CreateSequencerNetworkConfigs(sequencerNetworksConfigPath)
 	sequencerNetworkConfigs := LoadSequencerNetworkConfigsOrPanic(sequencerNetworksConfigPath)
 
@@ -70,6 +72,8 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	sequencerNetworksConfigPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", DefaultSequencerNetworksConfigFilename)
+	// create the networks config file if it doesn't exist. Will skip if the
+	// file already exists.
 	CreateSequencerNetworkConfigs(sequencerNetworksConfigPath)
 	sequencerNetworkConfigs := LoadSequencerNetworkConfigsOrPanic(sequencerNetworksConfigPath)
 
