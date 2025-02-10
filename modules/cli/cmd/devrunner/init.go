@@ -64,7 +64,8 @@ func runInitialization(c *cobra.Command, _ []string) {
 	cmd.CreateDirOrPanic(localBinDir)
 	cmd.CreateDirOrPanic(logsDir)
 
-	config.CreateNetworksConfig(networksConfigPath, localBinDir, localNetworkName, localDenom)
+	genericBinariesDir := filepath.Join("~", ".astria", instance, config.BinariesDirName)
+	config.CreateNetworksConfig(networksConfigPath, genericBinariesDir, localNetworkName, localDenom)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	config.CreateTUIConfig(tuiConfigPath)

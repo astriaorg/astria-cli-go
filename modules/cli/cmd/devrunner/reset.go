@@ -108,8 +108,8 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 		fmt.Println("Error removing file:", err)
 		return
 	}
-	localBinPath := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
-	config.CreateNetworksConfig(networksConfigPath, localBinPath, localNetworkName, localDenom)
+	genericBinariesDir := filepath.Join("~", ".astria", instance, config.BinariesDirName)
+	config.CreateNetworksConfig(networksConfigPath, genericBinariesDir, localNetworkName, localDenom)
 }
 
 // resetStateCmd represents the 'reset state' command
