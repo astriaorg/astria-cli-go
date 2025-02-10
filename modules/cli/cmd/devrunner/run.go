@@ -45,10 +45,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	ctx := c.Context()
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-
-	astriaDir := filepath.Join(homeDir, ".astria")
-
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -61,11 +58,12 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	exportLogs := flagHandler.GetValue("export-logs") == "true"
-	logsDir := filepath.Join(astriaDir, instance, config.LogsDirName)
+	serviceLogsDir := filepath.Join(homeDir, ".astria", instance, config.LogsDirName)
 	currentTime := time.Now()
 	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
-	cmd.CreateUILog(filepath.Join(astriaDir, instance))
+	uiLogsDir := filepath.Join(homeDir, ".astria", instance)
+	cmd.CreateUILog(uiLogsDir)
 
 	// log the instance name in the tui logs once they are created
 	if !flagHandler.GetChanged("instance") {
@@ -77,11 +75,11 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 
 	network := flagHandler.GetValue("network")
 
-	baseConfigPath := filepath.Join(astriaDir, instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
+	baseConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 	baseConfig := config.LoadBaseConfigOrPanic(baseConfigPath)
 	baseConfigEnvVars := baseConfig.ToSlice()
 
-	networksConfigPath := filepath.Join(astriaDir, instance, config.DefaultNetworksConfigName)
+	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	// check if the network exists in the networks config
@@ -113,7 +111,6 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	// for each service, with special treatment for "known" services like
 	// sequencer, composer, conductor, and cometbft
 	for label, service := range networkConfigs.Configs[network].Services {
-		service.LocalPath = util.ShellExpand(service.LocalPath)
 		switch label {
 		case "sequencer":
 			sequencerPath := getFlagPath(c, "sequencer-path", "sequencer", service.LocalPath)
@@ -132,7 +129,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     &seqReadinessCheck,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-sequencer.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-astria-sequencer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.SequencerStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -156,7 +153,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     &compReadinessCheck,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-composer.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-astria-composer.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ComposerStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -172,7 +169,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     nil,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-astria-conductor.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-astria-conductor.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.ConductorStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -189,7 +186,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				HaltIfFailed:  false,
 			}
 			cometReadinessCheck := processrunner.NewReadyChecker(cometRCOpts)
-			dataDir := filepath.Join(astriaDir, instance, config.DataDirName)
+			dataDir := filepath.Join(homeDir, ".astria", instance, config.DataDirName)
 			cometDataPath := filepath.Join(dataDir, ".cometbft")
 			args := append([]string{"node", "--home", cometDataPath, "--log_level", serviceLogLevel}, service.Args...)
 			log.Debugf("arguments for cometbft service: %v", args)
@@ -199,7 +196,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           args,
 				ReadyCheck:     &cometReadinessCheck,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-cometbft.log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-cometbft.log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.CometBFTStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -214,7 +211,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				Env:            environment,
 				Args:           service.Args,
 				ReadyCheck:     nil,
-				LogPath:        filepath.Join(logsDir, appStartTime+"-"+service.Name+".log"),
+				LogPath:        filepath.Join(serviceLogsDir, appStartTime+"-"+service.Name+".log"),
 				ExportLogs:     exportLogs,
 				StartMinimized: tuiConfig.GenericStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
@@ -256,6 +253,7 @@ func getFlagPath(c *cobra.Command, flag string, serviceName string, defaultValue
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	path := flagHandler.GetValue(flag)
+	path = util.ShellExpand(path)
 
 	if util.PathExists(path) && path != "" {
 		log.Info(fmt.Sprintf("getFlagPath: Override path provided for %s binary: %s", serviceName, path))

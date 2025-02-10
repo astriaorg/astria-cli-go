@@ -89,8 +89,7 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-	astriaDir := filepath.Join(homeDir, ".astria")
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -115,8 +114,8 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 		fmt.Println("Error removing file:", err)
 		return
 	}
-	localBinPath := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
-	config.CreateNetworksConfig(networksConfigPath, localBinPath, localNetworkName, rollupName, localDenom)
+	genericBinariesDir := filepath.Join("~", ".astria", instance, config.BinariesDirName)
+	config.CreateNetworksConfig(networksConfigPath, genericBinariesDir, localNetworkName, rollupName, localDenom)
 }
 
 // resetStateCmd represents the 'reset state' command
@@ -131,8 +130,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-	astriaDir := filepath.Join(homeDir, ".astria")
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -143,7 +141,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	instanceDir := filepath.Join(homeDir, ".astria", instance)
-	dataDir := filepath.Join(instanceDir, config.DataDirName)
+	dataDir := filepath.Join(homeDir, ".astria", instance, config.DataDirName)
 
 	log.Infof("Resetting state for instance '%s'", instance)
 

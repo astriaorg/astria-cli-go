@@ -107,8 +107,6 @@ func DefaultBaseConfig(instanceName, defaultSeqNetworkName, defaultRollupName, d
 //
 // Panics if the file cannot be created or written to.
 func CreateBaseConfig(path, instance, sequencerNetworkName, rollupName, defaultDenom string) {
-	path = util.ShellExpand(path)
-
 	_, err := os.Stat(path)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", path)

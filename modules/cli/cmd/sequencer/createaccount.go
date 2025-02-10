@@ -66,8 +66,7 @@ func createaccountCmdHandler(c *cobra.Command, _ []string) {
 				panic(err)
 			}
 			homeDir := cmd.GetUserHomeDirOrPanic()
-			astriaDir := filepath.Join(homeDir, ".astria")
-			keydir := filepath.Join(astriaDir, "keyfiles")
+			keydir := filepath.Join(homeDir, ".astria", "keyfiles")
 			cmd.CreateDirOrPanic(keydir)
 
 			filename, err := keys.SaveKeystoreToFile(keydir, ks)
