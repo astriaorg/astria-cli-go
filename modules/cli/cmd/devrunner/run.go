@@ -62,8 +62,8 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 	currentTime := time.Now()
 	appStartTime := currentTime.Format("20060102-150405") // YYYYMMDD-HHMMSS
 
-	uiLogsPath := filepath.Join(homeDir, ".astria", instance)
-	cmd.CreateUILog(uiLogsPath)
+	uiLogsDir := filepath.Join(homeDir, ".astria", instance)
+	cmd.CreateUILog(uiLogsDir)
 
 	// log the instance name in the tui logs once they are created
 	if !flagHandler.GetChanged("instance") {
