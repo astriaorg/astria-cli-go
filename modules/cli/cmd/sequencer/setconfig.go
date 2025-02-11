@@ -48,8 +48,7 @@ func setAssetCmdHandler(c *cobra.Command, args []string) {
 
 	file, err := os.Create(sequencerNetworksConfigPath)
 	if err != nil {
-		log.Error("Error creating file:", sequencerNetworksConfigPath, ":", err)
-		panic(err)
+		log.Panicf("Error creating file: %s: %v", sequencerNetworksConfigPath, err)
 	}
 	defer file.Close()
 
@@ -90,8 +89,7 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 
 	file, err := os.Create(sequencerNetworksConfigPath)
 	if err != nil {
-		log.Error("Error creating file:", sequencerNetworksConfigPath, ":", err)
-		panic(err)
+		log.Panicf("Error creating file: %s: %v", sequencerNetworksConfigPath, err)
 	}
 	defer file.Close()
 

@@ -279,18 +279,6 @@ func ReplaceInFile(filename, oldValue, newValue string) error {
 		return fmt.Errorf("failed to rename temporary file to original: %w", err)
 	}
 
-	// remove the backup file.
-	backupFile, err := os.Open(backupFilename)
-	if err != nil {
-		return fmt.Errorf("failed to open backup file: %w", err)
-	}
-	if err := backupFile.Close(); err != nil {
-		return fmt.Errorf("failed to close backup file: %w", err)
-	}
-	if err := os.Remove(backupFilename); err != nil {
-		return fmt.Errorf("failed to remove backup file: %w", err)
-	}
-
 	return nil
 }
 
@@ -375,8 +363,7 @@ func IsValidDenomOrPanic(denom string) {
 
 	for _, r := range denom {
 		if !unicode.IsLetter(r) {
-			log.Error("Error validating denomination:", denom, "Denominations must contain only letters.")
-			panic("Invalid denomination: " + denom + ", denominations must contain only letters.")
+			log.Panicf("Error validating denomination: %s, Denominations must contain only letters.", denom)
 		}
 	}
 }

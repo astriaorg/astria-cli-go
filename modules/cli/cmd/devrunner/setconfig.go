@@ -137,8 +137,7 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 
 	file, err := os.Create(networksConfigPath)
 	if err != nil {
-		log.Error("Error creating file:", networksConfigPath, ":", err)
-		panic(err)
+		log.Panicf("Error creating file: %s: %v", networksConfigPath, err)
 	}
 	defer file.Close()
 
@@ -151,15 +150,13 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 	// Update cometbft-genesis.json
 	data, err := os.ReadFile(cometbftGenesisPath)
 	if err != nil {
-		log.Error("Error reading file:", cometbftGenesisPath, ":", err)
-		panic(err)
+		log.Error("Error reading file: %s: %v", cometbftGenesisPath, err)
 	}
 
 	// Unmarshal into a map
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(data, &jsonMap); err != nil {
-		log.Error("Error unmarshalling JSON:", err)
-		panic(err)
+		log.Panicf("Error unmarshalling JSON: %v", err)
 	}
 	if appState, ok := jsonMap["app_state"].(map[string]interface{}); ok {
 		appState["allowed_fee_assets"] = []string{denom}
@@ -169,16 +166,13 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 	// Marshal back to JSON with indentation
 	updatedData, err := json.MarshalIndent(jsonMap, "", "  ")
 	if err != nil {
-		log.Error("Error marshalling JSON:", err)
-		panic(err)
+		log.Panicf("Error marshalling JSON: %v", err)
 	}
 
 	// Write back to file
 	err = os.WriteFile(cometbftGenesisPath, updatedData, 0644)
 	if err != nil {
-		log.Error("Error writing file:", cometbftGenesisPath, ":", err)
-		panic(err)
-
+		log.Panicf("Error writing file: %s: %v", cometbftGenesisPath, err)
 	}
 }
 
@@ -232,8 +226,7 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 
 	file, err := os.Create(networksConfigPath)
 	if err != nil {
-		log.Error("Error creating file:", networksConfigPath, ":", err)
-		panic(err)
+		log.Panicf("Error creating file: %s: %v", networksConfigPath, err)
 	}
 	defer file.Close()
 
@@ -246,15 +239,13 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	// Update cometbft-genesis.json
 	data, err := os.ReadFile(cometbftGenesisPath)
 	if err != nil {
-		log.Error("Error reading file:", cometbftGenesisPath, ":", err)
-		panic(err)
+		log.Error("Error reading file: %s: %v", cometbftGenesisPath, err)
 	}
 
 	// Unmarshal into a map
 	var jsonMap map[string]interface{}
 	if err := json.Unmarshal(data, &jsonMap); err != nil {
-		log.Error("Error unmarshalling JSON:", err)
-		panic(err)
+		log.Panicf("Error unmarshalling JSON: %v", err)
 	}
 
 	// Update specific fields
@@ -263,15 +254,13 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	// Marshal back to JSON with indentation
 	updatedData, err := json.MarshalIndent(jsonMap, "", "  ")
 	if err != nil {
-		log.Error("Error marshalling JSON:", err)
-		panic(err)
+		log.Panicf("Error marshalling JSON: %v", err)
 	}
 
 	// Write back to file
 	err = os.WriteFile(cometbftGenesisPath, updatedData, 0644)
 	if err != nil {
-		log.Error("Error writing file:", cometbftGenesisPath, ":", err)
-		panic(err)
+		log.Error("Error writing file: %s: %v", cometbftGenesisPath, err)
 	}
 }
 

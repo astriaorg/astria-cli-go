@@ -25,15 +25,14 @@ import (
 //
 //	ASTRIA_VAR='value'
 //
-// As an env var.
+// as an env var.
 //
-// A map was
-// used here to allow for dynamically adding new configuration options to the
-// config toml file.
+// A map was used here to allow for dynamically adding new configuration options
+// to the config toml file.
 type BaseConfig map[string]string
 
-// DefaultBaseConfig returns a BaseConfig with default values.
-func DefaultBaseConfig(instanceName, defaultSeqNetworkName, defaultRollupName, defaultDenom string) BaseConfig {
+// NewBaseConfig returns a BaseConfig with default values.
+func NewBaseConfig(instanceName, seqNetworkName, rollupName, denom string) BaseConfig {
 	return map[string]string{
 		// conductor
 		"astria_conductor_celestia_block_time_ms":        "1200",
@@ -52,7 +51,7 @@ func DefaultBaseConfig(instanceName, defaultSeqNetworkName, defaultRollupName, d
 		"astria_conductor_sequencer_requests_per_second": "500",
 		"astria_conductor_no_metrics":                    "true",
 		"astria_conductor_metrics_http_listener_addr":    "127.0.0.1:9000",
-		"astria_conductor_expected_sequencer_chain_id":   defaultSeqNetworkName,
+		"astria_conductor_expected_sequencer_chain_id":   seqNetworkName,
 		"astria_conductor_expected_celestia_chain_id":    "",
 
 		// sequencer
@@ -75,8 +74,8 @@ func DefaultBaseConfig(instanceName, defaultSeqNetworkName, defaultRollupName, d
 		"astria_composer_api_listen_addr":            "0.0.0.0:0",
 		"astria_composer_sequencer_abci_endpoint":    "http://127.0.0.1:26657",
 		"astria_composer_sequencer_grpc_endpoint":    "http://127.0.0.1:8080",
-		"astria_composer_sequencer_chain_id":         defaultSeqNetworkName,
-		"astria_composer_rollups":                    defaultRollupName + "::ws://127.0.0.1:8546",
+		"astria_composer_sequencer_chain_id":         seqNetworkName,
+		"astria_composer_rollups":                    rollupName + "::ws://127.0.0.1:8546",
 		"astria_composer_private_key_file":           filepath.Join("~", ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		"astria_composer_sequencer_address_prefix":   "astria",
 		"astria_composer_max_submit_interval_ms":     "2000",
@@ -85,7 +84,7 @@ func DefaultBaseConfig(instanceName, defaultSeqNetworkName, defaultRollupName, d
 		"astria_composer_no_metrics":                 "true",
 		"astria_composer_metrics_http_listener_addr": "127.0.0.1:9000",
 		"astria_composer_grpc_addr":                  "0.0.0.0:0",
-		"astria_composer_fee_asset":                  defaultDenom,
+		"astria_composer_fee_asset":                  denom,
 
 		// ANSI
 		"no_color": "",
@@ -113,7 +112,7 @@ func CreateBaseConfig(path, instance, sequencerNetworkName, rollupName, defaultD
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := DefaultBaseConfig(instance, sequencerNetworkName, rollupName, defaultDenom)
+	config := NewBaseConfig(instance, sequencerNetworkName, rollupName, defaultDenom)
 
 	// open a file for writing
 	file, err := os.Create(path)
