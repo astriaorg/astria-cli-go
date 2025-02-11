@@ -15,15 +15,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// setConfigCmd represents the set-config root command
+// setConfigCmd represents the setconfig root command
 var setConfigCmd = &cobra.Command{
-	Use:   "set-config",
+	Use:   "setconfig",
 	Short: "Update the configuration for the local development instance.",
 }
 
-// setRollupNameCmd represents the set-config rollup-name command
+// setRollupNameCmd represents the setconfig rollupname command
 var setRollupNameCmd = &cobra.Command{
-	Use:   "rollup-name [name]",
+	Use:   "rollupname [name]",
 	Short: "Set the rollup name across all config for the instance.",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	Run:   setRollupNameCmdHandler,
@@ -62,7 +62,7 @@ func setRollupNameCmdHandler(c *cobra.Command, args []string) {
 	}
 
 	if err := config.ReplaceInFile(baseConfigPath, astriaComposerRollups, updatedRollups); err != nil {
-		log.Error("Error updating the file:", baseConfigPath, ":", err)
+		log.Errorf("Error updating the file: %s: %v", baseConfigPath, err)
 		return
 	} else {
 		log.Info("Successfully updated: ", baseConfigPath)
@@ -73,9 +73,9 @@ func setRollupNameCmdHandler(c *cobra.Command, args []string) {
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	log.Info("Updating rollup_name to", name, "in networks-config.toml for network: ", network)
-	config := networkConfigs.Configs[network]
-	config.RollupName = name
-	networkConfigs.Configs[network] = config
+	tmpNetworkConfig := networkConfigs.Configs[network]
+	tmpNetworkConfig.RollupName = name
+	networkConfigs.Configs[network] = tmpNetworkConfig
 
 	file, err := os.Create(networksConfigPath)
 	if err != nil {
@@ -90,15 +90,15 @@ func setRollupNameCmdHandler(c *cobra.Command, args []string) {
 	log.Infof("Successfully updated networks-config.toml: %s\n", networksConfigPath)
 }
 
-// setDefaultDenomCmd represents the set-config default-denom command
-var setDefaultDenomCmd = &cobra.Command{
-	Use:   "default-denom [denom]",
-	Short: "Set the default sequencer denom across all config for the instance.",
+// setNativeAssetCmd represents the setconfig nativeasset command
+var setNativeAssetCmd = &cobra.Command{
+	Use:   "nativeasset [denom]",
+	Short: "Set the netive asset for the sequencer across all config for the instance.",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	Run:   setDefaultDenomCmdHandler,
+	Run:   setNativeAssetCmdHandler,
 }
 
-func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
+func setNativeAssetCmdHandler(c *cobra.Command, args []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	instance := flagHandler.GetValue("instance")
@@ -107,7 +107,6 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 	network := flagHandler.GetValue("network")
 	config.IsInstanceNameValidOrPanic(network)
 
-	baseConfigPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 	networksConfigPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", instance, config.DefaultNetworksConfigName)
 	cometbftGenesisPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", instance, config.DefaultConfigDirName, config.DefaultCometbftGenesisFilename)
 
@@ -115,25 +114,13 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 	denom = strings.ToLower(denom)
 	config.IsValidDenomOrPanic(denom)
 
-	// Update base-config.toml
-	baseConfig := config.LoadBaseConfigOrPanic(baseConfigPath)
-	astriaComposerFeeAsset := baseConfig["astria_composer_fee_asset"]
-
-	if err := config.ReplaceInFile(baseConfigPath, astriaComposerFeeAsset, denom); err != nil {
-		log.Error("Error updating the file:", baseConfigPath, ":", err)
-		return
-	} else {
-		log.Info("Successfully updated: ", baseConfigPath)
-	}
-	log.Info("Updated 'astria_composer_fee_asset' to: ", denom)
-
 	// Update networks-config.toml
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
-	log.Info("Updating default_denom to", denom, "in networks-config.toml for network: ", network)
-	config := networkConfigs.Configs[network]
-	config.NativeDenom = denom
-	networkConfigs.Configs[network] = config
+	log.Info("Updating native_denom to", denom, "in networks-config.toml for network: ", network)
+	tmpNetworkConfig := networkConfigs.Configs[network]
+	tmpNetworkConfig.NativeDenom = denom
+	networkConfigs.Configs[network] = tmpNetworkConfig
 
 	file, err := os.Create(networksConfigPath)
 	if err != nil {
@@ -150,7 +137,7 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 	// Update cometbft-genesis.json
 	data, err := os.ReadFile(cometbftGenesisPath)
 	if err != nil {
-		log.Error("Error reading file: %s: %v", cometbftGenesisPath, err)
+		log.Errorf("Error reading file: %s: %v", cometbftGenesisPath, err)
 	}
 
 	// Unmarshal into a map
@@ -159,7 +146,6 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 		log.Panicf("Error unmarshalling JSON: %v", err)
 	}
 	if appState, ok := jsonMap["app_state"].(map[string]interface{}); ok {
-		appState["allowed_fee_assets"] = []string{denom}
 		appState["native_asset_base_denomination"] = denom
 	}
 
@@ -176,10 +162,71 @@ func setDefaultDenomCmdHandler(c *cobra.Command, args []string) {
 	}
 }
 
-// setSequencerChainIdCmd represents the set-config sequencer-chain-id command
+// setFeeAssetCmd represents the setconfig feeasset command
+var setFeeAssetCmd = &cobra.Command{
+	Use:   "feeasset [denom]",
+	Short: "Set the sequencer fee asset across all config for the instance.",
+	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	Run:   setFeeAssetCmdHandler,
+}
+
+func setFeeAssetCmdHandler(c *cobra.Command, args []string) {
+	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
+
+	instance := flagHandler.GetValue("instance")
+	config.IsInstanceNameValidOrPanic(instance)
+
+	baseConfigPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
+	cometbftGenesisPath := filepath.Join(cmd.GetUserHomeDirOrPanic(), ".astria", instance, config.DefaultConfigDirName, config.DefaultCometbftGenesisFilename)
+
+	denom := args[0]
+	denom = strings.ToLower(denom)
+	config.IsValidDenomOrPanic(denom)
+
+	// Update base-config.toml
+	baseConfig := config.LoadBaseConfigOrPanic(baseConfigPath)
+	astriaComposerFeeAsset := baseConfig["astria_composer_fee_asset"]
+
+	if err := config.ReplaceInFile(baseConfigPath, astriaComposerFeeAsset, denom); err != nil {
+		log.Errorf("Error updating the file: %s: %v", baseConfigPath, err)
+		return
+	} else {
+		log.Info("Successfully updated: ", baseConfigPath)
+	}
+	log.Info("Updated 'astria_composer_fee_asset' to: ", denom)
+
+	// Update cometbft-genesis.json
+	data, err := os.ReadFile(cometbftGenesisPath)
+	if err != nil {
+		log.Errorf("Error reading file: %s: %v", cometbftGenesisPath, err)
+	}
+
+	// Unmarshal into a map
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(data, &jsonMap); err != nil {
+		log.Panicf("Error unmarshalling JSON: %v", err)
+	}
+	if appState, ok := jsonMap["app_state"].(map[string]interface{}); ok {
+		appState["allowed_fee_assets"] = []string{denom}
+	}
+
+	// Marshal back to JSON with indentation
+	updatedData, err := json.MarshalIndent(jsonMap, "", "  ")
+	if err != nil {
+		log.Panicf("Error marshalling JSON: %v", err)
+	}
+
+	// Write back to file
+	err = os.WriteFile(cometbftGenesisPath, updatedData, 0644)
+	if err != nil {
+		log.Panicf("Error writing file: %s: %v", cometbftGenesisPath, err)
+	}
+}
+
+// setSequencerChainIdCmd represents the setconfig sequencerchainid command
 var setSequencerChainIdCmd = &cobra.Command{
-	Use:   "sequencer-chain-id [chain-id]",
-	Short: "Set the default sequencer chain id across all config for the instance.",
+	Use:   "sequencerchainid [chain-id]",
+	Short: "Set the sequencer chain id across all config for the instance.",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	Run:   setSequencerChainIdCmdHandler,
 }
@@ -208,7 +255,7 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	// It can be used here to update the astria_composer_sequencer_chain_id and
 	// astria_conductor_expected_sequencer_chain_id fields at the same time
 	if err := config.ReplaceInFile(baseConfigPath, astriaComposerSequencerChainId, chainId); err != nil {
-		log.Error("Error updating the file:", baseConfigPath, ":", err)
+		log.Errorf("Error updating the file: %s: %v", baseConfigPath, err)
 		return
 	} else {
 		log.Info("Successfully updated: ", baseConfigPath)
@@ -220,9 +267,9 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	log.Info("Updating sequencer_chain_id to", chainId, "in networks-config.toml for network: ", network)
-	config := networkConfigs.Configs[network]
-	config.SequencerChainId = chainId
-	networkConfigs.Configs[network] = config
+	tmpNetworkConfig := networkConfigs.Configs[network]
+	tmpNetworkConfig.SequencerChainId = chainId
+	networkConfigs.Configs[network] = tmpNetworkConfig
 
 	file, err := os.Create(networksConfigPath)
 	if err != nil {
@@ -239,7 +286,7 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	// Update cometbft-genesis.json
 	data, err := os.ReadFile(cometbftGenesisPath)
 	if err != nil {
-		log.Error("Error reading file: %s: %v", cometbftGenesisPath, err)
+		log.Errorf("Error reading file: %s: %v", cometbftGenesisPath, err)
 	}
 
 	// Unmarshal into a map
@@ -260,7 +307,7 @@ func setSequencerChainIdCmdHandler(c *cobra.Command, args []string) {
 	// Write back to file
 	err = os.WriteFile(cometbftGenesisPath, updatedData, 0644)
 	if err != nil {
-		log.Error("Error writing file: %s: %v", cometbftGenesisPath, err)
+		log.Errorf("Error writing file: %s: %v", cometbftGenesisPath, err)
 	}
 }
 
@@ -274,14 +321,18 @@ func init() {
 	srnfh.BindStringFlag("rollup-port", config.DefaultRollupPort, "Select the localhost port that the rollup will be running on.")
 	srnfh.BindStringFlag("network", "local", "Specify the network that the rollup name is being updated for.")
 
-	setConfigCmd.AddCommand(setDefaultDenomCmd)
-	sddfh := cmd.CreateCliFlagHandler(setDefaultDenomCmd, cmd.EnvPrefix)
-	sddfh.BindStringFlag("default-denom", config.DefaultLocalNativeDenom, "Set the default sequencer denom across all config for the instance.")
-	sddfh.BindStringFlag("network", "local", "Specify the network that the default denom is being updated for.")
+	setConfigCmd.AddCommand(setNativeAssetCmd)
+	snafh := cmd.CreateCliFlagHandler(setNativeAssetCmd, cmd.EnvPrefix)
+	snafh.BindStringFlag("nativeasset", config.DefaultLocalNativeDenom, "Set the native asset for the sequencer across all config for the instance.")
+	snafh.BindStringFlag("network", "local", "Specify the network that the native asset is being updated for.")
+
+	setConfigCmd.AddCommand(setFeeAssetCmd)
+	sfafh := cmd.CreateCliFlagHandler(setFeeAssetCmd, cmd.EnvPrefix)
+	sfafh.BindStringFlag("feeasset", config.DefaultLocalNativeDenom, "Set the sequencer fee asset across all config for the instance.")
 
 	setConfigCmd.AddCommand(setSequencerChainIdCmd)
 	sscifh := cmd.CreateCliFlagHandler(setSequencerChainIdCmd, cmd.EnvPrefix)
-	sscifh.BindStringFlag("sequencer-chain-id", config.DefaultLocalNetworkName, "Set the default sequencer chain id across all config for the instance.")
+	sscifh.BindStringFlag("sequencer-chain-id", config.DefaultLocalNetworkName, "Set the sequencer chain id across all config for the instance.")
 	sscifh.BindStringFlag("network", "local", "Specify the network that the sequencer chain id is being updated for.")
 
 }

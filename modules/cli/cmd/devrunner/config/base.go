@@ -31,8 +31,8 @@ import (
 // to the config toml file.
 type BaseConfig map[string]string
 
-// NewBaseConfig returns a BaseConfig with default values.
-func NewBaseConfig(instanceName, seqNetworkName, rollupName, denom string) BaseConfig {
+// NewBaseConfig creates a new BaseConfig.
+func NewBaseConfig(instanceName, seqNetworkName, rollupName, feeAsset string) BaseConfig {
 	return map[string]string{
 		// conductor
 		"astria_conductor_celestia_block_time_ms":        "1200",
@@ -84,7 +84,7 @@ func NewBaseConfig(instanceName, seqNetworkName, rollupName, denom string) BaseC
 		"astria_composer_no_metrics":                 "true",
 		"astria_composer_metrics_http_listener_addr": "127.0.0.1:9000",
 		"astria_composer_grpc_addr":                  "0.0.0.0:0",
-		"astria_composer_fee_asset":                  denom,
+		"astria_composer_fee_asset":                  feeAsset,
 
 		// ANSI
 		"no_color": "",
@@ -100,19 +100,19 @@ func NewBaseConfig(instanceName, seqNetworkName, rollupName, denom string) BaseC
 }
 
 // CreateBaseConfig creates a base configuration file at
-// the given path, populating the file with the service defaults.
+// the given path, and populates the file.
 //
 // It will skip initialization if the file already exists.
 //
 // Panics if the file cannot be created or written to.
-func CreateBaseConfig(path, instance, sequencerNetworkName, rollupName, defaultDenom string) {
+func CreateBaseConfig(path, instance, sequencerNetworkName, rollupName, feeAsset string) {
 	_, err := os.Stat(path)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", path)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := NewBaseConfig(instance, sequencerNetworkName, rollupName, defaultDenom)
+	config := NewBaseConfig(instance, sequencerNetworkName, rollupName, feeAsset)
 
 	// open a file for writing
 	file, err := os.Create(path)

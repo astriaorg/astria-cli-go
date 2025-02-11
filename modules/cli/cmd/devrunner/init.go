@@ -30,8 +30,8 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(initCmd, cmd.EnvPrefix)
 	flagHandler.BindStringFlag("local-network-name", config.DefaultLocalNetworkName, "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	flagHandler.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
-	flagHandler.BindStringFlag("rollup-name", config.DefaultRollupName, "Set the default rollup name for the local instance. This is used to set the 'astria_composer_rollups' in the base-config.toml file.")
+	flagHandler.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the native denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	flagHandler.BindStringFlag("rollup-name", config.DefaultRollupName, "Set the rollup name for the local instance. This is used to set the 'astria_composer_rollups' in the base-config.toml file.")
 }
 
 func runInitialization(c *cobra.Command, _ []string) {

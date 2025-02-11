@@ -67,7 +67,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 
 	// log the instance name in the tui logs once they are created
 	if !flagHandler.GetChanged("instance") {
-		log.Debug("Using overridden default instance name: ", instance)
+		log.Debug("Using overridden instance name: ", instance)
 	} else {
 		log.Debug("Instance name: ", instance)
 	}

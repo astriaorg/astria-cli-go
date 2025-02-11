@@ -17,7 +17,7 @@ type TUIConfig struct {
 	WrapLines  bool `mapstructure:"wrap_lines" toml:"wrap_lines"`
 	Borderless bool `mapstructure:"borderless" toml:"borderless"`
 
-	// Override value for the Default Instance Name
+	// Override value for the Instance Name
 	OverrideInstanceName string `mapstructure:"override_instance_name" toml:"override_instance_name"`
 
 	// Known services start minimized
@@ -36,8 +36,7 @@ type TUIConfig struct {
 	BorderColor    string `mapstructure:"border_color" toml:"border_color"`
 }
 
-// DefaultTUIConfig returns a TUIConfig struct populated with all default
-// values.
+// DefaultTUIConfig returns a default TUIConfig struct.
 func DefaultTUIConfig() TUIConfig {
 	return TUIConfig{
 		AutoScroll:               true,
