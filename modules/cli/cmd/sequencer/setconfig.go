@@ -60,8 +60,8 @@ func setFeeAssetCmdHandler(c *cobra.Command, args []string) {
 
 // setAssetCmd represents the setconfig asset command
 var setAssetCmd = &cobra.Command{
-	Use:   "nativeasset [denom]",
-	Short: "Sets the native asset in the sequencer command configs.",
+	Use:   "asset [denom]",
+	Short: "Sets the asset in the sequencer command configs.",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	Run:   setAssetCmdHandler,
 }
