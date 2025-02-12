@@ -69,9 +69,9 @@ alias l := lint
 
 [no-exit-message]
 _lint-go:
-    cd modules/cli && golangci-lint run ./...
-    cd modules/go-sequencer-client && golangci-lint run ./...
-    cd modules/bech32m && golangci-lint run ./...
+    cd modules/cli && golangci-lint run
+    cd modules/go-sequencer-client && golangci-lint run
+    cd modules/bech32m && golangci-lint run
 
 [no-exit-message]
 _lint-md:
