@@ -213,7 +213,10 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 
 // CreateNetworksConfig creates and populates a networks configuration file.
 //   - configPath: the path to the networks configuration file
-//   - binPath: the path to the binaries directory within a given instance
+//   - binPathPrefixWithTilde: the path prefix to the binaries directory within
+//     a given instance. This path is prepended to the service binary name
+//     within the config file to point to the service config to the correct
+//     binary.
 //   - localSequencerChainId: the chain id for the local sequencer
 //   - rollupName: the name of the rollup
 //   - localNativeDenom: the native denom for the local sequencer
@@ -225,14 +228,14 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 // file already exists.
 //
 // Panic if the file cannot be created or written to.
-func CreateNetworksConfig(configPath, binPath, localSequencerChainId, rollupName, localNativeDenom string) {
+func CreateNetworksConfig(configPath, binPathPrefixWithTilde, localSequencerChainId, rollupName, localNativeDenom string) {
 	_, err := os.Stat(configPath)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", configPath)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := NewNetworksConfigs(binPath, localSequencerChainId, rollupName, localNativeDenom)
+	config := NewNetworksConfigs(binPathPrefixWithTilde, localSequencerChainId, rollupName, localNativeDenom)
 
 	// open a file for writing
 	file, err := os.Create(configPath)
