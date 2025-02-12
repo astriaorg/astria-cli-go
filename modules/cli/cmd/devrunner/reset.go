@@ -22,8 +22,8 @@ var resetCmd = &cobra.Command{
 // resetConfigCmd represents the 'reset config' command
 var resetConfigCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Reset the base config files to their initial default state.",
-	Long:  "Reset the base config files to their initial default state. This will return all files in the ~/.astria/<instance>/config directory to their default state as though initially created.",
+	Short: "Reset the base config files to their initial state.",
+	Long:  "Reset the base config files to their initial state. This will return all files in the ~/.astria/<instance>/config directory to a state as though initially created.",
 	Run:   resetConfigCmdHandler,
 }
 
@@ -31,8 +31,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-	astriaDir := filepath.Join(homeDir, ".astria")
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -45,10 +44,13 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
+	rollupName := flagHandler.GetValue("rollup-name")
+	config.IsSequencerChainIdValidOrPanic(rollupName) // rollup names follow the same rules as sequencer chain IDs
+
 	localDenom := flagHandler.GetValue("local-native-denom")
 
 	localConfigDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
-	baseConfigPath := filepath.Join(localConfigDir, config.DefaultBaseConfigName)
+	baseConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 
 	log.Infof("Resetting config for instance '%s'", instance)
 
@@ -70,7 +72,7 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	config.RecreateCometbftAndSequencerGenesisData(localConfigDir, localNetworkName, localDenom)
-	config.CreateBaseConfig(baseConfigPath, instance)
+	config.CreateBaseConfig(baseConfigPath, instance, localNetworkName, rollupName, localDenom)
 
 	log.Infof("Successfully reset config files for instance '%s'", instance)
 }
@@ -78,8 +80,8 @@ func resetConfigCmdHandler(c *cobra.Command, _ []string) {
 // resetNetworksCmd represents the 'reset networks' command
 var resetNetworksCmd = &cobra.Command{
 	Use:   "networks",
-	Short: "Reset the networks config to its default values.",
-	Long:  "Reset the networks config to its default values. This command only resets the ~/.astria/<instance>/networks-config.toml file.",
+	Short: "Reset the networks config to its initial values.",
+	Long:  "Reset the networks config to its initial values. This command only resets the ~/.astria/<instance>/networks-config.toml file.",
 	Run:   resetNetworksCmdHandler,
 }
 
@@ -87,8 +89,7 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-	astriaDir := filepath.Join(homeDir, ".astria")
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -101,6 +102,9 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
+	rollupName := flagHandler.GetValue("rollup-name")
+	config.IsSequencerChainIdValidOrPanic(rollupName) // rollup names follow the same rules as sequencer chain IDs
+
 	localDenom := flagHandler.GetValue("local-native-denom")
 
 	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
@@ -110,8 +114,8 @@ func resetNetworksCmdHandler(c *cobra.Command, _ []string) {
 		fmt.Println("Error removing file:", err)
 		return
 	}
-	localBinPath := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
-	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
+	binPathPrefixWithTilde := filepath.Join("~", ".astria", instance, config.BinariesDirName)
+	config.CreateNetworksConfig(networksConfigPath, binPathPrefixWithTilde, localNetworkName, rollupName, localDenom)
 }
 
 // resetStateCmd represents the 'reset state' command
@@ -126,8 +130,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	flagHandler := cmd.CreateCliFlagHandler(c, cmd.EnvPrefix)
 
 	homeDir := cmd.GetUserHomeDirOrPanic()
-	astriaDir := filepath.Join(homeDir, ".astria")
-	tuiConfigPath := filepath.Join(astriaDir, config.DefaultTUIConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
 	tuiConfig := config.LoadTUIConfigOrPanic(tuiConfigPath)
 
 	instance := flagHandler.GetValue("instance")
@@ -138,7 +141,7 @@ func resetStateCmdHandler(c *cobra.Command, _ []string) {
 	}
 
 	instanceDir := filepath.Join(homeDir, ".astria", instance)
-	dataDir := filepath.Join(instanceDir, config.DataDirName)
+	dataDir := filepath.Join(homeDir, ".astria", instance, config.DataDirName)
 
 	log.Infof("Resetting state for instance '%s'", instance)
 
@@ -162,12 +165,14 @@ func init() {
 	resetCmd.AddCommand(resetConfigCmd)
 	rcfh := cmd.CreateCliFlagHandler(resetConfigCmd, cmd.EnvPrefix)
 	rcfh.BindStringFlag("local-network-name", config.DefaultLocalNetworkName, "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	rcfh.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	rcfh.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the native denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	rcfh.BindStringFlag("rollup-name", config.DefaultRollupName, "Set the rollup name for the local instance. This is used to set the 'astria_composer_rollups' in the base-config.toml file.")
 
 	resetCmd.AddCommand(resetNetworksCmd)
 	rnfh := cmd.CreateCliFlagHandler(resetNetworksCmd, cmd.EnvPrefix)
 	rnfh.BindStringFlag("local-network-name", config.DefaultLocalNetworkName, "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	rnfh.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	rnfh.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the native denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	rnfh.BindStringFlag("rollup-name", config.DefaultRollupName, "Set the rollup name for the local instance. This is used to set the 'astria_composer_rollups' in the base-config.toml file.")
 
 	resetCmd.AddCommand(resetStateCmd)
 }

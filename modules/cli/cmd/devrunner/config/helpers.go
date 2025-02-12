@@ -11,13 +11,16 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// IsInstanceNameValidOrPanic checks if the instance name is valid and panics if it's not.
+// IsInstanceNameValidOrPanic checks if the instance name is valid.
+//
+// Panics if the instance name is not valid.
 func IsInstanceNameValidOrPanic(instance string) {
 	re, err := regexp.Compile(`^[a-z]+[a-z0-9]*(-[a-z0-9]+)*$`)
 	if err != nil {
@@ -31,7 +34,9 @@ func IsInstanceNameValidOrPanic(instance string) {
 	}
 }
 
-// IsSequencerChainIdValidOrPanic checks if the instance name is valid and panics if it's not.
+// IsSequencerChainIdValidOrPanic checks if the instance name is valid.
+//
+// Panics if the instance name is not valid.
 func IsSequencerChainIdValidOrPanic(id string) {
 	if len(id) < 1 || len(id) > 50 {
 		log.Errorf("Invalid sequencer chain id length: %s", id)
@@ -95,9 +100,12 @@ var embeddedCometbftGenesisFile embed.FS
 var embeddedCometbftValidatorFile embed.FS
 
 // RecreateCometbftAndSequencerGenesisData creates a new CometBFT genesis.json
-// and priv_validator_key.json file at the specified path. It uses the local
-// network name and local default denomination to update the chain id and
-// default denom for the local sequencer network.
+// and priv_validator_key.json file at the specified path.
+//   - path: the path to the directory where the new files will be created.
+//   - localNetworkName: the name of the local sequencer network.
+//   - localNativeDenom: the native denomination for the local sequencer network.
+//
+// Panics if the files cannot be created.
 func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNativeDenom string) {
 	// read the content from the embedded file
 	genesisData, err := fs.ReadFile(embeddedCometbftGenesisFile, "genesis.json")
@@ -110,7 +118,7 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 	if err := json.Unmarshal(genesisData, &data); err != nil {
 		log.Fatalf("Error unmarshaling JSON: %s", err)
 	}
-	// update chain id and default denom and convert back to bytes
+	// update chain id and native denom and convert back to bytes
 	data["chain_id"] = localNetworkName
 	if appState, ok := data["app_state"].(map[string]interface{}); ok {
 		appState["native_asset_base_denomination"] = localNativeDenom
@@ -179,12 +187,12 @@ func RecreateCometbftAndSequencerGenesisData(path, localNetworkName, localNative
 }
 
 // InitCometbft initializes CometBFT for running a local sequencer.
-func InitCometbft(defaultDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
+func InitCometbft(baseDir string, dataDirName string, binDirName string, binVersion string, configDirName string) {
 	log.Info("Initializing CometBFT for running local sequencer:")
-	cometbftDataPath := filepath.Join(defaultDir, dataDirName, ".cometbft")
+	cometbftDataPath := filepath.Join(baseDir, dataDirName, ".cometbft")
 
 	// verify that cometbft was downloaded and extracted to the correct location
-	cometbftCmdPath := filepath.Join(defaultDir, binDirName, "cometbft-v"+binVersion)
+	cometbftCmdPath := filepath.Join(baseDir, binDirName, "cometbft-v"+binVersion)
 	if !util.PathExists(cometbftCmdPath) {
 		log.Error("Error: cometbft binary not found here", cometbftCmdPath)
 		log.Error("\tCannot continue with initialization.")
@@ -205,8 +213,8 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	}
 
 	// copy the initialized genesis.json to the .cometbft directory
-	initGenesisJsonPath := filepath.Join(defaultDir, configDirName, DefaultCometbftGenesisFilename)
-	endGenesisJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft", "config", DefaultCometbftGenesisFilename)
+	initGenesisJsonPath := filepath.Join(baseDir, configDirName, DefaultCometbftGenesisFilename)
+	endGenesisJsonPath := filepath.Join(baseDir, dataDirName, ".cometbft", "config", DefaultCometbftGenesisFilename)
 	err = util.CopyFile(initGenesisJsonPath, endGenesisJsonPath)
 	if err != nil {
 		log.WithError(err).Error("Error copying CometBFT genesis.json file")
@@ -215,8 +223,8 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	log.Info("Copied genesis.json to", endGenesisJsonPath)
 
 	// copy the initialized priv_validator_key.json to the .cometbft directory
-	initPrivValidatorJsonPath := filepath.Join(defaultDir, configDirName, DefaultCometbftValidatorFilename)
-	endPrivValidatorJsonPath := filepath.Join(defaultDir, dataDirName, ".cometbft", "config", DefaultCometbftValidatorFilename)
+	initPrivValidatorJsonPath := filepath.Join(baseDir, configDirName, DefaultCometbftValidatorFilename)
+	endPrivValidatorJsonPath := filepath.Join(baseDir, dataDirName, ".cometbft", "config", DefaultCometbftValidatorFilename)
 	err = util.CopyFile(initPrivValidatorJsonPath, endPrivValidatorJsonPath)
 	if err != nil {
 		log.WithError(err).Error("Error copying CometBFT priv_validator_key.json file")
@@ -225,11 +233,11 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	log.Info("Copied priv_validator_key.json to", endPrivValidatorJsonPath)
 
 	// update the cometbft config.toml file to have the proper block time
-	cometbftConfigPath := filepath.Join(defaultDir, dataDirName, ".cometbft/config/config.toml")
+	cometbftConfigPath := filepath.Join(baseDir, dataDirName, ".cometbft/config/config.toml")
 	oldValue := `timeout_commit = "1s"`
 	newValue := `timeout_commit = "2s"`
 
-	if err := replaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
+	if err := ReplaceInFile(cometbftConfigPath, oldValue, newValue); err != nil {
 		log.Error("Error updating the file:", cometbftConfigPath, ":", err)
 		return
 	} else {
@@ -237,9 +245,9 @@ func InitCometbft(defaultDir string, dataDirName string, binDirName string, binV
 	}
 }
 
-// replaceInFile replaces oldValue with newValue in the file at filename.
+// ReplaceInFile replaces oldValue with newValue in the file at filename.
 // it is used here to update the block time in the cometbft config.toml file.
-func replaceInFile(filename, oldValue, newValue string) error {
+func ReplaceInFile(filename, oldValue, newValue string) error {
 	// read the original file.
 	content, err := os.ReadFile(filename)
 	if err != nil {
@@ -328,6 +336,13 @@ func validateServiceLogLevelOrPanic(logLevel string) {
 
 // GetServiceLogLevelOverrides returns a slice of strings that can be used to
 // update the log level for the Astria services.
+//
+// The env var log levels that are returned are:
+//   - ASTRIA_SEQUENCER_LOG
+//   - ASTRIA_COMPOSER_LOG
+//   - ASTRIA_CONDUCTOR_LOG
+//
+// Panics if the service log level is not one of the following: debug, info, error.
 func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 	validateServiceLogLevelOrPanic(serviceLogLevel)
 	serviceLogLevelOverrides := []string{
@@ -336,4 +351,19 @@ func GetServiceLogLevelOverrides(serviceLogLevel string) []string {
 		"ASTRIA_CONDUCTOR_LOG=\"astria_conductor=" + serviceLogLevel + "\"",
 	}
 	return serviceLogLevelOverrides
+}
+
+// IsValidDenom checks if the input string is a valid denomination.
+//
+// A valid denomination is a string that contains only letters.
+//
+// Panics if the input string is not a valid denomination.
+func IsValidDenomOrPanic(denom string) {
+	denom = strings.ToLower(denom)
+
+	for _, r := range denom {
+		if !unicode.IsLetter(r) {
+			log.Panicf("Error validating denomination: %s, Denominations must contain only letters.", denom)
+		}
+	}
 }

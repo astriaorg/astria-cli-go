@@ -6,22 +6,33 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/astriaorg/astria-cli-go/modules/cli/cmd"
+	util "github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/utilities"
+
 	"github.com/pelletier/go-toml/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 // BaseConfig is a map of string key-value pairs that represent the base
-// configuration for all services in the Astria stack. The key-values pairs are
-// also parsed into environment variables for the services to consume. A map was
-// used here to allow for dynamically adding new configuration options to the
-// config toml file.
+// configuration for all services in the Astria stack.
+//
+// The key-values pairs are also parsed into environment variables for the
+// services to consume. For example:
+//
+//	astria_var = 'value'
+//
+// in the toml, becomes:
+//
+//	ASTRIA_VAR='value'
+//
+// as an env var.
+//
+// A map was used here to allow for dynamically adding new configuration options
+// to the config toml file.
 type BaseConfig map[string]string
 
-// DefaultBaseConfig returns a BaseConfig with default values.
-func DefaultBaseConfig(instanceName string) BaseConfig {
-	homeDir := cmd.GetUserHomeDirOrPanic()
+// NewBaseConfig creates a new BaseConfig.
+func NewBaseConfig(instanceName, seqNetworkName, rollupName, feeAsset string) BaseConfig {
 	return map[string]string{
 		// conductor
 		"astria_conductor_celestia_block_time_ms":        "1200",
@@ -40,12 +51,12 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_conductor_sequencer_requests_per_second": "500",
 		"astria_conductor_no_metrics":                    "true",
 		"astria_conductor_metrics_http_listener_addr":    "127.0.0.1:9000",
-		"astria_conductor_expected_sequencer_chain_id":   DefaultLocalNetworkName,
+		"astria_conductor_expected_sequencer_chain_id":   seqNetworkName,
 		"astria_conductor_expected_celestia_chain_id":    "",
 
 		// sequencer
 		"astria_sequencer_listen_addr":                 "127.0.0.1:26658",
-		"astria_sequencer_db_filepath":                 filepath.Join(homeDir, ".astria", instanceName, DataDirName, "astria_sequencer_db"),
+		"astria_sequencer_db_filepath":                 filepath.Join("~", ".astria", instanceName, DataDirName, "astria_sequencer_db"),
 		"astria_sequencer_mempool_parked_max_tx_count": "200",
 		"astria_sequencer_grpc_addr":                   "127.0.0.1:8080",
 		"astria_sequencer_log":                         "astria_sequencer=info",
@@ -63,9 +74,9 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_api_listen_addr":            "0.0.0.0:0",
 		"astria_composer_sequencer_abci_endpoint":    "http://127.0.0.1:26657",
 		"astria_composer_sequencer_grpc_endpoint":    "http://127.0.0.1:8080",
-		"astria_composer_sequencer_chain_id":         DefaultLocalNetworkName,
-		"astria_composer_rollups":                    "astriachain::ws://127.0.0.1:8546",
-		"astria_composer_private_key_file":           filepath.Join(homeDir, ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
+		"astria_composer_sequencer_chain_id":         seqNetworkName,
+		"astria_composer_rollups":                    rollupName + "::ws://127.0.0.1:8546",
+		"astria_composer_private_key_file":           filepath.Join("~", ".astria", instanceName, DefaultConfigDirName, "composer_dev_priv_key"),
 		"astria_composer_sequencer_address_prefix":   "astria",
 		"astria_composer_max_submit_interval_ms":     "2000",
 		"astria_composer_max_bytes_per_bundle":       "200000",
@@ -73,7 +84,7 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 		"astria_composer_no_metrics":                 "true",
 		"astria_composer_metrics_http_listener_addr": "127.0.0.1:9000",
 		"astria_composer_grpc_addr":                  "0.0.0.0:0",
-		"astria_composer_fee_asset":                  "ntia",
+		"astria_composer_fee_asset":                  feeAsset,
 
 		// ANSI
 		"no_color": "",
@@ -89,17 +100,19 @@ func DefaultBaseConfig(instanceName string) BaseConfig {
 }
 
 // CreateBaseConfig creates a base configuration file at
-// the given path, populating the file with the service defaults.
-// It will skip initialization if the file already exists. It will panic if the
-// file cannot be created or written to.
-func CreateBaseConfig(path, instance string) {
+// the given path, and populates the file.
+//
+// It will skip initialization if the file already exists.
+//
+// Panics if the file cannot be created or written to.
+func CreateBaseConfig(path, instance, sequencerNetworkName, rollupName, feeAsset string) {
 	_, err := os.Stat(path)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", path)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := DefaultBaseConfig(instance)
+	config := NewBaseConfig(instance, sequencerNetworkName, rollupName, feeAsset)
 
 	// open a file for writing
 	file, err := os.Create(path)
@@ -115,8 +128,9 @@ func CreateBaseConfig(path, instance string) {
 	log.Infof("New network config file created successfully: %s\n", path)
 }
 
-// LoadBaseConfigOrPanic loads the BaseConfig from the given path. If the file
-// cannot be loaded or parsed, the function will panic.
+// LoadBaseConfigOrPanic loads the BaseConfig from the given path.
+//
+// Panics if the file cannot be loaded or parsed.
 func LoadBaseConfigOrPanic(path string) BaseConfig {
 	viper.SetConfigFile(path)
 
@@ -132,10 +146,15 @@ func LoadBaseConfigOrPanic(path string) BaseConfig {
 		panic(err)
 	}
 
+	for key, value := range config {
+		config[key] = util.ShellExpand(value)
+	}
+
 	return config
 }
 
 // ToSlice creates a []string of "key=value" pairs out of a BaseConfig.
+//
 // The variable name will become the env var key and that variable's value will
 // be the value.
 func (b BaseConfig) ToSlice() []string {

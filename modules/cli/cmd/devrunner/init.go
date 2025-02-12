@@ -30,7 +30,8 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(initCmd, cmd.EnvPrefix)
 	flagHandler.BindStringFlag("local-network-name", config.DefaultLocalNetworkName, "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	flagHandler.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	flagHandler.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the native denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	flagHandler.BindStringFlag("rollup-name", config.DefaultRollupName, "Set the rollup name for the local instance. This is used to set the 'astria_composer_rollups' in the base-config.toml file.")
 }
 
 func runInitialization(c *cobra.Command, _ []string) {
@@ -42,41 +43,42 @@ func runInitialization(c *cobra.Command, _ []string) {
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
 
+	rollupName := flagHandler.GetValue("rollup-name")
+	config.IsSequencerChainIdValidOrPanic(rollupName)
+
 	localDenom := flagHandler.GetValue("local-native-denom")
 
-	homeDir := cmd.GetUserHomeDirOrPanic()
 	// TODO: make the default home dir configurable
-	defaultDir := filepath.Join(homeDir, ".astria")
-	instanceDir := filepath.Join(defaultDir, instance)
+	homeDir := cmd.GetUserHomeDirOrPanic()
+	instanceDir := filepath.Join(homeDir, ".astria", instance)
+
+	// paths must be absolute
+	logsDir := filepath.Join(homeDir, ".astria", instance, config.LogsDirName)
+	localBinDir := filepath.Join(homeDir, ".astria", instance, config.BinariesDirName)
+	networksConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultNetworksConfigName)
+	tuiConfigPath := filepath.Join(homeDir, ".astria", config.DefaultTUIConfigName)
+	configDir := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName)
+	baseConfigPath := filepath.Join(homeDir, ".astria", instance, config.DefaultConfigDirName, config.DefaultBaseConfigName)
 
 	log.Info("Creating new instance in:", instanceDir)
 	cmd.CreateDirOrPanic(instanceDir)
+	cmd.CreateDirOrPanic(configDir)
 
-	// create a directory for all log files
-	logsDir := filepath.Join(instanceDir, config.LogsDirName)
+	log.Info("Binary files for locally running a services placed in: ", localBinDir)
+	cmd.CreateDirOrPanic(localBinDir)
 	cmd.CreateDirOrPanic(logsDir)
 
-	// create the local bin directory for downloaded binaries
-	localBinPath := filepath.Join(instanceDir, config.BinariesDirName)
-	log.Info("Binary files for locally running a sequencer placed in: ", localBinPath)
-	cmd.CreateDirOrPanic(localBinPath)
-
-	networksConfigPath := filepath.Join(defaultDir, instance, config.DefaultNetworksConfigName)
-	config.CreateNetworksConfig(localBinPath, networksConfigPath, localNetworkName, localDenom)
+	binPathPrefixWithTilde := filepath.Join("~", ".astria", instance, config.BinariesDirName)
+	config.CreateNetworksConfig(networksConfigPath, binPathPrefixWithTilde, localNetworkName, rollupName, localDenom)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
-	tuiConfigBath := filepath.Join(defaultDir, config.DefaultTUIConfigName)
-	config.CreateTUIConfig(tuiConfigBath)
+	config.CreateTUIConfig(tuiConfigPath)
 
-	configDirPath := filepath.Join(instanceDir, config.DefaultConfigDirName)
-	cmd.CreateDirOrPanic(configDirPath)
+	config.CreateBaseConfig(baseConfigPath, instance, localNetworkName, rollupName, localDenom)
 
-	baseConfigPath := filepath.Join(configDirPath, config.DefaultBaseConfigName)
-	config.CreateBaseConfig(baseConfigPath, instance)
+	config.CreateComposerDevPrivKeyFile(configDir)
 
-	config.CreateComposerDevPrivKeyFile(configDirPath)
-
-	config.RecreateCometbftAndSequencerGenesisData(configDirPath, localNetworkName, localDenom)
+	config.RecreateCometbftAndSequencerGenesisData(configDir, localNetworkName, localDenom)
 
 	// download and unpack all services for all networks
 	for label := range networkConfigs.Configs {
@@ -84,12 +86,12 @@ func runInitialization(c *cobra.Command, _ []string) {
 		resetANSI := "\033[0m"
 		log.Info(fmt.Sprint("--Downloading binaries for network: ", purpleANSI, label, resetANSI))
 		for _, bin := range networkConfigs.Configs[label].Services {
-			downloadAndUnpack(bin.DownloadURL, bin.Version, bin.Name, localBinPath)
+			downloadAndUnpack(bin.DownloadURL, bin.Version, bin.Name, localBinDir)
 		}
 	}
 
 	// create the data directory for cometbft and sequencer
-	dataPath := filepath.Join(instanceDir, config.DataDirName)
+	dataPath := filepath.Join(homeDir, ".astria", instance, config.DataDirName)
 	cmd.CreateDirOrPanic(dataPath)
 	config.InitCometbft(instanceDir, config.DataDirName, config.BinariesDirName, config.MainnetCometbftVersion, config.DefaultConfigDirName)
 
@@ -163,6 +165,11 @@ func extractTarGz(dest string, version string, gzipStream io.Reader) error {
 	}
 }
 
+// downloadAndUnpack downloads a file from the specified URL, extracts it, and
+// places it in the given path.
+//
+// Panics if the download, extraction, deletion of the .tar.gz, or placement of
+// the file fails.
 func downloadAndUnpack(url, version, packageName, placePath string) {
 	if url == "" {
 		log.Infof("No source URL provided for %s. Skipping download.\n", packageName)
