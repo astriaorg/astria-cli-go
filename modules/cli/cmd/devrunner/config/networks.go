@@ -55,7 +55,7 @@ type NetworkConfig struct {
 	SequencerGRPC    string                   `mapstructure:"sequencer_grpc" toml:"sequencer_grpc"`
 	SequencerRPC     string                   `mapstructure:"sequencer_rpc" toml:"sequencer_rpc"`
 	RollupName       string                   `mapstructure:"rollup_name" toml:"rollup_name"`
-	NativeDenom      string                   `mapstructure:"default_denom" toml:"default_denom"`
+	NativeDenom      string                   `mapstructure:"native_denom" toml:"native_denom"`
 	Services         map[string]ServiceConfig `mapstructure:"services" toml:"services"`
 }
 
@@ -74,44 +74,43 @@ func (n NetworkConfig) Expand() NetworkConfig {
 	return n
 }
 
-// DefaultNetworksConfigs returns a NetworksConfig struct populated with all
-// network defaults.
-func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
+// NewNetworksConfigs returns a new NetworkConfigs struct.
+func NewNetworksConfigs(binDir, sequencerNetworkName, rollupName, nativeDenom string) NetworkConfigs {
 	return NetworkConfigs{
 		Configs: map[string]NetworkConfig{
 			"local": {
-				SequencerChainId: "sequencer-test-chain-0",
+				SequencerChainId: sequencerNetworkName,
 				SequencerGRPC:    "http://127.0.0.1:8080",
 				SequencerRPC:     "http://127.0.0.1:26657",
-				RollupName:       "astria-test-chain-1",
-				NativeDenom:      DefaultLocalNativeDenom,
+				RollupName:       rollupName,
+				NativeDenom:      nativeDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
 						Version:     "v" + MainnetAstriaConductorVersion,
 						DownloadURL: ServiceUrls.AstriaConductorReleaseUrl(MainnetAstriaConductorVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+MainnetAstriaConductorVersion),
+						LocalPath:   filepath.Join(binDir, "astria-conductor-v"+MainnetAstriaConductorVersion),
 						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + MainnetAstriaComposerVersion,
 						DownloadURL: ServiceUrls.AstriaComposerReleaseUrl(MainnetAstriaComposerVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+MainnetAstriaComposerVersion),
+						LocalPath:   filepath.Join(binDir, "astria-composer-v"+MainnetAstriaComposerVersion),
 						Args:        nil,
 					},
 					"sequencer": {
 						Name:        "astria-sequencer",
 						Version:     "v" + MainnetAstriaSequencerVersion,
 						DownloadURL: ServiceUrls.AstriaSequencerReleaseUrl(MainnetAstriaSequencerVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-sequencer-v"+MainnetAstriaSequencerVersion),
+						LocalPath:   filepath.Join(binDir, "astria-sequencer-v"+MainnetAstriaSequencerVersion),
 						Args:        nil,
 					},
 					"cometbft": {
 						Name:        "cometbft",
 						Version:     "v" + MainnetCometbftVersion,
 						DownloadURL: ServiceUrls.CometBftReleaseUrl(MainnetCometbftVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "cometbft-v"+MainnetCometbftVersion),
+						LocalPath:   filepath.Join(binDir, "cometbft-v"+MainnetCometbftVersion),
 						Args:        nil,
 					},
 				},
@@ -120,21 +119,21 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "astria-dusk-" + cmd.DefaultDuskNum,
 				SequencerGRPC:    "https://grpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dusk-" + cmd.DefaultDuskNum + ".devnet.astria.org/",
-				RollupName:       "",
-				NativeDenom:      DefaultLocalNativeDenom,
+				RollupName:       rollupName,
+				NativeDenom:      nativeDenom,
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
 						Version:     "v" + DevnetConductorVersion,
 						DownloadURL: ServiceUrls.AstriaConductorReleaseUrl(DevnetConductorVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+DevnetConductorVersion),
+						LocalPath:   filepath.Join(binDir, "astria-conductor-v"+DevnetConductorVersion),
 						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + DevnetComposerVersion,
 						DownloadURL: ServiceUrls.AstriaComposerReleaseUrl(DevnetComposerVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+DevnetComposerVersion),
+						LocalPath:   filepath.Join(binDir, "astria-composer-v"+DevnetComposerVersion),
 						Args:        nil,
 					},
 				},
@@ -143,21 +142,21 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "dawn-" + cmd.DefaultDawnNum,
 				SequencerGRPC:    "https://grpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.dawn-" + cmd.DefaultDawnNum + ".astria.org/",
-				RollupName:       "",
+				RollupName:       rollupName,
 				NativeDenom:      "ibc/channel-0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
 						Version:     "v" + TestnetConductorVersion,
 						DownloadURL: ServiceUrls.AstriaConductorReleaseUrl(TestnetConductorVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+TestnetConductorVersion),
+						LocalPath:   filepath.Join(binDir, "astria-conductor-v"+TestnetConductorVersion),
 						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + TestnetComposerVersion,
 						DownloadURL: ServiceUrls.AstriaComposerReleaseUrl(TestnetComposerVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+TestnetComposerVersion),
+						LocalPath:   filepath.Join(binDir, "astria-composer-v"+TestnetComposerVersion),
 						Args:        nil,
 					},
 				},
@@ -166,21 +165,21 @@ func DefaultNetworksConfigs(defaultBinDir string) NetworkConfigs {
 				SequencerChainId: "astria",
 				SequencerGRPC:    "https://grpc.sequencer.astria.org/",
 				SequencerRPC:     "https://rpc.sequencer.astria.org/",
-				RollupName:       "",
+				RollupName:       rollupName,
 				NativeDenom:      "ibc/channel-0/utia",
 				Services: map[string]ServiceConfig{
 					"conductor": {
 						Name:        "astria-conductor",
 						Version:     "v" + MainnetAstriaConductorVersion,
 						DownloadURL: ServiceUrls.AstriaConductorReleaseUrl(MainnetAstriaConductorVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-conductor-v"+MainnetAstriaConductorVersion),
+						LocalPath:   filepath.Join(binDir, "astria-conductor-v"+MainnetAstriaConductorVersion),
 						Args:        nil,
 					},
 					"composer": {
 						Name:        "astria-composer",
 						Version:     "v" + MainnetAstriaComposerVersion,
 						DownloadURL: ServiceUrls.AstriaComposerReleaseUrl(MainnetAstriaComposerVersion),
-						LocalPath:   filepath.Join(defaultBinDir, "astria-composer-v"+MainnetAstriaComposerVersion),
+						LocalPath:   filepath.Join(binDir, "astria-composer-v"+MainnetAstriaComposerVersion),
 						Args:        nil,
 					},
 				},
@@ -212,32 +211,28 @@ func LoadNetworkConfigsOrPanic(path string) NetworkConfigs {
 	return config
 }
 
-// CreateNetworksConfig creates a networks configuration file and populates it
-// with the network defaults.
+// CreateNetworksConfig creates and populates a networks configuration file.
 //   - configPath: the path to the networks configuration file
 //   - binPath: the path to the binaries directory within a given instance
 //   - localSequencerChainId: the chain id for the local sequencer
+//   - rollupName: the name of the rollup
 //   - localNativeDenom: the native denom for the local sequencer
 //
 // Note: The configPath and binPath should be part of the same instance.
 //
-// This function will also override the default local denom and local
-// sequencer network chain id based on the command line flags provided. It will
-// skip initialization if the file already exists.
+// This function will set the native denom and local sequencer network chain id
+// based on the command line flags provided. It will skip initialization if the
+// file already exists.
 //
 // Panic if the file cannot be created or written to.
-func CreateNetworksConfig(configPath, binPath, localSequencerChainId, localNativeDenom string) {
+func CreateNetworksConfig(configPath, binPath, localSequencerChainId, rollupName, localNativeDenom string) {
 	_, err := os.Stat(configPath)
 	if err == nil {
 		log.Infof("%s already exists. Skipping initialization.\n", configPath)
 		return
 	}
 	// create an instance of the Config struct with some data
-	config := DefaultNetworksConfigs(binPath)
-	local := config.Configs["local"]
-	local.NativeDenom = localNativeDenom
-	local.SequencerChainId = localSequencerChainId
-	config.Configs["local"] = local
+	config := NewNetworksConfigs(binPath, localSequencerChainId, rollupName, localNativeDenom)
 
 	// open a file for writing
 	file, err := os.Create(configPath)
@@ -255,8 +250,8 @@ func CreateNetworksConfig(configPath, binPath, localSequencerChainId, localNativ
 
 // GetEndpointOverrides returns a slice of environment variables for supporting
 // the ability to run against different Sequencer networks. It enables a way to
-// dynamically configure endpoints for Conductor and Composer to override
-// the default environment variables for the network configuration. It uses the
+// dynamically configure endpoints for Conductor and Composer and will override
+// the environment variables derived from the network configuration. It uses the
 // BaseConfig to properly update the ASTRIA_COMPOSER_ROLLUPS env var.
 //
 // The overrides this function returns are:

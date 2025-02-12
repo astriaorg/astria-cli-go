@@ -3,6 +3,7 @@ package utilities
 import (
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -78,4 +79,20 @@ func ShellExpand(value string) string {
 		expanded = homeDir + expanded[1:]
 	}
 	return expanded
+}
+
+// IsValidPort checks if the given port is a valid port number.
+//
+// Panics if the port is not a valid port number or the correct length.
+func IsValidPortOrPanic(port string) {
+	// Convert string to integer
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		log.Panicf("Error converting port to integer: %v", err)
+	}
+
+	// Valid ports are between 1 and 65535
+	if !(portNum > 0 && portNum < 65536) {
+		log.Panicf("Invalid port number: out of range: %v", portNum)
+	}
 }

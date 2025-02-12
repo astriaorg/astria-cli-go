@@ -30,7 +30,8 @@ func init() {
 
 	flagHandler := cmd.CreateCliFlagHandler(initCmd, cmd.EnvPrefix)
 	flagHandler.BindStringFlag("local-network-name", config.DefaultLocalNetworkName, "Set the local network name for the instance. This is used to set the chain ID in the CometBFT genesis.json file.")
-	flagHandler.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the default denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	flagHandler.BindStringFlag("local-native-denom", config.DefaultLocalNativeDenom, "Set the native denom for the local instance. This is used to set the 'native_asset_base_denomination' and 'allowed_fee_assets' in the CometBFT genesis.json file.")
+	flagHandler.BindStringFlag("rollup-name", config.DefaultRollupName, "Set the rollup name for the local instance. This is used to set the 'astria_composer_rollups' in the base-config.toml file.")
 }
 
 func runInitialization(c *cobra.Command, _ []string) {
@@ -41,6 +42,9 @@ func runInitialization(c *cobra.Command, _ []string) {
 
 	localNetworkName := flagHandler.GetValue("local-network-name")
 	config.IsSequencerChainIdValidOrPanic(localNetworkName)
+
+	rollupName := flagHandler.GetValue("rollup-name")
+	config.IsSequencerChainIdValidOrPanic(rollupName)
 
 	localDenom := flagHandler.GetValue("local-native-denom")
 
@@ -65,12 +69,12 @@ func runInitialization(c *cobra.Command, _ []string) {
 	cmd.CreateDirOrPanic(logsDir)
 
 	genericBinariesDir := filepath.Join("~", ".astria", instance, config.BinariesDirName)
-	config.CreateNetworksConfig(networksConfigPath, genericBinariesDir, localNetworkName, localDenom)
+	config.CreateNetworksConfig(networksConfigPath, genericBinariesDir, localNetworkName, rollupName, localDenom)
 	networkConfigs := config.LoadNetworkConfigsOrPanic(networksConfigPath)
 
 	config.CreateTUIConfig(tuiConfigPath)
 
-	config.CreateBaseConfig(baseConfigPath, instance)
+	config.CreateBaseConfig(baseConfigPath, instance, localNetworkName, rollupName, localDenom)
 
 	config.CreateComposerDevPrivKeyFile(configDir)
 
