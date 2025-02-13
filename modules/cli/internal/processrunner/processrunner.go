@@ -26,6 +26,7 @@ type ProcessRunner interface {
 	GetStartMinimized() bool
 	GetHighlightColor() string
 	GetBorderColor() string
+	GetMaxUiLogLines() int
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -60,6 +61,7 @@ type NewProcessRunnerOpts struct {
 	StartMinimized bool
 	HighlightColor string
 	BorderColor    string
+	MaxUiLogLines  int
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -271,4 +273,8 @@ func (pr *processRunner) GetHighlightColor() string {
 
 func (pr *processRunner) GetBorderColor() string {
 	return pr.opts.BorderColor
+}
+
+func (pr *processRunner) GetMaxUiLogLines() int {
+	return pr.opts.MaxUiLogLines
 }

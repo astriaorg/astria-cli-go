@@ -80,3 +80,7 @@ func (m *MockProcessRunner) GetHighlightColor() string {
 func (m *MockProcessRunner) GetBorderColor() string {
 	return "gray"
 }
+
+func (m *MockProcessRunner) GetMaxUiLogLines() int {
+	return 1000
+}

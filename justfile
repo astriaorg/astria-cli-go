@@ -82,9 +82,10 @@ fix-md:
     markdownlint-cli2 "**/*.md" "#bin" "#.github" --fix
 
 defaultargs := ''
-# run the cli with --log-level=debug
+# build and run the cli with --log-level=debug. The process will be named astria-go-dev.
 run *args=defaultargs:
-    cd modules/cli && go run main.go {{args}} --log-level=debug
+    cd modules/cli && go build -o ../../bin/astria-go-dev && ../../bin/astria-go-dev {{args}} --log-level=debug
+
 alias r := run
 
 run-race args=defaultargs:

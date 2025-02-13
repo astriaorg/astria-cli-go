@@ -34,6 +34,9 @@ type TUIConfig struct {
 	// Accessibility settings
 	HighlightColor string `mapstructure:"highlight_color" toml:"highlight_color"`
 	BorderColor    string `mapstructure:"border_color" toml:"border_color"`
+
+	// Max number of lines to display in the TUI log viewer for all services
+	MaxUiLogLines int `mapstructure:"max_ui_log_lines" toml:"max_ui_log_lines"`
 }
 
 // DefaultTUIConfig returns a default TUIConfig struct.
@@ -51,6 +54,7 @@ func DefaultTUIConfig() TUIConfig {
 		GenericStartPosition:     "after",
 		HighlightColor:           DefaultHighlightColor,
 		BorderColor:              DefaultBorderColor,
+		MaxUiLogLines:            DefaultMaxUiLogLines,
 	}
 }
 
@@ -68,7 +72,8 @@ func (c TUIConfig) String() string {
 	output += fmt.Sprintf("GenericStartsMinimized: %v", c.GenericStartsMinimized)
 	output += fmt.Sprintf("GenericStartPosition: %v", c.GenericStartPosition)
 	output += fmt.Sprintf("HighlightColor: %s, ", c.HighlightColor)
-	output += fmt.Sprintf("BorderColor: %s", c.BorderColor)
+	output += fmt.Sprintf("BorderColor: %s, ", c.BorderColor)
+	output += fmt.Sprintf("MaxUiLogLines: %d", c.MaxUiLogLines)
 	output += "}"
 	return output
 }

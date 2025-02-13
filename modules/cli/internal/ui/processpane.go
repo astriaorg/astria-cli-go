@@ -33,6 +33,7 @@ func NewProcessPane(tApp *tview.Application, pr processrunner.ProcessRunner) *Pr
 	tv := tview.NewTextView().
 		SetDynamicColors(true).
 		SetScrollable(true).
+		SetMaxLines(pr.GetMaxUiLogLines()).
 		SetChangedFunc(func() {
 			tApp.Draw()
 		})

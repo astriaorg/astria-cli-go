@@ -134,6 +134,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				StartMinimized: tuiConfig.SequencerStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
 				BorderColor:    tuiConfig.BorderColor,
+				MaxUiLogLines:  tuiConfig.MaxUiLogLines,
 			}
 			seqRunner = processrunner.NewProcessRunner(ctx, seqOpts)
 		case "composer":
@@ -158,6 +159,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				StartMinimized: tuiConfig.ComposerStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
 				BorderColor:    tuiConfig.BorderColor,
+				MaxUiLogLines:  tuiConfig.MaxUiLogLines,
 			}
 			compRunner = processrunner.NewProcessRunner(ctx, composerOpts)
 		case "conductor":
@@ -174,6 +176,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				StartMinimized: tuiConfig.ConductorStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
 				BorderColor:    tuiConfig.BorderColor,
+				MaxUiLogLines:  tuiConfig.MaxUiLogLines,
 			}
 			condRunner = processrunner.NewProcessRunner(ctx, conductorOpts)
 		case "cometbft":
@@ -201,6 +204,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				StartMinimized: tuiConfig.CometBFTStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
 				BorderColor:    tuiConfig.BorderColor,
+				MaxUiLogLines:  tuiConfig.MaxUiLogLines,
 			}
 			cometRunner = processrunner.NewProcessRunner(ctx, cometOpts)
 		default:
@@ -216,6 +220,7 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 				StartMinimized: tuiConfig.GenericStartsMinimized,
 				HighlightColor: tuiConfig.HighlightColor,
 				BorderColor:    tuiConfig.BorderColor,
+				MaxUiLogLines:  tuiConfig.MaxUiLogLines,
 			}
 			genericRunner := processrunner.NewProcessRunner(ctx, genericOpts)
 			genericRunners = append(genericRunners, genericRunner)
