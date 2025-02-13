@@ -323,16 +323,11 @@ func init() {
 
 	setConfigCmd.AddCommand(setNativeAssetCmd)
 	snafh := cmd.CreateCliFlagHandler(setNativeAssetCmd, cmd.EnvPrefix)
-	snafh.BindStringFlag("nativeasset", config.DefaultLocalNativeDenom, "Set the native asset for the sequencer across all config for the instance.")
 	snafh.BindStringFlag("network", "local", "Specify the network that the native asset is being updated for.")
 
 	setConfigCmd.AddCommand(setFeeAssetCmd)
-	sfafh := cmd.CreateCliFlagHandler(setFeeAssetCmd, cmd.EnvPrefix)
-	sfafh.BindStringFlag("feeasset", config.DefaultLocalNativeDenom, "Set the sequencer fee asset across all config for the instance.")
 
 	setConfigCmd.AddCommand(setSequencerChainIdCmd)
 	sscifh := cmd.CreateCliFlagHandler(setSequencerChainIdCmd, cmd.EnvPrefix)
-	sscifh.BindStringFlag("sequencer-chain-id", config.DefaultLocalNetworkName, "Set the sequencer chain id across all config for the instance.")
 	sscifh.BindStringFlag("network", "local", "Specify the network that the sequencer chain id is being updated for.")
-
 }
