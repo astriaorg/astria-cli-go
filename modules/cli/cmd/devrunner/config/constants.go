@@ -17,6 +17,7 @@ const (
 	DefaultTUIConfigName             = "tui-config.toml"
 	DefaultHighlightColor            = "blue"
 	DefaultBorderColor               = "gray"
+	DefaultMaxUiLogLines             = 1000
 	DefaultRollupPort                = "8546"
 
 	// NOTE - do not include the 'v' at the beginning of the version number
