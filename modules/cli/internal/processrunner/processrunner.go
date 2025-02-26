@@ -237,6 +237,7 @@ func (pr *processRunner) GetOutputAndClearBuf() string {
 func (pr *processRunner) GetInfo() string {
 	output := ""
 	output += " " + pr.GetTitle() + " binary path: " + pr.opts.BinPath + "\n"
+	output += "\tCurrent regex filter: " + pr.opts.LogFilter + "\n"
 	return output
 }
 
