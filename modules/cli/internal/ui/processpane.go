@@ -82,7 +82,7 @@ func (pp *ProcessPane) StartScan() {
 			filter = config.DefaultLogFilter
 		}
 
-		re := regexp.MustCompile(pp.pr.GetLogFilter())
+		re := regexp.MustCompile(filter)
 
 		for range ticker.C {
 			currentOutput := pp.pr.GetOutputAndClearBuf() // get the current full output

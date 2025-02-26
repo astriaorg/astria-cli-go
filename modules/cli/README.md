@@ -22,7 +22,7 @@ See all releases [here](https://github.com/astriaorg/astria-cli-go/releases).
 
    ```bash
    # For macOS silicon (arm64)
-   export RELEASE_URL="https://github.com/astriaorg/astria-cli-go/releases/download/v0.12.0/astria-go-v0.12.0-darwin-arm64.tar.gz"
+   export RELEASE_URL="https://github.com/astriaorg/astria-cli-go/releases/download/v0.16.1/astria-go-v0.16.1-darwin-arm64.tar.gz"
    curl -L $RELEASE_URL --output astria-go.tar.gz
    ```
 
@@ -91,9 +91,7 @@ Steps:
 3. Verify the build:
 
    ```bash
-   just run "version"
-   # or
-   go run main.go version
+   just run version
    ```
 
 ## Running the Astria Sequencer
@@ -201,6 +199,31 @@ The CLI uses the following configuration files:
 Once `astria-go dev init` has been run, edit `~/.astria/tui-config.toml` to
 control the starting settings of the TUI app.
 
+The TUI config controls the visuals and settings of the tui when using the `dev
+run` command.
+
+#### Log Settings
+
+Control if the logs will auto scroll, wrap lines, are displayed borderlessly,
+set max lines stored in the ui, as well as regex filters for what lines are
+shown in the ui for all services.
+
+```toml
+auto_scroll = true
+wrap_lines = false
+borderless = false
+...
+max_ui_log_lines = 1000
+cometbft_log_filter = '.*'
+conductor_log_filter = '.*'
+composer_log_filter = '.*'
+sequencer_log_filter = '.*'
+generic_service_log_filter = '.*'
+```
+
+Control which service log windows are minimized or maximized, accessibility
+colors for highlighting and TUI window boarders.
+
 The `highlight_color` and `border_color` accept both [W3C named
 colors](https://www.w3schools.com/tags/ref_colornames.asp) and hexadecimal
 notation:
@@ -208,6 +231,28 @@ notation:
 ```toml
 highlight_color = "deepskyblue" # names should be all lowercase with no spaces
 border_color = "#808080"
+```
+
+```toml
+...
+cometbft_starts_minimized = false
+conductor_starts_minimized = false
+composer_starts_minimized = false
+sequencer_starts_minimized = false
+generic_starts_minimized = true
+generic_start_position = 'after'
+highlight_color = 'blue'
+border_color = 'gray'
+...
+```
+
+Set a default instance to use to allow shorter run commands when doing local
+development.
+
+```toml
+...
+override_instance_name = 'default'
+...
 ```
 
 ### Set Service Environment Variables
@@ -230,11 +275,11 @@ and `local_path` in the `networks-config.toml`. For example, to roll back
 Composer:
 
 ```toml
-[networks.local.services.composer]
+[networks.dawn.services.composer]
 name = 'astria-composer'
-version = 'v0.7.0'
-download_url = 'https://github.com/astriaorg/astria/releases/download/composer-v0.7.0/astria-composer-aarch64-apple-darwin.tar.gz'
-local_path = '<your home directory>/.astria/default/bin/astria-composer-v0.7.0'
+version = 'v1.0.0-rc.2'
+download_url = 'https://github.com/astriaorg/astria/releases/download/composer-v1.0.0-rc.2/astria-composer-aarch64-apple-darwin.tar.gz'
+local_path = '~/.astria/default/bin/astria-composer-v1.0.0-rc.2'
 args = []
 ```
 
@@ -275,7 +320,7 @@ Add a service from a release:
 name = 'your_service'
 version = 'v0.0.0'
 download_url = 'download url to the release'
-local_path = '<your home directory>/.astria/default/bin/<your_service_name-version>'
+local_path = '~.astria/default/bin/<your_service_name-version>'
 args = ['your', 'service', 'args']
 ```
 
@@ -294,16 +339,16 @@ native_denom = 'ntia'
 [networks.sequencer_only.services]
 [networks.sequencer_only.services.cometbft]
 name = 'cometbft'
-version = 'v0.38.8'
-download_url = 'https://github.com/cometbft/cometbft/releases/download/v0.38.8/cometbft_0.38.8_darwin_arm64.tar.gz'
-local_path = '<your home directory>/.astria/default/bin/cometbft-v0.38.8'
+version = 'v0.38.11'
+download_url = 'https://github.com/cometbft/cometbft/releases/download/v0.38.11/cometbft_0.38.11_darwin_arm64.tar.gz'
+local_path = '~/.astria/default/bin/cometbft-v0.38.11'
 args = []
 
 [networks.sequencer_only.services.sequencer]
 name = 'astria-sequencer'
-version = 'v0.15.0'
-download_url = 'https://github.com/astriaorg/astria/releases/download/sequencer-v0.15.0/astria-sequencer-aarch64-apple-darwin.tar.gz'
-local_path = '<your home directory>/.astria/default/bin/astria-sequencer-v0.15.0'
+version = 'v1.0.0'
+download_url = 'https://github.com/astriaorg/astria/releases/download/sequencer-v1.0.0/astria-sequencer-aarch64-apple-darwin.tar.gz'
+local_path = '~/.astria/default/bin/astria-sequencer-v1.0.0'
 args = []
 ```
 
