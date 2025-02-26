@@ -27,6 +27,7 @@ type ProcessRunner interface {
 	GetHighlightColor() string
 	GetBorderColor() string
 	GetMaxUiLogLines() int
+	GetLogFilter() string
 }
 
 // ProcessRunner is a struct that represents a process to be run.
@@ -62,6 +63,7 @@ type NewProcessRunnerOpts struct {
 	HighlightColor string
 	BorderColor    string
 	MaxUiLogLines  int
+	LogFilter      string
 }
 
 // NewProcessRunner creates a new ProcessRunner.
@@ -277,4 +279,8 @@ func (pr *processRunner) GetBorderColor() string {
 
 func (pr *processRunner) GetMaxUiLogLines() int {
 	return pr.opts.MaxUiLogLines
+}
+
+func (pr *processRunner) GetLogFilter() string {
+	return pr.opts.LogFilter
 }

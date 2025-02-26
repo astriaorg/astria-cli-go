@@ -2,10 +2,12 @@ package ui
 
 import (
 	"io"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/config"
 	"github.com/astriaorg/astria-cli-go/modules/cli/internal/processrunner"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -74,24 +76,51 @@ func (pp *ProcessPane) StartScan() {
 		ticker := time.NewTicker(pp.TickerInterval * time.Millisecond) // adjust the duration as needed
 		defer ticker.Stop()
 
+		filter := pp.pr.GetLogFilter()
+		if filter == "" {
+			log.Warnf("No log filter found, using default: \"%s\"", config.DefaultLogFilter)
+			filter = config.DefaultLogFilter
+		}
+
+		re := regexp.MustCompile(pp.pr.GetLogFilter())
+
 		for range ticker.C {
 			currentOutput := pp.pr.GetOutputAndClearBuf() // get the current full output
+
+			// get individual lines from the output
+			currentOutputLines := strings.Split(currentOutput, "\n")
+			var keptLines []string
+			// filter out lines that don't match the include filter
+			for _, line := range currentOutputLines {
+				if re.MatchString(line) {
+					keptLines = append(keptLines, line)
+				}
+			}
+
+			var builder strings.Builder
+			for i, s := range keptLines {
+				builder.WriteString(s)
+				if i < len(keptLines)-1 {
+					builder.WriteString("\n")
+				}
+			}
+			result := builder.String()
 
 			// new, unprocessed data.
 			pp.tApp.QueueUpdateDraw(func() {
 				// write output data to logs if possible
 				if pp.pr.CanWriteToLog() {
-					err := pp.pr.WriteToLog(currentOutput)
+					err := pp.pr.WriteToLog(result)
 					if err != nil {
 						log.WithError(err).Error("Error writing to log")
 					}
 				}
 				// write output data to ui element
-				_, err := pp.ansiWriter.Write([]byte(currentOutput))
+				_, err := pp.ansiWriter.Write([]byte(result))
 				if err != nil {
 					log.WithError(err).Error("Error writing to textView")
 				}
-				atomic.AddInt64(&pp.lineCount, int64(strings.Count(currentOutput, "\n")))
+				atomic.AddInt64(&pp.lineCount, int64(strings.Count(result, "\n")))
 			})
 		}
 	}()
