@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/astriaorg/astria-cli-go/modules/cli/cmd/devrunner/config"
@@ -38,6 +41,7 @@ func init() {
 	flagHandler.BindStringFlag("composer-path", "", "Provide an override path to a specific composer binary.")
 	flagHandler.BindStringFlag("sequencer-path", "", "Provide an override path to a specific sequencer binary.")
 	flagHandler.BindBoolFlag("export-logs", false, "Export logs to files.")
+	flagHandler.BindBoolFlag("headless", false, "Run services without TUI (headless mode).")
 }
 
 func runCmdHandler(c *cobra.Command, _ []string) {
@@ -244,12 +248,34 @@ func runCmdHandler(c *cobra.Command, _ []string) {
 		log.WithError(err).Error("Error starting services")
 	}
 
-	// create and start ui app
-	app := ui.NewApp(runners)
-	// start the app with initial setting from the tui config, the border will
-	// always start on
-	appStartState := ui.NewStateStore(tuiConfig.AutoScroll, tuiConfig.WrapLines, tuiConfig.Borderless)
-	app.Start(appStartState)
+	headless := flagHandler.GetValue("headless") == "true"
+	
+	if headless {
+		log.Info("Running in headless mode. Press Ctrl+C to stop all services.")
+		
+		// Setup signal handling for graceful shutdown
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		
+		// Wait for shutdown signal
+		<-sigChan
+		log.Info("Shutdown signal received. Stopping all services...")
+		
+		// Stop all runners
+		for _, runner := range runners {
+			if runner != nil {
+				runner.Stop()
+			}
+		}
+		log.Info("All services stopped.")
+	} else {
+		// create and start ui app
+		app := ui.NewApp(runners)
+		// start the app with initial setting from the tui config, the border will
+		// always start on
+		appStartState := ui.NewStateStore(tuiConfig.AutoScroll, tuiConfig.WrapLines, tuiConfig.Borderless)
+		app.Start(appStartState)
+	}
 }
 
 // getFlagPath gets the override path from the flag. It returns the default
