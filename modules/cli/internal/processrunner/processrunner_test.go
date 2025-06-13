@@ -153,16 +153,17 @@ func TestProcessRunnerRestart(t *testing.T) {
 func TestProcessRunnerInfo(t *testing.T) {
 	ctx := context.Background()
 	opts := NewProcessRunnerOpts{
-		Title:   "TestPR",
-		BinPath: "/bin/sleep",
-		Args:    []string{"1"},
+		Title:     "TestPR",
+		BinPath:   "/bin/sleep",
+		Args:      []string{"1"},
+		LogFilter: ".*",
 	}
 	pr := NewProcessRunner(ctx, opts)
 
 	// get the info text
 	infoText := pr.GetInfo()
 	// set the exact expected output (including spaces for alignment)
-	expectedOutput := " TestPR binary path: /bin/sleep\n"
+	expectedOutput := " TestPR binary path: /bin/sleep\n\tCurrent regex filter: .*\n"
 
 	assert.Equal(t, expectedOutput, infoText, "Info text should match expected output")
 }

@@ -84,3 +84,7 @@ func (m *MockProcessRunner) GetBorderColor() string {
 func (m *MockProcessRunner) GetMaxUiLogLines() int {
 	return 1000
 }
+
+func (m *MockProcessRunner) GetLogFilter() string {
+	return ".*"
+}

@@ -37,6 +37,13 @@ type TUIConfig struct {
 
 	// Max number of lines to display in the TUI log viewer for all services
 	MaxUiLogLines int `mapstructure:"max_ui_log_lines" toml:"max_ui_log_lines"`
+
+	// Log filters
+	CometBftLogFilter       string `mapstructure:"cometbft_log_filter" toml:"cometbft_log_filter"`
+	ConductorLogFilter      string `mapstructure:"conductor_log_filter" toml:"conductor_log_filter"`
+	ComposerLogFilter       string `mapstructure:"composer_log_filter" toml:"composer_log_filter"`
+	SequencerLogFilter      string `mapstructure:"sequencer_log_filter" toml:"sequencer_log_filter"`
+	GenericServiceLogFilter string `mapstructure:"generic_service_log_filter" toml:"generic_service_log_filter"`
 }
 
 // DefaultTUIConfig returns a default TUIConfig struct.
@@ -55,6 +62,11 @@ func DefaultTUIConfig() TUIConfig {
 		HighlightColor:           DefaultHighlightColor,
 		BorderColor:              DefaultBorderColor,
 		MaxUiLogLines:            DefaultMaxUiLogLines,
+		CometBftLogFilter:        DefaultLogFilter,
+		ConductorLogFilter:       DefaultLogFilter,
+		ComposerLogFilter:        DefaultLogFilter,
+		SequencerLogFilter:       DefaultLogFilter,
+		GenericServiceLogFilter:  DefaultLogFilter,
 	}
 }
 
@@ -73,7 +85,12 @@ func (c TUIConfig) String() string {
 	output += fmt.Sprintf("GenericStartPosition: %v", c.GenericStartPosition)
 	output += fmt.Sprintf("HighlightColor: %s, ", c.HighlightColor)
 	output += fmt.Sprintf("BorderColor: %s, ", c.BorderColor)
-	output += fmt.Sprintf("MaxUiLogLines: %d", c.MaxUiLogLines)
+	output += fmt.Sprintf("MaxUiLogLines: %d, ", c.MaxUiLogLines)
+	output += fmt.Sprintf("CometBftLogFilter: %s, ", c.CometBftLogFilter)
+	output += fmt.Sprintf("ConductorLogFilter: %s, ", c.ConductorLogFilter)
+	output += fmt.Sprintf("ComposerLogFilter: %s, ", c.ComposerLogFilter)
+	output += fmt.Sprintf("SequencerLogFilter: %s, ", c.SequencerLogFilter)
+	output += fmt.Sprintf("GenericServiceLogFilter: %s", c.GenericServiceLogFilter)
 	output += "}"
 	return output
 }
@@ -103,6 +120,28 @@ func LoadTUIConfigOrPanic(path string) TUIConfig {
 		log.Warnf("Invalid value for generic_start_position: %q. Valid values are: 'before', 'after', 'default'", config.GenericStartPosition)
 		log.Warnf("Setting generic_start_position to 'default'")
 		config.GenericStartPosition = "default"
+	}
+
+	// if the filters are empty, set them to the default
+	if config.ConductorLogFilter == "" {
+		log.Warn("No log filter found for conductor, using default")
+		config.ConductorLogFilter = DefaultLogFilter
+	}
+	if config.CometBftLogFilter == "" {
+		log.Warn("No log filter found for cometbft, using default")
+		config.CometBftLogFilter = DefaultLogFilter
+	}
+	if config.ComposerLogFilter == "" {
+		log.Warn("No log filter found for composer, using default")
+		config.ComposerLogFilter = DefaultLogFilter
+	}
+	if config.SequencerLogFilter == "" {
+		log.Warn("No log filter found for sequencer, using default")
+		config.SequencerLogFilter = DefaultLogFilter
+	}
+	if config.GenericServiceLogFilter == "" {
+		log.Warn("No log filter found for generic services, using default")
+		config.GenericServiceLogFilter = DefaultLogFilter
 	}
 
 	return config
